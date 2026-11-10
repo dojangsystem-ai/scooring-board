@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Taekwondo Scoring Board Pro - Electronic Tournament System</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Custom Fonts & Effects -->
+  <link rel="stylesheet" href="css/custom.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            chung: {
+              DEFAULT: '#0062cc',
+              dark: '#003e85',
+              glow: '#007aff'
+            },
+            hong: {
+              DEFAULT: '#d90429',
+              dark: '#8d0801',
+              glow: '#ef4444'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-black text-slate-100 min-h-screen antialiased overflow-x-hidden">
+  
+  <!-- Container Aplikasi -->
+  <div id="app-root">
+    <!-- UI akan dirender oleh js/renderer.js -->
+  </div>
+
+  <!-- Container Cetak Berita Acara Pertandingan (@media print) -->
+  <div id="print-scoresheet"></div>
+
+  <!-- Script Modules -->
+  <script src="js/audio-and-sync.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/renderer.js"></script>
+
+  <script>
+    // Inisialisasi saat halaman dimuat
+    document.addEventListener('DOMContentLoaded', () => {
+      // Cek parameter URL (misal: ?mode=tv untuk layar penonton/TV atau ?mode=obs untuk broadcast overlay)
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('mode') === 'tv') {
+        window.app.data.viewMode = 'tv';
+      } else if (params.get('mode') === 'operator') {
+        window.app.data.viewMode = 'operator';
+      } else if (params.get('mode') === 'judge') {
+        window.app.data.viewMode = 'judge';
+      } else if (params.get('mode') === 'obs') {
+        window.app.data.viewMode = 'obs';
+        document.body.classList.remove('bg-black');
+        document.body.classList.add('bg-transparent');
+      }
+
+      if (params.get('category')) {
+        window.app.data.category = params.get('category');
+      }
+
+      // Render pertama kali
+      window.app.render();
+
+      // Keyboard Shortcuts untuk Table Operator
+      window.addEventListener('keydown', (e) => {
+        // Abaikan jika fokus di input field
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        if (e.code === 'Space') {
+          e.preventDefault();
+          if (window.app.data.category === 'kyorugi') {
+            window.app.toggleKyorugiTimer();
+          }
+        } else if (e.key === 'b' || e.key === 'B') {
+          window.soundSys.playBuzzer();
+        } else if (e.key === '1') {
+          window.app.setCategory('kyorugi');
+        } else if (e.key === '2') {
+          window.app.setCategory('poomsae_rec');
+        } else if (e.key === '3') {
+          window.app.setCategory('poomsae_free');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+

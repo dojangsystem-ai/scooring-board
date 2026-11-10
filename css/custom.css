@@ -1,0 +1,142 @@
+/* Custom CSS for Taekwondo Scoring Board */
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,400;0,600;0,700;1,700&family=Rajdhani:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --font-digital: 'Chakra Petch', monospace, sans-serif;
+  --font-display: 'Rajdhani', sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  
+  --chung-blue: #0062cc;
+  --chung-dark: #003e85;
+  --hong-red: #d90429;
+  --hong-dark: #8d0801;
+  --tkd-gold: #f59e0b;
+}
+
+body {
+  font-family: var(--font-sans);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.font-digital {
+  font-family: var(--font-digital);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Glow effects for scoreboard */
+.glow-blue {
+  text-shadow: 0 0 15px rgba(0, 122, 255, 0.7), 0 0 30px rgba(0, 122, 255, 0.4);
+}
+
+.glow-red {
+  text-shadow: 0 0 15px rgba(239, 68, 68, 0.7), 0 0 30px rgba(239, 68, 68, 0.4);
+}
+
+.glow-gold {
+  text-shadow: 0 0 15px rgba(245, 158, 11, 0.7), 0 0 30px rgba(245, 158, 11, 0.4);
+}
+
+/* Pulse animation for active timer */
+@keyframes timerPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+.timer-running {
+  animation: timerPulse 2s infinite ease-in-out;
+}
+
+/* Score change animation */
+@keyframes scorePop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.score-updated {
+  animation: scorePop 0.25s ease-out;
+}
+
+/* Strikethrough for truncated scores in Poomsae */
+.score-dropped {
+  position: relative;
+  opacity: 0.45;
+  filter: grayscale(0.8);
+}
+
+.score-dropped::after {
+  content: '';
+  position: absolute;
+  left: -5%;
+  top: 50%;
+  width: 110%;
+  height: 3px;
+  background-color: #ef4444;
+  transform: rotate(-12deg);
+  border-radius: 2px;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #111827;
+}
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+
+/* =========================================
+   PRINT STYLES FOR OFFICIAL MATCH SCORESHEET
+   ========================================= */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  header, .no-print, button, nav {
+    display: none !important;
+  }
+
+  #print-scoresheet {
+    display: block !important;
+    color: black !important;
+    background: white !important;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+
+  .print-table th, .print-table td {
+    border: 1px solid #333;
+    padding: 8px 12px;
+    text-align: center;
+  }
+
+  .print-table th {
+    background-color: #f3f4f6;
+  }
+}
+
+/* Default state: hide print scoresheet container on screen */
+#print-scoresheet {
+  display: none;
+}
+
+
