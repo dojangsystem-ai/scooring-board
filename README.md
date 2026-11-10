@@ -22,9 +22,9 @@ Aplikasi ini dilengkapi 4 mode tampilan interaktif yang dapat dipilih langsung m
 | **📱 3. Pad Juri (Touch Pad)** | Tablet / Smartphone Juri | Antarmuka ramah sentuhan (*touch-friendly*) untuk hakim sudut. Pada Kyorugi terdapat tombol sentuh besar Pukulan Biru/Merah (1 poin). Pada Poomsae terdapat tombol pengurangan cepat Akurasi (-0.1, -0.3) dan slider Presentasi. |
 | **📋 4. Jadwal Partai** | Laptop Panitia / Admin | Daftar bagan pertandingan (*match queue*). Operator cukup mengklik **"Muat Partai ↗"** untuk langsung memuat nama atlet, kontingen, dan kelas ke Layar TV. |
 
-### Visual Perangkat Pad Juri (Corner Judge Tablet)
+### Visual Perangkat Pad Juri Standar KPNP & DAEDO (World Taekwondo)
 
-![Perangkat Pad Juri Taekwondo](assets/taekwondo_corner_judge_pad.jpg)
+![Perangkat Pad Juri Standar KPNP dan Daedo](assets/kpnp_daedo_corner_judge_pad.jpg)
 
 ### Tampilan Layar Penuh Pad Juri (3 Kategori Pertandingan)
 

@@ -62,6 +62,10 @@ window.renderUI = function (appState) {
           <span>🖨️</span> <span class="hidden sm:inline">Cetak</span>
         </button>
 
+        <button onclick="app.toggleSettingsModal()" title="Pengaturan Turnamen & Durasi" class="p-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 flex items-center space-x-1">
+          <span>⚙️</span> <span class="hidden sm:inline">Setelan</span>
+        </button>
+
         <button onclick="toggleFullscreen()" class="p-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-700">
           ⛶ Fullscreen
         </button>
@@ -761,188 +765,336 @@ function renderPoomsaeFreeOperator(appState) {
 }
 
 // ==========================================
-// 3. RENDER PAD JURI (TABLET / MOBILE TOUCH VIEW)
+// 3. RENDER PAD JURI (KPNP & DAEDO WT STANDARD JSD)
 // ==========================================
 function renderJudgePad(appState) {
-  const { category, selectedJudgeId, poomsaeRec } = appState.data;
+  const { category, selectedJudgeId, poomsaeRec, kyorugi, court, division } = appState.data;
   const currentJudge = poomsaeRec.judges.find(j => j.id === selectedJudgeId) || poomsaeRec.judges[0];
 
   return `
-    <main class="w-full min-h-[calc(100vh-50px)] bg-slate-950 text-white p-3 sm:p-6 flex flex-col justify-between">
-      <div class="max-w-3xl mx-auto w-full">
+    <main class="w-full min-h-[calc(100vh-50px)] bg-neutral-950 text-white p-2 sm:p-5 flex flex-col justify-between select-none">
+      <div class="max-w-4xl mx-auto w-full">
         
-        <!-- Header Identitas Juri -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-4 flex items-center justify-between shadow-xl">
-          <div class="flex items-center space-x-3">
-            <span class="text-2xl">📱</span>
-            <div>
-              <div class="text-xs text-amber-400 font-bold uppercase tracking-wider">CORNER JUDGE PAD (TOUCH)</div>
-              <h2 class="text-xl font-black text-white font-display">Perangkat Juri: ${selectedJudgeId}</h2>
+        <!-- HARDWARE CASING KPNP / DAEDO WIRELESS CONTROLLER -->
+        <div class="border-4 sm:border-8 border-neutral-800 rounded-3xl sm:rounded-[2.5rem] bg-gradient-to-b from-neutral-900 via-neutral-950 to-neutral-900 p-3 sm:p-5 shadow-[0_20px_50px_rgba(0,0,0,0.9)] relative">
+          
+          <!-- TOP HARDWARE STATUS TELEMETRY BAR (KPNP / DAEDO STANDARD) -->
+          <div class="bg-black border border-neutral-800 rounded-xl px-4 py-2 mb-4 flex flex-wrap items-center justify-between text-xs text-neutral-400 font-mono">
+            <div class="flex items-center space-x-3">
+              <span class="flex items-center space-x-1.5 text-emerald-400 font-bold">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="tracking-wider">DAEDO Gen2 / KPNP PSS</span>
+              </span>
+              <span class="text-neutral-600">|</span>
+              <span class="text-amber-400 font-bold">${court}</span>
+              <span class="text-neutral-600">|</span>
+              <span class="text-slate-300 font-bold font-sans">${selectedJudgeId}</span>
+            </div>
+
+            <div class="flex items-center space-x-3 my-0.5">
+              <span class="bg-neutral-900 border border-neutral-700 px-2 py-0.5 rounded text-[11px] text-amber-300 font-bold">
+                ${kyorugi.round ? `R${kyorugi.round}` : 'R1'} [BEST OF 3]
+              </span>
+              <span class="text-emerald-400 font-bold font-digital text-sm dynamic-timer-text">
+                ${appState.formatTime(kyorugi.timerSeconds)}
+              </span>
+              <span class="text-cyan-400 font-bold">📶 2.4GHz RF</span>
+              <span class="text-emerald-400 font-bold">🔋 98%</span>
+            </div>
+
+            <!-- Selector ID Juri (J1 s/d J5) -->
+            <div class="flex items-center space-x-1 bg-neutral-900 p-1 rounded-lg border border-neutral-800">
+              <span class="text-[10px] text-neutral-500 px-1 font-sans">JURI:</span>
+              ${['J1', 'J2', 'J3', 'J4', 'J5'].map(id => `
+                <button onclick="app.setJudgeId('${id}')" class="px-2 py-0.5 rounded text-xs font-bold transition-all ${id === selectedJudgeId ? 'bg-amber-500 text-black shadow' : 'text-neutral-400 hover:text-white'}">
+                  ${id}
+                </button>
+              `).join('')}
             </div>
           </div>
-          <!-- Selector ID Juri -->
-          <div class="flex items-center space-x-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
-            ${['J1', 'J2', 'J3', 'J4', 'J5'].map(id => `
-              <button onclick="app.setJudgeId('${id}')" class="px-2.5 py-1 rounded-lg text-xs font-bold ${id === selectedJudgeId ? 'bg-amber-500 text-black shadow' : 'text-slate-400 hover:text-white'}">
-                ${id}
+
+          <!-- KONTEN PAD SESUAI KATEGORI -->
+          ${category === 'kyorugi' ? `
+            <!-- ============================================== -->
+            <!-- KYORUGI CONTROLLER (KPNP & DAEDO PSS JOYSTICK) -->
+            <!-- ============================================== -->
+            <div class="grid grid-cols-2 gap-3 sm:gap-6 my-2">
+              
+              <!-- SISI KIRI: CHUNG (BIRU) -->
+              <div class="bg-gradient-to-b from-[#003875] via-[#004f9e] to-[#002855] rounded-2xl sm:rounded-3xl p-3 sm:p-5 border-4 border-blue-500 shadow-2xl flex flex-col justify-between min-h-[360px] relative overflow-hidden">
+                <div class="flex items-center justify-between border-b border-blue-400/40 pb-2 mb-2">
+                  <div class="flex items-center space-x-2">
+                    <span class="w-3 h-3 rounded-full bg-blue-400 animate-ping"></span>
+                    <span class="text-blue-100 font-black tracking-widest text-base sm:text-lg font-display">CHUNG (청)</span>
+                  </div>
+                  <span class="text-xs bg-blue-950/80 text-blue-200 border border-blue-400/40 px-2 py-0.5 rounded font-mono">SKOR: ${kyorugi.chung.score}</span>
+                </div>
+
+                <!-- TOMBOL PUKULAN UTAMA (PUNCH 1 PT) -->
+                <button onclick="app.addKyorugiPoint('chung', 1); triggerJudgeFeedback(this);" class="my-auto w-full py-8 sm:py-10 bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 active:scale-95 text-white font-black text-2xl sm:text-4xl rounded-2xl shadow-[0_10px_25px_rgba(0,102,204,0.6)] border-2 border-blue-300 flex flex-col items-center justify-center space-y-1 transition-all">
+                  <span class="text-3xl sm:text-4xl">🥊</span>
+                  <span>PUKULAN (PUNCH)</span>
+                  <span class="text-xs sm:text-sm font-medium text-blue-100 bg-blue-900/60 px-3 py-0.5 rounded-full border border-blue-400/40">1 POIN RESMI WT</span>
+                </button>
+
+                <!-- TOMBOL TEKNIK PUTAR & KEPALA BACKUP -->
+                <div class="space-y-2 mt-2">
+                  <button onclick="app.addKyorugiPoint('chung', 2); triggerJudgeFeedback(this);" class="w-full py-3 bg-gradient-to-r from-indigo-800 to-blue-900 hover:from-indigo-700 hover:to-blue-800 active:scale-95 text-blue-100 font-extrabold text-xs sm:text-sm rounded-xl border border-blue-400/50 shadow flex items-center justify-center space-x-2">
+                    <span>⚡</span>
+                    <span>TEKNIK PUTAR (TECH +2 PTS)</span>
+                  </button>
+                  <button onclick="app.addKyorugiPoint('chung', 3); triggerJudgeFeedback(this);" class="w-full py-2 bg-neutral-900/80 hover:bg-neutral-800 active:scale-95 text-blue-200 font-semibold text-xs rounded-lg border border-neutral-700 flex items-center justify-center space-x-1">
+                    <span>🎯</span>
+                    <span>KEPALA MANUAL (HEAD +3 PTS)</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- SISI KANAN: HONG (MERAH) -->
+              <div class="bg-gradient-to-b from-[#8c0018] via-[#b30020] to-[#660012] rounded-2xl sm:rounded-3xl p-3 sm:p-5 border-4 border-red-500 shadow-2xl flex flex-col justify-between min-h-[360px] relative overflow-hidden">
+                <div class="flex items-center justify-between border-b border-red-400/40 pb-2 mb-2">
+                  <div class="flex items-center space-x-2">
+                    <span class="w-3 h-3 rounded-full bg-red-400 animate-ping"></span>
+                    <span class="text-red-100 font-black tracking-widest text-base sm:text-lg font-display">HONG (홍)</span>
+                  </div>
+                  <span class="text-xs bg-red-950/80 text-red-200 border border-red-400/40 px-2 py-0.5 rounded font-mono">SKOR: ${kyorugi.hong.score}</span>
+                </div>
+
+                <!-- TOMBOL PUKULAN UTAMA (PUNCH 1 PT) -->
+                <button onclick="app.addKyorugiPoint('hong', 1); triggerJudgeFeedback(this);" class="my-auto w-full py-8 sm:py-10 bg-gradient-to-b from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 active:scale-95 text-white font-black text-2xl sm:text-4xl rounded-2xl shadow-[0_10px_25px_rgba(217,4,41,0.6)] border-2 border-red-300 flex flex-col items-center justify-center space-y-1 transition-all">
+                  <span class="text-3xl sm:text-4xl">🥊</span>
+                  <span>PUKULAN (PUNCH)</span>
+                  <span class="text-xs sm:text-sm font-medium text-red-100 bg-red-900/60 px-3 py-0.5 rounded-full border border-red-400/40">1 POIN RESMI WT</span>
+                </button>
+
+                <!-- TOMBOL TEKNIK PUTAR & KEPALA BACKUP -->
+                <div class="space-y-2 mt-2">
+                  <button onclick="app.addKyorugiPoint('hong', 2); triggerJudgeFeedback(this);" class="w-full py-3 bg-gradient-to-r from-rose-900 to-red-900 hover:from-rose-800 hover:to-red-800 active:scale-95 text-red-100 font-extrabold text-xs sm:text-sm rounded-xl border border-red-400/50 shadow flex items-center justify-center space-x-2">
+                    <span>⚡</span>
+                    <span>TEKNIK PUTAR (TECH +2 PTS)</span>
+                  </button>
+                  <button onclick="app.addKyorugiPoint('hong', 3); triggerJudgeFeedback(this);" class="w-full py-2 bg-neutral-900/80 hover:bg-neutral-800 active:scale-95 text-red-200 font-semibold text-xs rounded-lg border border-neutral-700 flex items-center justify-center space-x-1">
+                    <span>🎯</span>
+                    <span>KEPALA MANUAL (HEAD +3 PTS)</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- FOOTER STATUS WINDOW TOLERANSI WT (1.0 DETIK) -->
+            <div class="mt-3 bg-black/80 border border-neutral-800 rounded-xl p-2.5 px-4 flex items-center justify-between text-xs text-neutral-400">
+              <span class="flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>Standar Validasi Pukulan WT: Minimal 2 dari 3 juri menekan dalam jendela waktu <b>1.0 detik</b>.</span>
+              </span>
+              <span class="text-amber-400 font-mono font-bold">READY 1.0s</span>
+            </div>
+          ` : category === 'poomsae_rec' ? `
+            <!-- ============================================== -->
+            <!-- POOMSAE RECOGNISED TERMINAL (KPNP & DAEDO)     -->
+            <!-- ============================================== -->
+            <div class="space-y-4 my-2">
+              
+              <!-- Info Peserta -->
+              <div class="bg-black/70 border border-neutral-800 rounded-xl p-3 flex items-center justify-between">
+                <div>
+                  <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">PESERTA POOMSAE STANDAR</span>
+                  <div class="font-bold text-white text-base font-display">${poomsaeRec.athleteName} (${poomsaeRec.team})</div>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] text-neutral-400 uppercase">JURUS DIUJI</span>
+                  <div class="text-amber-400 font-bold text-sm font-display">${poomsaeRec.poomsaeName}</div>
+                </div>
+              </div>
+
+              <!-- 1. MATRIKS AKURASI (MAX 4.00) DENGAN COUNTER DEDUKSI RESMI WT -->
+              <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <div>
+                    <span class="text-blue-400 font-bold text-xs uppercase tracking-wider block">1. NILAI AKURASI (ACCURACY)</span>
+                    <span class="text-[11px] text-neutral-400">Pengurangan bertahap dari nilai dasar 4.00</span>
+                  </div>
+                  <div class="text-right">
+                    <span class="font-digital text-4xl font-black text-blue-400">${currentJudge.accuracy.toFixed(1)}</span>
+                    <span class="text-xs text-neutral-500 block">/ 4.00 MAX</span>
+                  </div>
+                </div>
+
+                <!-- Tombol Deduksi KPNP / Daedo Standard -->
+                <div class="grid grid-cols-4 gap-2">
+                  <button onclick="app.updateJudgeScore('${selectedJudgeId}', Math.max(0, currentJudge.accuracy - 0.1).toFixed(1), currentJudge.presentation)" class="py-4 bg-amber-500/15 hover:bg-amber-500/25 active:scale-95 text-amber-400 font-black rounded-xl border border-amber-500/40 text-center flex flex-col items-center justify-center">
+                    <span class="text-xl sm:text-2xl font-digital">-0.1</span>
+                    <span class="text-[10px] uppercase font-sans mt-0.5">Minor (Kecil)</span>
+                  </button>
+                  <button onclick="app.updateJudgeScore('${selectedJudgeId}', Math.max(0, currentJudge.accuracy - 0.3).toFixed(1), currentJudge.presentation)" class="py-4 bg-red-500/15 hover:bg-red-500/25 active:scale-95 text-red-400 font-black rounded-xl border border-red-500/40 text-center flex flex-col items-center justify-center">
+                    <span class="text-xl sm:text-2xl font-digital">-0.3</span>
+                    <span class="text-[10px] uppercase font-sans mt-0.5">Major (Besar)</span>
+                  </button>
+                  <button onclick="app.updateJudgeScore('${selectedJudgeId}', Math.min(4.0, currentJudge.accuracy + 0.1).toFixed(1), currentJudge.presentation)" class="py-4 bg-blue-500/15 hover:bg-blue-500/25 active:scale-95 text-blue-300 font-bold rounded-xl border border-blue-500/40 text-center flex flex-col items-center justify-center">
+                    <span class="text-xl sm:text-2xl font-digital">+0.1</span>
+                    <span class="text-[10px] uppercase font-sans mt-0.5">Batal / Undo</span>
+                  </button>
+                  <button onclick="app.updateJudgeScore('${selectedJudgeId}', 4.0, currentJudge.presentation)" class="py-4 bg-neutral-800 hover:bg-neutral-700 active:scale-95 text-neutral-300 font-bold rounded-xl border border-neutral-700 text-center flex flex-col items-center justify-center">
+                    <span class="text-lg font-mono">4.00</span>
+                    <span class="text-[10px] uppercase font-sans mt-0.5">Reset Dasar</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 2. MATRIKS PRESENTASI 3 SUB-SKOR (MAX 6.00) -->
+              <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <div>
+                    <span class="text-emerald-400 font-bold text-xs uppercase tracking-wider block">2. NILAI PRESENTASI (PRESENTATION)</span>
+                    <span class="text-[11px] text-neutral-400">Kecepatan & Daya, Irama, dan Penguasaan Energi</span>
+                  </div>
+                  <div class="text-right">
+                    <span class="font-digital text-4xl font-black text-emerald-400">${currentJudge.presentation.toFixed(1)}</span>
+                    <span class="text-xs text-neutral-500 block">/ 6.00 MAX</span>
+                  </div>
+                </div>
+
+                <div class="space-y-3">
+                  <input type="range" min="0" max="6.0" step="0.1" value="${currentJudge.presentation}" oninput="app.updateJudgeScore('${selectedJudgeId}', currentJudge.accuracy, this.value)" class="w-full accent-emerald-500 h-3 bg-neutral-800 rounded-lg cursor-pointer">
+                  <div class="flex justify-between text-xs text-neutral-400 font-mono">
+                    <span>0.0 (Sangat Kurang)</span>
+                    <span>3.0 (Cukup)</span>
+                    <span>4.5 (Baik)</span>
+                    <span>6.0 (Sempurna)</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TOTAL LIVE PRATINJAU & TOMBOL TRANSMIT -->
+              <div class="bg-black/60 border border-neutral-800 rounded-2xl p-3 flex items-center justify-between">
+                <div class="text-left">
+                  <span class="text-[10px] text-neutral-400 uppercase">AKUMULASI SKOR JURI ${selectedJudgeId}:</span>
+                  <div class="font-digital text-3xl font-black text-amber-400">
+                    ${(currentJudge.accuracy + currentJudge.presentation).toFixed(2)}
+                  </div>
+                </div>
+
+                <button onclick="app.calculatePoomsaeRecognised(); triggerTransmitFeedback(this);" class="py-3.5 px-6 sm:px-8 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white font-extrabold text-sm sm:text-base rounded-xl shadow-xl flex items-center space-x-2 border border-emerald-400">
+                  <span>✓</span>
+                  <span>KIRIM NILAI KE SERVER PSS (TRANSMIT)</span>
+                </button>
+              </div>
+
+            </div>
+          ` : `
+            <!-- ============================================== -->
+            <!-- POOMSAE FREESTYLE TERMINAL (KPNP & DAEDO)      -->
+            <!-- ============================================== -->
+            <div class="space-y-4 my-2">
+              
+              <!-- Header Freestyle -->
+              <div class="bg-black/70 border border-purple-900/60 rounded-xl p-3 flex items-center justify-between">
+                <div>
+                  <span class="text-[10px] text-purple-400 font-bold uppercase tracking-wider">FREESTYLE JURY TERMINAL</span>
+                  <div class="font-bold text-white text-base font-display">${appState.data.poomsaeFree.athleteName}</div>
+                  <div class="text-xs text-purple-300">Musik: ${appState.data.poomsaeFree.musicTitle}</div>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] text-neutral-400 uppercase">DURASI MUSIK</span>
+                  <div class="text-emerald-400 font-digital text-xl font-bold">⏱️ 95s (Optimal)</div>
+                </div>
+              </div>
+
+              <!-- 5 ELEMEN WAJIB DIUJI (TECHNICAL SKILLS 6.0) -->
+              <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-4">
+                <span class="text-purple-400 font-bold text-xs uppercase tracking-wider block mb-2.5">
+                  1. TECHNICAL SKILLS: 5 ELEMEN WAJIB RESMI WT (MAX 6.00)
+                </span>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                  <div class="bg-black/60 p-2.5 rounded-xl border border-neutral-800">
+                    <div class="font-bold text-neutral-200">1. Jump Side Kick</div>
+                    <div class="text-[10px] text-neutral-400 mb-1">Tinggi Lompatan</div>
+                    <input type="number" step="0.1" min="0" max="1.0" value="0.9" class="w-full bg-neutral-900 border border-purple-500/50 rounded px-2 py-1 text-purple-300 font-mono text-center font-bold">
+                  </div>
+                  <div class="bg-black/60 p-2.5 rounded-xl border border-neutral-800">
+                    <div class="font-bold text-neutral-200">2. Multiple Kicks</div>
+                    <div class="text-[10px] text-neutral-400 mb-1">Jumlah Target Udara</div>
+                    <input type="number" step="0.1" min="0" max="1.0" value="0.8" class="w-full bg-neutral-900 border border-purple-500/50 rounded px-2 py-1 text-purple-300 font-mono text-center font-bold">
+                  </div>
+                  <div class="bg-black/60 p-2.5 rounded-xl border border-neutral-800">
+                    <div class="font-bold text-neutral-200">3. Spinning Kick</div>
+                    <div class="text-[10px] text-neutral-400 mb-1">Putaran 540°/720°</div>
+                    <input type="number" step="0.1" min="0" max="1.0" value="0.9" class="w-full bg-neutral-900 border border-purple-500/50 rounded px-2 py-1 text-purple-300 font-mono text-center font-bold">
+                  </div>
+                  <div class="bg-black/60 p-2.5 rounded-xl border border-neutral-800">
+                    <div class="font-bold text-neutral-200">4. Basic Moves</div>
+                    <div class="text-[10px] text-neutral-400 mb-1">Kuda-kuda Baku</div>
+                    <input type="number" step="0.1" min="0" max="1.0" value="0.8" class="w-full bg-neutral-900 border border-purple-500/50 rounded px-2 py-1 text-purple-300 font-mono text-center font-bold">
+                  </div>
+                  <div class="bg-black/60 p-2.5 rounded-xl border border-neutral-800">
+                    <div class="font-bold text-neutral-200">5. Acrobatic Kick</div>
+                    <div class="text-[10px] text-neutral-400 mb-1">Tendangan Salto</div>
+                    <input type="number" step="0.1" min="0" max="1.0" value="0.9" class="w-full bg-neutral-900 border border-purple-500/50 rounded px-2 py-1 text-purple-300 font-mono text-center font-bold">
+                  </div>
+                  <div class="bg-black/60 p-2.5 rounded-xl border border-neutral-800">
+                    <div class="font-bold text-neutral-200">6. Basic TKD Stances</div>
+                    <div class="text-[10px] text-neutral-400 mb-1">Ketepatan Mendarat</div>
+                    <input type="number" step="0.1" min="0" max="1.0" value="0.8" class="w-full bg-neutral-900 border border-purple-500/50 rounded px-2 py-1 text-purple-300 font-mono text-center font-bold">
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. PRESENTASI & KOREOGRAFI (MAX 4.00) -->
+              <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-4">
+                <span class="text-pink-400 font-bold text-xs uppercase tracking-wider block mb-2">
+                  2. PRESENTATION & HARMONY DENGAN MUSIK (MAX 4.00)
+                </span>
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                  <div class="bg-black/60 p-2.5 rounded-xl border border-neutral-800">
+                    <div class="font-bold text-neutral-300 mb-1">Kreativitas & Koreografi:</div>
+                    <input type="number" step="0.1" min="0" max="1.0" value="0.9" class="w-full bg-neutral-900 border border-pink-500/50 rounded px-2 py-1 text-pink-300 font-mono text-center font-bold">
+                  </div>
+                  <div class="bg-black/60 p-2.5 rounded-xl border border-neutral-800">
+                    <div class="font-bold text-neutral-300 mb-1">Keselarasan Musik & Beat:</div>
+                    <input type="number" step="0.1" min="0" max="1.0" value="0.8" class="w-full bg-neutral-900 border border-pink-500/50 rounded px-2 py-1 text-pink-300 font-mono text-center font-bold">
+                  </div>
+                </div>
+              </div>
+
+              <!-- TRANSMIT FREESTYLE SCORE -->
+              <button onclick="app.calculatePoomsaeFreestyle(); triggerTransmitFeedback(this);" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-95 text-white font-extrabold text-sm sm:text-base rounded-2xl shadow-xl flex items-center justify-center space-x-2 border border-purple-400">
+                <span>⚡</span>
+                <span>KIRIM NILAI FREESTYLE KE SERVER PSS (TRANSMIT)</span>
               </button>
-            `).join('')}
-          </div>
+
+            </div>
+          `}
+
         </div>
 
-        ${category === 'kyorugi' ? `
-          <!-- PAD JURI KYORUGI (TOUCH-FRIENDLY BUTTONS) -->
-          <div class="grid grid-cols-2 gap-4 my-auto">
-            <!-- Pukulan Biru -->
-            <div class="bg-gradient-to-b from-blue-700 to-blue-900 rounded-3xl p-6 text-center border-4 border-blue-400 shadow-2xl flex flex-col justify-between min-h-[300px]">
-              <span class="text-blue-200 font-black tracking-widest text-sm uppercase">CHUNG (BIRU)</span>
-              <button onclick="app.addKyorugiPoint('chung', 1)" class="my-auto w-full py-8 bg-blue-500 hover:bg-blue-400 active:scale-95 text-white font-black text-2xl sm:text-3xl rounded-2xl shadow-lg border-2 border-blue-300">
-                🥊 PUKULAN<br><span class="text-base font-medium">(1 Poin)</span>
-              </button>
-              <button onclick="app.addKyorugiPoint('chung', 2)" class="w-full py-3 bg-blue-950/70 hover:bg-blue-950 text-blue-200 font-bold text-sm rounded-xl border border-blue-400/40">
-                +2 Tendangan Putar
-              </button>
-            </div>
+      </div>
+      <div class="text-center text-[11px] text-neutral-500 mt-3 font-mono">
+        World Taekwondo Electronic Scoring System • Daedo & KPNP Standard Wireless JSD Protocol
+      </div>
+    </main>
+  `;
+}
 
-            <!-- Pukulan Merah -->
-            <div class="bg-gradient-to-b from-red-700 to-red-900 rounded-3xl p-6 text-center border-4 border-red-400 shadow-2xl flex flex-col justify-between min-h-[300px]">
-              <span class="text-red-200 font-black tracking-widest text-sm uppercase">HONG (MERAH)</span>
-              <button onclick="app.addKyorugiPoint('hong', 1)" class="my-auto w-full py-8 bg-red-500 hover:bg-red-400 active:scale-95 text-white font-black text-2xl sm:text-3xl rounded-2xl shadow-lg border-2 border-red-300">
-                🥊 PUKULAN<br><span class="text-base font-medium">(1 Poin)</span>
-              </button>
-              <button onclick="app.addKyorugiPoint('hong', 2)" class="w-full py-3 bg-red-950/70 hover:bg-red-950 text-red-200 font-bold text-sm rounded-xl border border-red-400/40">
-                +2 Tendangan Putar
-              </button>
-            </div>
-          </div>
-        ` : category === 'poomsae_rec' ? `
-          <!-- PAD JURI POOMSAE RECOGNISED (AKURASI & PRESENTASI) -->
-          <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div>
-                <span class="text-xs text-amber-400 font-bold uppercase">POOMSAE STANDAR</span>
-                <h3 class="text-xl font-black text-white font-display">${poomsaeRec.athleteName}</h3>
-                <p class="text-xs text-slate-400">${poomsaeRec.team} • Jurus: ${poomsaeRec.poomsaeName}</p>
-              </div>
-              <div class="text-right">
-                <span class="text-xs text-slate-400">Total Skor Juri:</span>
-                <div class="font-digital text-3xl font-black text-amber-400">${(currentJudge.accuracy + currentJudge.presentation).toFixed(2)}</div>
-              </div>
-            </div>
+// Visual Feedback Helpers for Judge Pad Buttons
+function triggerJudgeFeedback(btnEl) {
+  if (!btnEl) return;
+  btnEl.classList.add('ring-4', 'ring-white', 'scale-95');
+  setTimeout(() => {
+    btnEl.classList.remove('ring-4', 'ring-white', 'scale-95');
+  }, 200);
+}
 
-            <!-- Akurasi (Pengurangan Cepat) -->
-            <div>
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-blue-400 font-bold text-sm uppercase">1. Nilai Akurasi (Accuracy - Max 4.0)</span>
-                <span class="font-digital text-2xl font-black text-white">${currentJudge.accuracy.toFixed(1)}</span>
-              </div>
-              <div class="grid grid-cols-3 gap-3">
-                <button onclick="app.updateJudgeScore('${selectedJudgeId}', Math.max(0, currentJudge.accuracy - 0.1).toFixed(1), currentJudge.presentation)" class="py-4 bg-slate-800 hover:bg-slate-700 active:scale-95 text-amber-400 font-black text-lg rounded-2xl border border-slate-700">
-                  -0.1 (Kecil)
-                </button>
-                <button onclick="app.updateJudgeScore('${selectedJudgeId}', Math.max(0, currentJudge.accuracy - 0.3).toFixed(1), currentJudge.presentation)" class="py-4 bg-slate-800 hover:bg-slate-700 active:scale-95 text-red-400 font-black text-lg rounded-2xl border border-slate-700">
-                  -0.3 (Besar)
-                </button>
-                <button onclick="app.updateJudgeScore('${selectedJudgeId}', 4.0, currentJudge.presentation)" class="py-4 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 font-bold text-sm rounded-2xl border border-slate-700">
-                  Reset (4.0)
-                </button>
-              </div>
-            </div>
-
-            <!-- Presentasi (Speed, Rhythm, Energy) -->
-            <div class="pt-4 border-t border-slate-800">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-emerald-400 font-bold text-sm uppercase">2. Nilai Presentasi (Presentation - Max 6.0)</span>
-                <span class="font-digital text-2xl font-black text-white">${currentJudge.presentation.toFixed(1)}</span>
-              </div>
-              <input type="range" min="0" max="6.0" step="0.1" value="${currentJudge.presentation}" oninput="app.updateJudgeScore('${selectedJudgeId}', currentJudge.accuracy, this.value)" class="w-full accent-emerald-500 h-3 bg-slate-800 rounded-lg cursor-pointer">
-              <div class="flex justify-between text-xs text-slate-400 mt-1">
-                <span>0.0 (Kurang)</span>
-                <span>3.0 (Cukup)</span>
-                <span>6.0 (Sempurna)</span>
-              </div>
-            </div>
-
-            <!-- Tombol Konfirmasi Skor -->
-            <button onclick="app.calculatePoomsaeRecognised(); alert('Nilai Juri ${selectedJudgeId} berhasil disubmit ke Operator!');" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-extrabold text-lg rounded-2xl shadow-xl flex items-center justify-center space-x-2">
-              <span>✓</span>
-              <span>KIRIM NILAI JURI KE OPERATOR MEJA</span>
-            </button>
-          </div>
-        ` : `
-          <!-- PAD JURI POOMSAE FREESTYLE (5 ELEMEN WAJIB & MUSIK) -->
-          <div class="bg-slate-900 border border-purple-800/80 rounded-3xl p-6 shadow-2xl space-y-6">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div>
-                <span class="text-xs text-purple-400 font-bold uppercase">POOMSAE FREE STYLE</span>
-                <h3 class="text-xl font-black text-white font-display">${appState.data.poomsaeFree.athleteName}</h3>
-                <p class="text-xs text-slate-400">${appState.data.poomsaeFree.team} • Musik: ${appState.data.poomsaeFree.musicTitle}</p>
-              </div>
-              <div class="text-right">
-                <span class="text-xs text-slate-400">Total Skor Juri:</span>
-                <div class="font-digital text-3xl font-black text-purple-400">8.40</div>
-              </div>
-            </div>
-
-            <!-- 5 Elemen Teknik Wajib (Technical Skills Max 6.0) -->
-            <div>
-              <span class="text-purple-400 font-bold text-sm uppercase block mb-3">1. Technical Skills (5 Teknik Wajib - Max 6.0)</span>
-              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                  <div class="font-bold text-white mb-1">1. Jump Side Kick</div>
-                  <div class="text-[10px] text-slate-400 mb-1.5">Tinggi Lompatan (1.0)</div>
-                  <input type="number" step="0.1" min="0" max="1.0" value="0.9" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-purple-300 font-mono text-center font-bold">
-                </div>
-                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                  <div class="font-bold text-white mb-1">2. Multiple Kicks</div>
-                  <div class="text-[10px] text-slate-400 mb-1.5">Tendangan Beruntun (1.0)</div>
-                  <input type="number" step="0.1" min="0" max="1.0" value="0.8" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-purple-300 font-mono text-center font-bold">
-                </div>
-                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                  <div class="font-bold text-white mb-1">3. Spinning Kick</div>
-                  <div class="text-[10px] text-slate-400 mb-1.5">Putaran 540°/720° (1.0)</div>
-                  <input type="number" step="0.1" min="0" max="1.0" value="0.9" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-purple-300 font-mono text-center font-bold">
-                </div>
-                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                  <div class="font-bold text-white mb-1">4. Basic Moves</div>
-                  <div class="text-[10px] text-slate-400 mb-1.5">Kuda-kuda Baku (1.0)</div>
-                  <input type="number" step="0.1" min="0" max="1.0" value="0.8" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-purple-300 font-mono text-center font-bold">
-                </div>
-                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                  <div class="font-bold text-white mb-1">5. Acrobatic Kick</div>
-                  <div class="text-[10px] text-slate-400 mb-1.5">Tendangan Salto (1.0)</div>
-                  <input type="number" step="0.1" min="0" max="1.0" value="0.9" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-purple-300 font-mono text-center font-bold">
-                </div>
-                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                  <div class="font-bold text-white mb-1">6. Basic Stances</div>
-                  <div class="text-[10px] text-slate-400 mb-1.5">Keseimbangan (1.0)</div>
-                  <input type="number" step="0.1" min="0" max="1.0" value="0.8" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-purple-300 font-mono text-center font-bold">
-                </div>
-              </div>
-            </div>
-
-            <!-- Presentasi & Musik (Max 4.0) -->
-            <div class="pt-4 border-t border-slate-800">
-              <span class="text-pink-400 font-bold text-sm uppercase block mb-2">2. Presentation & Music (Max 4.0)</span>
-              <div class="grid grid-cols-2 gap-2 text-xs">
-                <div class="bg-slate-950 p-2 rounded-lg border border-slate-800">
-                  <span class="text-slate-300 font-medium">Kreativitas & Koreografi:</span>
-                  <input type="number" step="0.1" min="0" max="1.0" value="0.9" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-pink-300 font-mono text-center mt-1">
-                </div>
-                <div class="bg-slate-950 p-2 rounded-lg border border-slate-800">
-                  <span class="text-slate-300 font-medium">Harmoni dengan Musik:</span>
-                  <input type="number" step="0.1" min="0" max="1.0" value="0.8" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-pink-300 font-mono text-center mt-1">
-                </div>
-              </div>
-            </div>
-
-            <!-- Tombol Konfirmasi Freestyle -->
-            <button onclick="app.calculatePoomsaeFreestyle(); alert('Nilai Freestyle Juri ${selectedJudgeId} berhasil disubmit ke Operator!');" class="w-full py-4 bg-purple-600 hover:bg-purple-500 active:scale-95 text-white font-extrabold text-lg rounded-2xl shadow-xl flex items-center justify-center space-x-2">
-              <span>⚡</span>
-              <span>KIRIM NILAI FREESTYLE KE OPERATOR MEJA</span>
-            </button>
-          </div>
-        `}
+function triggerTransmitFeedback(btnEl) {
+  if (!btnEl) return;
+  const original = btnEl.innerHTML;
+  btnEl.innerHTML = `<span>✓ TERKIRIM KE MEJA OPERATOR!</span>`;
+  btnEl.classList.add('bg-emerald-500');
+  setTimeout(() => {
+    btnEl.innerHTML = original;
+    btnEl.classList.remove('bg-emerald-500');
+  }, 1800);
+}
 
       </div>
       <div class="text-center text-xs text-slate-500 mt-4">

@@ -5,12 +5,25 @@
  */
 
 const DEFAULT_STATE = {
-  viewMode: 'tv', // 'tv' (Layar TV) | 'operator' (Panel Meja) | 'judge' (Pad Juri) | 'matches' (Jadwal Partai)
+  viewMode: 'tv', // 'tv' (Layar TV) | 'operator' (Panel Meja) | 'judge' (Pad Juri) | 'matches' (Jadwal Partai) | 'obs' (OBS Overlay)
   category: 'kyorugi', // 'kyorugi' | 'poomsae_rec' | 'poomsae_free'
   court: 'COURT 1',
   division: 'SENIOR PUTRA UNDER 68 KG',
   matchNumber: 'PARTAI #04',
   selectedJudgeId: 'J1', // Untuk Mode Pad Juri (J1 s/d J5)
+  settingsModalOpen: false,
+  
+  // Konfigurasi Turnamen
+  settings: {
+    tournamentTitle: 'KEJUARAAN NASIONAL TAEKWONDO CHAMPIONSHIP 2026',
+    courtName: 'COURT 1',
+    roundDuration: 120,
+    restDuration: 60,
+    pointGapEnabled: true,
+    pointGapThreshold: 12,
+    judgeCount: 5,
+    soundMuted: false
+  },
   
   // State Video Replay (IVR) Challenge
   ivr: {
@@ -656,6 +669,47 @@ class AppState {
 
     printEl.innerHTML = content;
     window.print();
+  }
+
+  // --- PENGATURAN / SETTINGS MODAL ---
+  toggleSettingsModal() {
+    this.data.settingsModalOpen = !this.data.settingsModalOpen;
+    this.notifyChange();
+  }
+
+  saveSettings(title, court, duration, pointGap, muted) {
+    this.data.settings.tournamentTitle = title;
+    this.data.settings.courtName = court;
+    this.data.court = court;
+    this.data.settings.roundDuration = parseInt(duration) || 120;
+    this.data.kyorugi.timerInitial = this.data.settings.roundDuration;
+    this.data.kyorugi.timerSeconds = this.data.settings.roundDuration;
+    this.data.settings.pointGapEnabled = !!pointGap;
+    this.data.settings.soundMuted = !!muted;
+    window.soundSys.soundEnabled = !muted;
+    this.data.settingsModalOpen = false;
+    this.notifyChange();
+  }
+
+  // --- EKSPOR DATA HASIL PERTANDINGAN ---
+  exportMatchesJSON() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data.matches, null, 2));
+    const dlAnchorElem = document.createElement('a');
+    dlAnchorElem.setAttribute("href", dataStr);
+    dlAnchorElem.setAttribute("download", `Hasil_Pertandingan_Taekwondo_${this.data.court.replace(/\s+/g, '_')}.json`);
+    dlAnchorElem.click();
+  }
+
+  exportMatchesCSV() {
+    let csv = "Nomor Partai,Kategori,Divisi,Sudut Biru (Chung),Sudut Merah (Hong),Status\n";
+    this.data.matches.forEach(m => {
+      csv += `"${m.number}","${m.category}","${m.division}","${m.chung}","${m.hong}","${m.status}"\n`;
+    });
+    const dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+    const dlAnchorElem = document.createElement('a');
+    dlAnchorElem.setAttribute("href", dataStr);
+    dlAnchorElem.setAttribute("download", `Hasil_Pertandingan_Taekwondo_${this.data.court.replace(/\s+/g, '_')}.csv`);
+    dlAnchorElem.click();
   }
 
   render() {
