@@ -1,8 +1,8 @@
-# Taekwondo Scoring Board Pro - Electronic Tournament System
+# Taekwondo Scoring Board Pro - Electronic Tournament System (World Taekwondo Standard)
 
-![Taekwondo Scoring Board Arena System](assets/taekwondo_scoring_board_system.jpg)
+![Suite Lengkap Scoring Board World Taekwondo](assets/world_taekwondo_scoreboard_suite.jpg)
 
-Aplikasi template **Electronic Scoring Board (Papan Skor Digital)** untuk kejuaraan Taekwondo modern sesuai standar resmi **World Taekwondo (WT)**.
+Aplikasi template **Electronic Scoring Board (Papan Skor Digital)** untuk kejuaraan Taekwondo modern yang telah **100% disesuaikan dengan standar regulasi resmi World Taekwondo (WT)** dan mengadopsi sistem kompetisi **DAEDO TK-Strike Gen2 & KPNP PSS**.
 
 Mendukung 3 kategori pertandingan utama:
 1. 🥊 **Kyorugi (Sparring / Pertarungan)** - Regulasi *Best of 3 Rounds*, Point Gap, Gam-jeom limit (5 kotak), Instant Video Replay (IVR), Medical Timeout (60s), dan Buzzer otomatis.

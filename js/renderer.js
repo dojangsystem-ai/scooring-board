@@ -86,6 +86,11 @@ window.renderUI = function (appState) {
     html += renderOBSOverlay(appState);
   }
 
+  // Render Modal Pengaturan jika aktif
+  if (appState.data.settingsModalOpen) {
+    html += renderSettingsModal(appState);
+  }
+
   container.innerHTML = html;
 };
 
@@ -235,8 +240,8 @@ function renderKyorugiTV(appState) {
           <div class="font-digital text-4xl sm:text-6xl lg:text-7xl font-black ${timerRunning ? 'text-emerald-400 timer-running' : 'text-amber-500'} tracking-tighter dynamic-timer-text">
             ${timeFormatted}
           </div>
-          <div class="mt-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full inline-block ${timerRunning ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-amber-950 text-amber-400 border border-amber-800'}">
-            ${timerRunning ? 'KYE-SOK (BERJALAN)' : 'KAL-YEO (JEDA)'}
+          <div class="mt-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full inline-block ${timerRunning ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-amber-950 text-amber-400 border border-amber-800'}">
+            ${timerRunning ? 'KYE-SOK (계속)' : 'KAL-YEO (갈려)'}
           </div>
         </div>
 
@@ -296,24 +301,32 @@ function renderKyorugiTV(appState) {
         </div>
       </div>
 
-      <!-- MODAL PEMENANG PARTAI JIKA ADA -->
+      <!-- MODAL PEMENANG PARTAI JIKA ADA (WT OFFICIAL WINNER DECLARATION) -->
       ${winner ? `
-        <div class="absolute inset-0 bg-black/90 backdrop-blur-xl z-50 flex flex-col items-center justify-center p-6 rounded-2xl border-4 ${winner === 'chung' ? 'border-blue-500' : 'border-red-500'}">
-          <div class="text-amber-400 text-lg sm:text-2xl font-bold tracking-widest uppercase mb-2">
-            🏆 MATCH WINNER
+        <div class="absolute inset-0 bg-black/95 backdrop-blur-xl z-50 flex flex-col items-center justify-center p-6 rounded-2xl border-4 ${winner === 'chung' ? 'border-blue-500' : 'border-red-500'} animate-fade-in">
+          <div class="text-amber-400 text-sm sm:text-base font-bold tracking-widest uppercase mb-1">
+            🏆 WORLD TAEKWONDO • OFFICIAL WINNER DECLARATION
           </div>
-          <div class="text-4xl sm:text-7xl font-black font-display tracking-wider ${winner === 'chung' ? 'text-blue-400' : 'text-red-400'}">
+          <div class="text-2xl sm:text-4xl font-black text-amber-300 font-display mb-1">
+            ${winner === 'chung' ? 'CHUNG SEUNG (청승)' : 'HONG SEUNG (홍승)'}
+          </div>
+          <div class="text-4xl sm:text-7xl font-black font-display tracking-wider ${winner === 'chung' ? 'text-blue-400 glow-blue' : 'text-red-400 glow-red'}">
             ${winner === 'chung' ? chung.name : hong.name}
           </div>
           <div class="text-xl sm:text-3xl font-bold text-white mt-1">
             ${winner === 'chung' ? chung.team : hong.team}
           </div>
-          <div class="mt-4 px-4 py-1.5 bg-slate-800 rounded-lg text-sm sm:text-base text-slate-300 border border-slate-700">
-            ${kyorugi.winReason}
+          <div class="mt-3 px-4 py-1.5 bg-slate-900 rounded-lg text-xs sm:text-sm text-slate-300 border border-slate-700">
+            ${kyorugi.winReason} • Skor Ronde: ${chung.roundsWon} - ${hong.roundsWon}
           </div>
-          <button onclick="app.resetKyorugiMatch()" class="mt-6 px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-lg shadow-lg">
-            Partai Baru / Reset
-          </button>
+          <div class="mt-6 flex items-center space-x-3">
+            <button onclick="app.printScoresheet()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500 font-bold rounded-xl shadow-lg flex items-center space-x-1.5 text-sm">
+              <span>🖨️</span> <span>Cetak Berita Acara</span>
+            </button>
+            <button onclick="app.resetKyorugiMatch()" class="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl shadow-lg text-sm">
+              Partai Baru / Reset 🔄
+            </button>
+          </div>
         </div>
       ` : ''}
 
@@ -1114,7 +1127,7 @@ function renderMatchSchedule(appState) {
     <main class="w-full min-h-[calc(100vh-50px)] bg-slate-950 text-slate-200 p-4 sm:p-6 overflow-y-auto">
       <div class="max-w-6xl mx-auto">
         
-        <div class="flex flex-wrap items-center justify-between border-b border-slate-800 pb-4 mb-6">
+        <div class="flex flex-wrap items-center justify-between border-b border-slate-800 pb-4 mb-4">
           <div>
             <h2 class="text-2xl font-black text-white font-display">Bagan & Jadwal Pertandingan Ring</h2>
             <p class="text-xs text-slate-400">Pilih partai pertandingan untuk langsung dimuat ke Layar TV dan Meja Operator.</p>
@@ -1123,6 +1136,21 @@ function renderMatchSchedule(appState) {
             <span class="text-xs text-slate-400">Partai Aktif Saat Ini:</span>
             <div class="text-lg font-bold text-amber-400 font-display">${matchNumber}</div>
           </div>
+        </div>
+
+        <!-- Tombol Aksi Jadwal: Ekspor Data & Tambah Partai -->
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div class="flex items-center space-x-2">
+            <button onclick="app.exportMatchesJSON()" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 flex items-center space-x-1.5 shadow">
+              <span>💾</span> <span>Ekspor JSON (Bagan)</span>
+            </button>
+            <button onclick="app.exportMatchesCSV()" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 flex items-center space-x-1.5 shadow">
+              <span>📊</span> <span>Ekspor Excel / CSV</span>
+            </button>
+          </div>
+          <button onclick="addNewMatchPrompt()" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-black rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow">
+            <span>➕</span> <span>Tambah Partai Baru</span>
+          </button>
         </div>
 
         <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
@@ -1303,5 +1331,126 @@ function toggleFullscreen() {
 
 function openDisplayWindow() {
   window.open(window.location.pathname + '?mode=tv', '_blank', 'width=1280,height=720');
+}
+
+// ==========================================
+// 6. MODAL PENGATURAN TURNAMEN STANDAR WT
+// ==========================================
+function renderSettingsModal(appState) {
+  const s = appState.data.settings;
+  return `
+    <div class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 select-none">
+      <div class="bg-slate-900 border-2 border-slate-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl text-slate-200">
+        
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-5">
+          <div class="flex items-center space-x-2">
+            <span class="text-2xl">⚙️</span>
+            <div>
+              <h3 class="text-xl font-black text-white font-display">Pengaturan Turnamen Standar WT</h3>
+              <p class="text-[11px] text-slate-400">World Taekwondo Official Electronic Scoring Configuration</p>
+            </div>
+          </div>
+          <button onclick="app.toggleSettingsModal()" class="text-slate-400 hover:text-white text-xl font-bold p-1">
+            ✕
+          </button>
+        </div>
+
+        <div class="space-y-4 text-xs sm:text-sm">
+          <!-- Nama Event / Kejuaraan -->
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Nama Kejuaraan / Turnamen:</label>
+            <input id="set-title" type="text" value="${s.tournamentTitle}" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white font-semibold">
+          </div>
+
+          <!-- Nama Ring / Court -->
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Nama Ring / Court:</label>
+            <input id="set-court" type="text" value="${s.courtName}" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white font-semibold">
+          </div>
+
+          <!-- Preset Durasi Ronde WT -->
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Durasi Ronde Kyorugi (Standar WT):</label>
+            <select id="set-duration" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white font-semibold">
+              <option value="120" ${s.roundDuration === 120 ? 'selected' : ''}>120 Detik (Senior - 2 Menit)</option>
+              <option value="90" ${s.roundDuration === 90 ? 'selected' : ''}>90 Detik (Junior - 1.5 Menit)</option>
+              <option value="60" ${s.roundDuration === 60 ? 'selected' : ''}>60 Detik (Cadet / Pra-Cadet - 1 Menit)</option>
+            </select>
+          </div>
+
+          <!-- Aturan Point Gap & Audio -->
+          <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+            <label class="flex items-center space-x-2 cursor-pointer bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+              <input id="set-gap" type="checkbox" ${s.pointGapEnabled ? 'checked' : ''} class="w-4 h-4 accent-amber-500 rounded">
+              <span class="text-xs font-semibold">Point Gap WT (12 Poin)</span>
+            </label>
+
+            <label class="flex items-center space-x-2 cursor-pointer bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+              <input id="set-mute" type="checkbox" ${s.soundMuted ? 'checked' : ''} class="w-4 h-4 accent-red-500 rounded">
+              <span class="text-xs font-semibold">Mode Hening (Mute Audio)</span>
+            </label>
+          </div>
+
+          <!-- Generator Suara WT -->
+          <div class="pt-2 border-t border-slate-800">
+            <span class="text-[11px] font-bold text-slate-400 uppercase block mb-2">Uji Generator Suara Turnamen:</span>
+            <div class="grid grid-cols-4 gap-1.5 text-center text-xs">
+              <button onclick="window.soundSys.playBuzzer()" class="bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 py-1.5 rounded border border-amber-600/50">
+                🔊 Buzzer
+              </button>
+              <button onclick="window.soundSys.playKalyeo()" class="bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 py-1.5 rounded border border-blue-600/50">
+                🔔 Kal-yeo
+              </button>
+              <button onclick="window.soundSys.playGamJeom()" class="bg-red-600/30 hover:bg-red-600/50 text-red-300 py-1.5 rounded border border-red-600/50">
+                ⚠️ Gamjeom
+              </button>
+              <button onclick="window.soundSys.playPoint()" class="bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 py-1.5 rounded border border-emerald-600/50">
+                🥊 Point
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tombol Aksi Simpan -->
+        <div class="mt-6 flex items-center justify-end space-x-3 border-t border-slate-800 pt-4">
+          <button onclick="app.toggleSettingsModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold">
+            Batal
+          </button>
+          <button onclick="saveSettingsFromModal()" class="px-6 py-2 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-black shadow-lg">
+            Simpan Setelan ✓
+          </button>
+        </div>
+
+      </div>
+    </div>
+  `;
+}
+
+function saveSettingsFromModal() {
+  const title = document.getElementById('set-title').value;
+  const court = document.getElementById('set-court').value;
+  const duration = document.getElementById('set-duration').value;
+  const pointGap = document.getElementById('set-gap').checked;
+  const muted = document.getElementById('set-mute').checked;
+  app.saveSettings(title, court, duration, pointGap, muted);
+}
+
+function addNewMatchPrompt() {
+  const number = prompt('Masukkan Nomor Partai (contoh: PARTAI #07):', `PARTAI #0${app.data.matches.length + 1}`);
+  if (!number) return;
+  const division = prompt('Masukkan Divisi/Kelas (contoh: Senior Putra -63 kg):', 'Senior Putra -63 kg');
+  const chung = prompt('Nama Atlet Sudut Biru (Chung):', 'Atlet Biru (Kontingen A)');
+  const hong = prompt('Nama Atlet Sudut Merah (Hong):', 'Atlet Merah (Kontingen B)');
+  
+  app.data.matches.push({
+    id: `M-0${app.data.matches.length + 1}`,
+    number,
+    category: 'kyorugi',
+    division: division || 'Kyorugi',
+    chung: chung || 'Chung',
+    hong: hong || 'Hong',
+    status: 'MENUNGGU'
+  });
+  app.notifyChange();
 }
 
