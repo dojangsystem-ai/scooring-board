@@ -156,7 +156,24 @@ const DEFAULT_STATE = {
 
 class AppState {
   constructor() {
-    this.data = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    const saved = localStorage.getItem('tkd_saved_state');
+    if (saved) {
+      try {
+        this.data = JSON.parse(saved);
+        this.data.kyorugi.timerRunning = false;
+        this.data.kyorugi.timerInterval = null;
+        this.data.medical.active = false;
+        this.data.medical.interval = null;
+        if (this.data.poomsaeFree) {
+          this.data.poomsaeFree.timerRunning = false;
+          this.data.poomsaeFree.timerInterval = null;
+        }
+      } catch (e) {
+        this.data = JSON.parse(JSON.stringify(DEFAULT_STATE));
+      }
+    } else {
+      this.data = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    }
     this.sync = new BoardSync((incoming) => this.handleSync(incoming));
   }
 
@@ -173,6 +190,9 @@ class AppState {
   notifyChange() {
     this.render();
     this.sync.broadcast('STATE_UPDATE', this.data);
+    try {
+      localStorage.setItem('tkd_saved_state', JSON.stringify(this.data));
+    } catch (e) {}
   }
 
   setCategory(cat) {

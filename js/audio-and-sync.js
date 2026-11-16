@@ -97,6 +97,29 @@ class SoundSynthesizer {
     // Nada ringan saat poin bertambah
     this.playBeep(1046.5, 0.08, 'sine');
   }
+
+  // Rhythmic Synth Beat untuk Poomsae Freestyle (128 BPM)
+  startFreestyleBeat() {
+    if (!this.soundEnabled || this.beatInterval) return;
+    this.init();
+    let step = 0;
+    this.beatInterval = setInterval(() => {
+      if (!this.soundEnabled) return;
+      if (step % 2 === 0) {
+        this.playBeep(110, 0.08, 'triangle'); // Kick bass
+      } else {
+        this.playBeep(1200, 0.03, 'sine'); // Hi-hat
+      }
+      step++;
+    }, 468);
+  }
+
+  stopFreestyleBeat() {
+    if (this.beatInterval) {
+      clearInterval(this.beatInterval);
+      this.beatInterval = null;
+    }
+  }
 }
 
 // Sinkronisasi Antar Tab / Jendela (Operator <-> Layar Tampilan LED)
