@@ -12,7 +12,7 @@ const DEFAULT_STATE = {
   matchNumber: 'PARTAI #04',
   selectedJudgeId: 'J1', // Untuk Mode Pad Juri (J1 s/d J5)
   settingsModalOpen: false,
-  
+
   // Konfigurasi Turnamen
   settings: {
     tournamentTitle: 'KEJUARAAN NASIONAL TAEKWONDO CHAMPIONSHIP 2026',
@@ -24,7 +24,7 @@ const DEFAULT_STATE = {
     judgeCount: 5,
     soundMuted: false
   },
-  
+
   // State Video Replay (IVR) Challenge
   ivr: {
     active: false,
@@ -192,7 +192,7 @@ class AppState {
     this.sync.broadcast('STATE_UPDATE', this.data);
     try {
       localStorage.setItem('tkd_saved_state', JSON.stringify(this.data));
-    } catch (e) {}
+    } catch (e) { }
   }
 
   setCategory(cat) {
@@ -520,7 +520,7 @@ class AppState {
     this.data.medical.active = true;
     this.data.medical.fighter = fighter;
     this.data.medical.seconds = 60;
-    
+
     if (this.data.medical.interval) clearInterval(this.data.medical.interval);
     this.data.medical.interval = setInterval(() => {
       if (this.data.medical.seconds > 0) {
@@ -612,128 +612,275 @@ class AppState {
     const printEl = document.getElementById('print-scoresheet');
     if (!printEl) return;
 
-    const { category, court, division, matchNumber, kyorugi, poomsaeRec } = this.data;
+    const { category, court, division, matchNumber, settings, kyorugi, poomsaeRec, poomsaeFree } = this.data;
     const now = new Date().toLocaleString('id-ID');
+    const tournament = settings.tournamentTitle || 'KEJUARAAN NASIONAL TAEKWONDO TAHUN 2026';
 
     let content = `
-      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; color: #111;">
-        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px;">
-          <h2 style="margin: 0; font-size: 16px; text-transform: uppercase;">KEJUARAAN NASIONAL TAEKWONDO CHAMPIONSHIP</h2>
-          <h1 style="margin: 5px 0; font-size: 20px; font-weight: bold;">BERITA ACARA & LEMBAR HASIL RESMI PERTANDINGAN</h1>
-          <p style="margin: 0; font-size: 11px; color: #555;">Official World Taekwondo (WT) Match Scoresheet</p>
+      <div style="font-family: Arial, Helvetica, sans-serif; max-width: 850px; margin: 0 auto; color: #000; padding: 10px; line-height: 1.3;">
+        <!-- Kop Surat Resmi WT & PBTI -->
+        <div style="border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+          <div style="border: 2px solid #000; font-weight: 900; font-size: 24px; padding: 4px 10px; letter-spacing: -1px;">WT</div>
+          <div style="text-align: center; flex: 1; padding: 0 10px;">
+            <div style="font-size: 11px; font-weight: bold; letter-spacing: 1px; color: #444; text-transform: uppercase;">PENGURUS BESAR TAEKWONDO INDONESIA / WORLD TAEKWONDO</div>
+            <div style="font-size: 17px; font-weight: 900; text-transform: uppercase; margin: 2px 0;">BERITA ACARA & LEMBAR HASIL RESMI PERTANDINGAN</div>
+            <div style="font-size: 10px; font-family: monospace; color: #666; text-transform: uppercase;">OFFICIAL MATCH PROTOCOL & SCORESHEET (${category.toUpperCase()})</div>
+          </div>
+          <div style="text-align: right; font-size: 10px; font-family: monospace; border-left: 1px solid #000; padding-left: 8px;">
+            <div>FORM: <b>${category === 'kyorugi' ? 'WT-FR-01' : (category === 'poomsae_rec' ? 'WT-FR-02' : 'WT-FR-03')}</b></div>
+            <div>VERSI: <b>2024-V2</b></div>
+            <div>STATUS: <b>RESMI</b></div>
+          </div>
         </div>
 
-        <table style="width: 100%; font-size: 12px; margin-bottom: 15px; border-collapse: collapse;">
+        <!-- Info Pertandingan / Metadata -->
+        <table style="width: 100%; font-size: 11px; margin-bottom: 10px; border-collapse: collapse; border: 1px solid #000; background: #fdfdfd;">
           <tr>
-            <td style="width: 25%; font-weight: bold; padding: 4px;">Ring / Court:</td>
-            <td style="width: 25%; padding: 4px;">${court}</td>
-            <td style="width: 25%; font-weight: bold; padding: 4px;">Nomor Partai:</td>
-            <td style="width: 25%; padding: 4px;">${matchNumber}</td>
+            <td style="width: 18%; font-weight: bold; padding: 3px 6px; border: 1px solid #ddd;">Nama Turnamen:</td>
+            <td style="width: 42%; font-weight: bold; padding: 3px 6px; border: 1px solid #ddd;">${tournament}</td>
+            <td style="width: 18%; font-weight: bold; padding: 3px 6px; border: 1px solid #ddd;">Gelanggang (Court):</td>
+            <td style="width: 22%; font-weight: bold; padding: 3px 6px; border: 1px solid #ddd;">${court}</td>
           </tr>
           <tr>
-            <td style="font-weight: bold; padding: 4px;">Divisi / Kelas:</td>
-            <td style="padding: 4px;">${division}</td>
-            <td style="font-weight: bold; padding: 4px;">Waktu Cetak:</td>
-            <td style="padding: 4px;">${now}</td>
+            <td style="font-weight: bold; padding: 3px 6px; border: 1px solid #ddd;">Nomor Partai:</td>
+            <td style="font-weight: bold; color: #b91c1c; padding: 3px 6px; border: 1px solid #ddd;">${matchNumber}</td>
+            <td style="font-weight: bold; padding: 3px 6px; border: 1px solid #ddd;">Waktu Cetak:</td>
+            <td style="padding: 3px 6px; border: 1px solid #ddd;">${now}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; padding: 3px 6px; border: 1px solid #ddd;">Divisi / Kategori:</td>
+            <td style="padding: 3px 6px; border: 1px solid #ddd;">${division}</td>
+            <td style="font-weight: bold; padding: 3px 6px; border: 1px solid #ddd;">Babak Pertandingan:</td>
+            <td style="padding: 3px 6px; border: 1px solid #ddd;">Penyisihan / Semifinal / Final</td>
           </tr>
         </table>
     `;
 
     if (category === 'kyorugi') {
+      const isPtf = kyorugi.winReason && kyorugi.winReason.toLowerCase().includes('poin');
+      const isPtg = kyorugi.winReason && kyorugi.winReason.toLowerCase().includes('gap');
+      const isRsc = kyorugi.winReason && kyorugi.winReason.toLowerCase().includes('rsc');
+      const isWdr = kyorugi.winReason && kyorugi.winReason.toLowerCase().includes('wdr');
+
       content += `
-        <table class="print-table">
+        <!-- Data Atlet Kyorugi -->
+        <table style="width: 100%; font-size: 11px; margin-bottom: 10px; border-collapse: collapse; border: 2px solid #000;">
           <thead>
             <tr>
-              <th>Ronde</th>
-              <th>CHUNG (BIRU)<br/><b>${kyorugi.chung.name}</b></th>
-              <th>HONG (MERAH)<br/><b>${kyorugi.hong.name}</b></th>
-              <th>Pemenang Ronde</th>
-              <th>Keterangan</th>
+              <th style="width: 50%; background: #0056b3; color: #fff; padding: 4px; text-transform: uppercase;">CHUNG (청) - SUDUT BIRU</th>
+              <th style="width: 50%; background: #c82333; color: #fff; padding: 4px; text-transform: uppercase;">HONG (홍) - SUDUT MERAH</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding: 6px; border: 1px solid #ccc; background: #f0f7ff;">
+                <div><b>Nama Atlet:</b> <span style="font-size: 13px; font-weight: bold; color: #004085;">${kyorugi.chung.name}</span></div>
+                <div><b>Tim / Kontingen:</b> ${kyorugi.chung.team}</div>
+                <div><b>No. Lisensi / GAL:</b> INA-${kyorugi.chung.team.substring(0, 3).toUpperCase()}-01</div>
+                <div><b>Sisa Kuota Replay:</b> ${kyorugi.chung.videoQuota} Kartu</div>
+              </td>
+              <td style="padding: 6px; border: 1px solid #ccc; background: #fff5f5;">
+                <div><b>Nama Atlet:</b> <span style="font-size: 13px; font-weight: bold; color: #721c24;">${kyorugi.hong.name}</span></div>
+                <div><b>Tim / Kontingen:</b> ${kyorugi.hong.team}</div>
+                <div><b>No. Lisensi / GAL:</b> INA-${kyorugi.hong.team.substring(0, 3).toUpperCase()}-02</div>
+                <div><b>Sisa Kuota Replay:</b> ${kyorugi.hong.videoQuota} Kartu</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Tabel Rincian Ronde WT Best of 3 -->
+        <table style="width: 100%; font-size: 11px; text-align: center; border-collapse: collapse; border: 1px solid #000; margin-bottom: 10px;">
+          <thead>
+            <tr style="background: #e9ecef; font-weight: bold; border-bottom: 1px solid #000;">
+              <th rowspan="2" style="border: 1px solid #000; padding: 4px; width: 12%;">Ronde</th>
+              <th colspan="2" style="border: 1px solid #000; padding: 4px; background: #d0e2ff; color: #003366;">CHUNG (BIRU)</th>
+              <th colspan="2" style="border: 1px solid #000; padding: 4px; background: #ffd7d9; color: #660000;">HONG (MERAH)</th>
+              <th rowspan="2" style="border: 1px solid #000; padding: 4px; width: 22%;">Pemenang Ronde</th>
+              <th rowspan="2" style="border: 1px solid #000; padding: 4px; width: 30%;">Metode & Alasan Kemenangan</th>
+            </tr>
+            <tr style="background: #f8f9fa; font-size: 10px; border-bottom: 1px solid #000;">
+              <th style="border: 1px solid #000; padding: 2px;">Poin</th>
+              <th style="border: 1px solid #000; padding: 2px;">Gam-jeom</th>
+              <th style="border: 1px solid #000; padding: 2px;">Poin</th>
+              <th style="border: 1px solid #000; padding: 2px;">Gam-jeom</th>
             </tr>
           </thead>
           <tbody>
             ${[1, 2, 3].map(r => {
-              const hist = kyorugi.roundHistory.find(h => h.round === r);
-              return `
-                <tr>
-                  <td><b>Ronde ${r}</b></td>
-                  <td>${hist ? `${hist.chungScore} Poin` : (r === kyorugi.round ? `${kyorugi.chung.score} Poin` : '-')}</td>
-                  <td>${hist ? `${hist.hongScore} Poin` : (r === kyorugi.round ? `${kyorugi.hong.score} Poin` : '-')}</td>
-                  <td><b>${hist ? (hist.winner === 'chung' ? 'CHUNG (BIRU)' : 'HONG (MERAH)') : '-'}</b></td>
-                  <td>${hist ? hist.reason : '-'}</td>
+        const hist = kyorugi.roundHistory.find(h => h.round === r);
+        const isCurrentActive = (r === kyorugi.round && !hist);
+        const cPts = hist ? hist.chungScore : (isCurrentActive ? kyorugi.chung.score : '-');
+        const cGj = hist ? hist.chungGamjeom : (isCurrentActive ? kyorugi.chung.gamjeom : '-');
+        const hPts = hist ? hist.hongScore : (isCurrentActive ? kyorugi.hong.score : '-');
+        const hGj = hist ? hist.hongGamjeom : (isCurrentActive ? kyorugi.hong.gamjeom : '-');
+        const winnerText = hist ? (hist.winner === 'chung' ? 'CHUNG (BIRU)' : 'HONG (MERAH)') : (isCurrentActive ? 'Sedang Berjalan' : '-');
+        const reasonText = hist ? hist.reason : (isCurrentActive ? 'Ronde Sedang Berlangsung' : '-');
+
+        return `
+                <tr style="border-bottom: 1px solid #ccc; ${hist && hist.winner === 'chung' ? 'background: #f4f8ff;' : (hist && hist.winner === 'hong' ? 'background: #fff6f6;' : '')}">
+                  <td style="border: 1px solid #000; padding: 4px; font-weight: bold;">Ronde ${r}</td>
+                  <td style="border: 1px solid #000; padding: 4px; font-weight: bold; color: #0056b3; font-size: 13px;">${cPts}</td>
+                  <td style="border: 1px solid #000; padding: 4px;">${cGj}</td>
+                  <td style="border: 1px solid #000; padding: 4px; font-weight: bold; color: #c82333; font-size: 13px;">${hPts}</td>
+                  <td style="border: 1px solid #000; padding: 4px;">${hGj}</td>
+                  <td style="border: 1px solid #000; padding: 4px; font-weight: bold;">${winnerText}</td>
+                  <td style="border: 1px solid #000; padding: 4px; text-align: left; font-size: 10px;">${reasonText}</td>
                 </tr>
               `;
-            }).join('')}
+      }).join('')}
           </tbody>
         </table>
 
-        <div style="margin-top: 15px; padding: 10px; border: 2px solid #000; background: #fafafa; text-align: center;">
-          <div style="font-size: 12px; font-weight: bold;">PEMENANG PARTAI RESMI (MATCH WINNER):</div>
-          <div style="font-size: 18px; font-weight: bold; margin: 4px 0;">
-            ${kyorugi.winner ? (kyorugi.winner === 'chung' ? `${kyorugi.chung.name} (CHUNG / BIRU)` : `${kyorugi.hong.name} (HONG / MERAH)`) : 'Sedang Berlangsung'}
+        <!-- Kotak Rekapitulasi & Keputusan Akhir -->
+        <div style="border: 2px solid #000; padding: 8px; background: #fff8e1; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #000; padding-bottom: 4px; margin-bottom: 6px;">
+            <div style="font-size: 11px; font-weight: bold; text-transform: uppercase;">KEPUTUSAN PEMENANG RESMI (OFFICIAL MATCH WINNER):</div>
+            <div style="font-size: 11px; font-weight: bold;">SKOR RONDE: <span style="font-size: 14px;">${kyorugi.chung.roundsWon} - ${kyorugi.hong.roundsWon}</span></div>
           </div>
-          <div style="font-size: 12px;">Skor Ronde: Chung ${kyorugi.chung.roundsWon} - ${kyorugi.hong.roundsWon} Hong | Gam-jeom: ${kyorugi.chung.gamjeom} vs ${kyorugi.hong.gamjeom}</div>
+          <div style="text-align: center; font-size: 16px; font-weight: 900; margin: 4px 0; color: ${kyorugi.winner === 'chung' ? '#0056b3' : (kyorugi.winner === 'hong' ? '#c82333' : '#000')};">
+            ${kyorugi.winner ? (kyorugi.winner === 'chung' ? `[PEMENANG: CHUNG / BIRU] ${kyorugi.chung.name} (${kyorugi.chung.team})` : `[PEMENANG: HONG / MERAH] ${kyorugi.hong.name} (${kyorugi.hong.team})`) : 'STATUS: BELUM SELESAI / SEDANG BERLANGSUNG'}
+          </div>
+          <div style="font-size: 10px; font-weight: bold; margin-top: 6px; display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; text-align: center; border-top: 1px solid #ccc; padding-top: 4px;">
+            <div>[ ${isPtf ? 'X' : ' '} ] PTF</div>
+            <div>[ ${isPtg ? 'X' : ' '} ] PTG</div>
+            <div>[ ${isRsc ? 'X' : ' '} ] RSC</div>
+            <div>[ ${isWdr ? 'X' : ' '} ] WDR</div>
+            <div>[   ] DSQ</div>
+            <div>[   ] PUN</div>
+            <div>[   ] SUP</div>
+            <div>[   ] GDP</div>
+          </div>
         </div>
       `;
-    } else {
+    } else if (category === 'poomsae_rec') {
       content += `
-        <div style="margin-bottom: 10px; font-size: 13px;">
-          <b>Peserta:</b> ${poomsaeRec.athleteName} (${poomsaeRec.team}) | <b>Jurus:</b> ${poomsaeRec.poomsaeName}
-        </div>
-        <table class="print-table">
+        <!-- Data Atlet Poomsae Recognised -->
+        <table style="width: 100%; font-size: 11px; margin-bottom: 10px; border-collapse: collapse; border: 1px solid #000;">
+          <tr style="background: #f8f9fa;">
+            <td style="width: 20%; font-weight: bold; padding: 4px 6px; border: 1px solid #ccc;">Nama Peserta:</td>
+            <td style="width: 40%; font-weight: bold; font-size: 13px; padding: 4px 6px; border: 1px solid #ccc;">${poomsaeRec.athleteName}</td>
+            <td style="width: 20%; font-weight: bold; padding: 4px 6px; border: 1px solid #ccc;">Kontingen / Tim:</td>
+            <td style="width: 20%; padding: 4px 6px; border: 1px solid #ccc;">${poomsaeRec.team}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; padding: 4px 6px; border: 1px solid #ccc;">Jurus Wajib 1:</td>
+            <td style="font-weight: bold; padding: 4px 6px; border: 1px solid #ccc;">${poomsaeRec.poomsaeName}</td>
+            <td style="font-weight: bold; padding: 4px 6px; border: 1px solid #ccc;">Skala Nilai:</td>
+            <td style="padding: 4px 6px; border: 1px solid #ccc;">10.00 (WT Standard)</td>
+          </tr>
+        </table>
+
+        <!-- Tabel Truncated Mean Panel 5 Juri -->
+        <table style="width: 100%; font-size: 11px; text-align: center; border-collapse: collapse; border: 1px solid #000; margin-bottom: 10px;">
           <thead>
-            <tr>
-              <th>Juri</th>
-              <th>Akurasi (Max 4.0)</th>
-              <th>Presentasi (Max 6.0)</th>
-              <th>Total</th>
-              <th>Status Truncated</th>
+            <tr style="background: #e9ecef; font-weight: bold; border-bottom: 1px solid #000;">
+              <th style="border: 1px solid #000; padding: 4px; width: 14%;">Panel Juri</th>
+              <th style="border: 1px solid #000; padding: 4px; width: 26%;">AKURASI (Max 4.00)<br/><span style="font-size: 9px; font-weight: normal;">Kuda-kuda, Tangkisan, Tendangan</span></th>
+              <th style="border: 1px solid #000; padding: 4px; width: 26%;">PRESENTASI (Max 6.00)<br/><span style="font-size: 9px; font-weight: normal;">Tenaga, Kecepatan, Irama</span></th>
+              <th style="border: 1px solid #000; padding: 4px; width: 16%;">Total Nilai</th>
+              <th style="border: 1px solid #000; padding: 4px; width: 18%;">Status Truncated</th>
             </tr>
           </thead>
           <tbody>
             ${poomsaeRec.judges.map(j => {
-              const isDroppedAcc = j.id === poomsaeRec.result.droppedAccMin || j.id === poomsaeRec.result.droppedAccMax;
-              const isDroppedPres = j.id === poomsaeRec.result.droppedPresMin || j.id === poomsaeRec.result.droppedPresMax;
-              return `
-                <tr>
-                  <td><b>${j.id}</b></td>
-                  <td>${isDroppedAcc ? `<s>${j.accuracy}</s>` : j.accuracy}</td>
-                  <td>${isDroppedPres ? `<s>${j.presentation}</s>` : j.presentation}</td>
-                  <td>${(j.accuracy + j.presentation).toFixed(2)}</td>
-                  <td>${(isDroppedAcc || isDroppedPres) ? 'Dibuang (Min/Max)' : 'Dihitung'}</td>
+        const isDroppedAccMin = j.id === poomsaeRec.result.droppedAccMin;
+        const isDroppedAccMax = j.id === poomsaeRec.result.droppedAccMax;
+        const isDroppedPresMin = j.id === poomsaeRec.result.droppedPresMin;
+        const isDroppedPresMax = j.id === poomsaeRec.result.droppedPresMax;
+        const isDroppedAny = isDroppedAccMin || isDroppedAccMax || isDroppedPresMin || isDroppedPresMax;
+
+        return `
+                <tr style="border-bottom: 1px solid #ddd; ${isDroppedAny ? 'background: #fff0f0; color: #888;' : ''}">
+                  <td style="border: 1px solid #000; padding: 4px; font-weight: bold; color: #000;">${j.id}</td>
+                  <td style="border: 1px solid #000; padding: 4px; ${isDroppedAccMin || isDroppedAccMax ? 'text-decoration: line-through; color: #d00;' : 'font-weight: bold;'}">${j.accuracy.toFixed(2)} ${(isDroppedAccMin ? '(Min)' : (isDroppedAccMax ? '(Max)' : ''))}</td>
+                  <td style="border: 1px solid #000; padding: 4px; ${isDroppedPresMin || isDroppedPresMax ? 'text-decoration: line-through; color: #d00;' : 'font-weight: bold;'}">${j.presentation.toFixed(2)} ${(isDroppedPresMin ? '(Min)' : (isDroppedPresMax ? '(Max)' : ''))}</td>
+                  <td style="border: 1px solid #000; padding: 4px; font-weight: bold; color: #000;">${(j.accuracy + j.presentation).toFixed(2)}</td>
+                  <td style="border: 1px solid #000; padding: 4px; font-size: 10px; font-weight: bold; color: ${isDroppedAny ? '#c00' : '#080'};">${isDroppedAny ? 'DIBUANG (Drop)' : 'DIHITUNG'}</td>
                 </tr>
               `;
-            }).join('')}
+      }).join('')}
           </tbody>
           <tfoot>
-            <tr style="font-weight: bold; background: #eee;">
-              <td>SKOR AKHIR</td>
-              <td>${poomsaeRec.result.accuracyFinal}</td>
-              <td>${poomsaeRec.result.presentationFinal}</td>
-              <td colspan="2" style="font-size: 15px;">TOTAL: ${poomsaeRec.result.totalScore}</td>
+            <tr style="background: #e2f0cb; font-weight: 900; font-size: 12px; border-top: 2px solid #000;">
+              <td style="border: 1px solid #000; padding: 5px;">RATA-RATA RESMI</td>
+              <td style="border: 1px solid #000; padding: 5px; color: #003366;">${poomsaeRec.result.accuracyFinal}</td>
+              <td style="border: 1px solid #000; padding: 5px; color: #003366;">${poomsaeRec.result.presentationFinal}</td>
+              <td colspan="2" style="border: 1px solid #000; padding: 5px; font-size: 15px; color: #0b6623;">
+                SKOR TOTAL: ${poomsaeRec.result.totalScore}
+              </td>
             </tr>
           </tfoot>
         </table>
       `;
+    } else {
+      content += `
+        <!-- Data Atlet Freestyle -->
+        <table style="width: 100%; font-size: 11px; margin-bottom: 10px; border-collapse: collapse; border: 1px solid #000;">
+          <tr style="background: #f8f9fa;">
+            <td style="width: 20%; font-weight: bold; padding: 4px 6px; border: 1px solid #ccc;">Nama Peserta:</td>
+            <td style="width: 40%; font-weight: bold; font-size: 13px; padding: 4px 6px; border: 1px solid #ccc;">${poomsaeFree.athleteName}</td>
+            <td style="width: 20%; font-weight: bold; padding: 4px 6px; border: 1px solid #ccc;">Kontingen / Tim:</td>
+            <td style="width: 20%; padding: 4px 6px; border: 1px solid #ccc;">${poomsaeFree.team}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; padding: 4px 6px; border: 1px solid #ccc;">Durasi Musik:</td>
+            <td style="padding: 4px 6px; border: 1px solid #ccc;">90 - 100 Detik (Standard WT)</td>
+            <td style="font-weight: bold; padding: 4px 6px; border: 1px solid #ccc;">Skala Nilai:</td>
+            <td style="padding: 4px 6px; border: 1px solid #ccc;">Teknik 6.00 + Presentasi 4.00</td>
+          </tr>
+        </table>
+
+        <!-- Ringkasan Nilai Freestyle -->
+        <table style="width: 100%; font-size: 11px; text-align: center; border-collapse: collapse; border: 1px solid #000; margin-bottom: 10px;">
+          <tr style="background: #e9ecef; font-weight: bold;">
+            <th style="border: 1px solid #000; padding: 5px; width: 33%;">1. TEKNIK WAJIB (Max 6.00)</th>
+            <th style="border: 1px solid #000; padding: 5px; width: 33%;">2. PRESENTASI (Max 4.00)</th>
+            <th style="border: 1px solid #000; padding: 5px; width: 34%;">SKOR AKHIR RESMI</th>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #000; padding: 8px; font-size: 15px; font-weight: bold; color: #4a154b;">${poomsaeFree.result.technicalScore.toFixed(2)}</td>
+            <td style="border: 1px solid #000; padding: 8px; font-size: 15px; font-weight: bold; color: #4a154b;">${poomsaeFree.result.presentationScore.toFixed(2)}</td>
+            <td style="border: 1px solid #000; padding: 8px; font-size: 20px; font-weight: 900; color: #0b6623; background: #e8f5e9;">${poomsaeFree.result.finalScore.toFixed(2)} / 10.00</td>
+          </tr>
+        </table>
+      `;
     }
 
+    // Blok 4 Tanda Tangan Resmi Pengesahan
     content += `
-        <div style="margin-top: 35px; display: flex; justify-content: space-between; font-size: 12px; text-align: center;">
-          <div style="width: 30%;">
-            <p>Wasit Tengah (Center Referee),</p>
-            <br/><br/><br/>
-            <p style="border-top: 1px solid #000; margin: 0; padding-top: 5px;">( .................................... )</p>
+        <div style="margin-top: 25px; border-top: 1px solid #000; padding-top: 10px;">
+          <div style="font-size: 10px; font-weight: bold; text-transform: uppercase; text-align: center; margin-bottom: 15px; letter-spacing: 0.5px; color: #555;">
+            PENGESAHAN DEWAN WASIT & PANITIA PERTANDINGAN (OFFICIAL RATIFICATION)
           </div>
-          <div style="width: 30%;">
-            <p>Operator Meja,</p>
-            <br/><br/><br/>
-            <p style="border-top: 1px solid #000; margin: 0; padding-top: 5px;">( .................................... )</p>
-          </div>
-          <div style="width: 30%;">
-            <p>Ketua Pertandingan (CS),</p>
-            <br/><br/><br/>
-            <p style="border-top: 1px solid #000; margin: 0; padding-top: 5px;">( .................................... )</p>
-          </div>
+          <table style="width: 100%; font-size: 11px; text-align: center; border-collapse: collapse;">
+            <tr>
+              <td style="width: 25%; vertical-align: top;">
+                <div>Wasit Tengah (Referee)</div>
+                <div style="height: 45px;"></div>
+                <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto; padding-top: 3px; font-weight: bold;">( ................................ )</div>
+                <div style="font-size: 9px; color: #555;">Lisensi Wasit PBTI / WT</div>
+              </td>
+              <td style="width: 25%; vertical-align: top;">
+                <div>Dewan Juri (Judges)</div>
+                <div style="height: 45px;"></div>
+                <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto; padding-top: 3px; font-weight: bold;">( ................................ )</div>
+                <div style="font-size: 9px; color: #555;">Corner Judge Panel</div>
+              </td>
+              <td style="width: 25%; vertical-align: top;">
+                <div>Juri Replay (Review Jury)</div>
+                <div style="height: 45px;"></div>
+                <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto; padding-top: 3px; font-weight: bold;">( ................................ )</div>
+                <div style="font-size: 9px; color: #555;">Video Replay Official</div>
+              </td>
+              <td style="width: 25%; vertical-align: top;">
+                <div>Ketua Pertandingan (CS/TD)</div>
+                <div style="height: 45px;"></div>
+                <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto; padding-top: 3px; font-weight: bold;">( ................................ )</div>
+                <div style="font-size: 9px; color: #555;">Technical Delegate PBTI</div>
+              </td>
+            </tr>
+          </table>
         </div>
       </div>
     `;

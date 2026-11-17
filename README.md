@@ -58,6 +58,12 @@ Buka file **`index.html`** yang terhubung secara modular dengan sub-folder `css/
 
 ---
 
+## 🖨️ Cetak Berita Acara Pertandingan Resmi Standar WT
+- Klik tombol **🖨️ Cetak** pada bilah navigasi atau tombol **🖨️ Cetak Berita Acara** setelah pertandingan usai. Sistem secara otomatis menyusun dan mencetak lembar Berita Acara Resmi (*Official Match Protocol & Scoresheet*) standar World Taekwondo (WT-FR-01, WT-FR-02, WT-FR-03) lengkap dengan rincian poin per-ronde, log kartu IVR coach, catatan penalti, serta blok 4 tanda tangan dewan wasit dan Technical Delegate.
+- Template cetak mandiri A4 juga dapat dibuka dan dicetak langsung pada berkas: **[form_berita_acara_wt.html](file:///c:/Users/susen/OneDrive/Documents/githublab/scooring%20board/form_berita_acara_wt.html)** dan spesifikasi dokumentasi pada **[FORM_BERITA_ACARA_STANDAR_WT.md](file:///c:/Users/susen/OneDrive/Documents/githublab/scooring%20board/FORM_BERITA_ACARA_STANDAR_WT.md)**.
+
+---
+
 ## ⌨️ Shortcut Keyboard untuk Operator
 - **[Spasi]**: Mulai / Jeda Timer (*Kye-sok / Kal-yeo*)
 - **[B]**: Bunyikan Klakson Buzzer

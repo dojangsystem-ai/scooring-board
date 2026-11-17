@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Berita Acara Resmi Pertandingan - Standar World Taekwondo (WT)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .page-break {
+        page-break-after: always;
+        break-after: page;
+      }
+      .sheet-container {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+      @page {
+        size: A4 portrait;
+        margin: 12mm 15mm;
+      }
+    }
+    input[type="text"], input[type="number"], select {
+      background: transparent;
+      border-bottom: 1px dashed #64748b;
+    }
+    input:focus {
+      outline: none;
+      border-bottom: 1px solid #0284c7;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen py-8">
+
+  <!-- Floating Print & Filter Toolbar (Non-Printable) -->
+  <div class="no-print max-w-4xl mx-auto mb-6 bg-slate-900 text-white p-4 rounded-xl shadow-xl flex flex-wrap items-center justify-between gap-4 border border-slate-700">
+    <div class="flex items-center space-x-3">
+      <div class="w-9 h-9 bg-red-600 rounded-lg flex items-center justify-center font-bold text-white text-lg shadow">
+        WT
+      </div>
+      <div>
+        <h1 class="text-sm font-black uppercase tracking-wider text-slate-200">World Taekwondo Official Match Protocol</h1>
+        <p class="text-xs text-slate-400">Template Cetak Berita Acara Pertandingan & Lembar Skor Resmi</p>
+      </div>
+    </div>
+
+    <!-- Category Selector -->
+    <div class="flex items-center space-x-2 bg-slate-800 p-1 rounded-lg border border-slate-700">
+      <button onclick="switchTab('kyorugi')" id="btn-kyorugi" class="px-3 py-1.5 text-xs font-bold rounded bg-blue-600 text-white shadow">
+        🥋 Kyorugi (Tarung)
+      </button>
+      <button onclick="switchTab('poomsae_rec')" id="btn-poomsae-rec" class="px-3 py-1.5 text-xs font-medium rounded text-slate-300 hover:text-white">
+        🏅 Poomsae Recognised
+      </button>
+      <button onclick="switchTab('poomsae_free')" id="btn-poomsae-free" class="px-3 py-1.5 text-xs font-medium rounded text-slate-300 hover:text-white">
+        ⚡ Freestyle
+      </button>
+    </div>
+
+    <div class="flex items-center space-x-2">
+      <button onclick="window.print()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg shadow-lg flex items-center space-x-1.5 transition">
+        <span>🖨️</span> <span>Cetak Form / Simpan PDF</span>
+      </button>
+      <button onclick="fillSampleData()" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold text-xs rounded-lg transition" title="Isi dengan contoh data pertandingan">
+        ✨ Contoh Data
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 1. KYORUGI OFFICIAL MATCH PROTOCOL SHEET -->
+  <!-- ========================================================================= -->
+  <div id="sheet-kyorugi" class="sheet-container max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-300">
+    <!-- Header -->
+    <div class="border-b-2 border-black pb-3 mb-4 flex items-center justify-between">
+      <div class="w-16 h-16 flex items-center justify-center border-2 border-black font-black text-xl tracking-tighter">
+        WT
+      </div>
+      <div class="text-center flex-1 px-4">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-slate-600">PENGURUS BESAR TAEKWONDO INDONESIA / WORLD TAEKWONDO</h2>
+        <h1 class="text-lg font-black uppercase text-black tracking-tight">BERITA ACARA & LEMBAR HASIL RESMI PERTANDINGAN KYORUGI</h1>
+        <p class="text-[11px] font-mono text-slate-500 uppercase tracking-wider">OFFICIAL KYORUGI MATCH PROTOCOL & SCORESHEET (BEST OF 3)</p>
+      </div>
+      <div class="text-right text-[11px] font-mono border-l-2 border-black pl-3 leading-tight">
+        <div>FORM: <b>WT-FR-01</b></div>
+        <div>VERSI: <b>2024-V2</b></div>
+        <div>STATUS: <b>RESMI</b></div>
+      </div>
+    </div>
+
+    <!-- Metadata Grid -->
+    <div class="grid grid-cols-12 gap-2 text-xs mb-4 border border-black p-2 bg-slate-50">
+      <div class="col-span-8 flex items-center space-x-2">
+        <span class="font-bold uppercase w-28">Nama Turnamen:</span>
+        <input type="text" id="k-tournament" class="flex-1 font-semibold" value="KEJUARAAN NASIONAL TAEKWONDO TAHUN 2026">
+      </div>
+      <div class="col-span-4 flex items-center space-x-2">
+        <span class="font-bold uppercase w-20">Gelanggang:</span>
+        <input type="text" id="k-court" class="flex-1 font-bold text-center border-b border-black" value="COURT 1">
+      </div>
+
+      <div class="col-span-4 flex items-center space-x-2">
+        <span class="font-bold uppercase w-28">Nomor Partai:</span>
+        <input type="text" id="k-match-no" class="flex-1 font-black text-center border-b border-black text-red-600" value="MATCH #104">
+      </div>
+      <div class="col-span-4 flex items-center space-x-2">
+        <span class="font-bold uppercase w-20">Tanggal:</span>
+        <input type="text" id="k-date" class="flex-1" value="17 November 2026">
+      </div>
+      <div class="col-span-4 flex items-center space-x-2">
+        <span class="font-bold uppercase w-20">Babak:</span>
+        <input type="text" id="k-phase" class="flex-1 font-semibold" value="Semifinal">
+      </div>
+
+      <div class="col-span-6 flex items-center space-x-2">
+        <span class="font-bold uppercase w-28">Divisi / Umur:</span>
+        <input type="text" id="k-division" class="flex-1" value="Senior Putra (Male)">
+      </div>
+      <div class="col-span-6 flex items-center space-x-2">
+        <span class="font-bold uppercase w-24">Kelas Berat:</span>
+        <input type="text" id="k-weight" class="flex-1 font-semibold" value="Under 68 kg (Featherweight)">
+      </div>
+    </div>
+
+    <!-- Contestants (Chung vs Hong) Table -->
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <!-- Chung Box -->
+      <div class="border-2 border-blue-600 rounded p-2.5 bg-blue-50/40">
+        <div class="bg-blue-600 text-white font-black text-xs px-2 py-0.5 uppercase tracking-wider flex justify-between items-center rounded-sm mb-2">
+          <span>CHUNG (청) - BIRU</span>
+          <span class="text-[10px] font-normal">Sudut Biru</span>
+        </div>
+        <table class="w-full text-xs space-y-1">
+          <tr>
+            <td class="font-bold w-24 py-0.5">Nama Atlet:</td>
+            <td><input type="text" id="k-chung-name" class="w-full font-bold uppercase text-blue-900" value="BAMBANG WIJAYA"></td>
+          </tr>
+          <tr>
+            <td class="font-bold py-0.5">Tim/Kontingen:</td>
+            <td><input type="text" id="k-chung-team" class="w-full" value="JAWA BARAT (KAB. BOGOR)"></td>
+          </tr>
+          <tr>
+            <td class="font-bold py-0.5">No. Lisensi/GAL:</td>
+            <td><input type="text" id="k-chung-gal" class="w-full font-mono text-[11px]" value="INA-19980421"></td>
+          </tr>
+          <tr>
+            <td class="font-bold py-0.5">Nama Pelatih:</td>
+            <td><input type="text" id="k-chung-coach" class="w-full" value="Sabeum Nim Hendra (INA)"></td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Hong Box -->
+      <div class="border-2 border-red-600 rounded p-2.5 bg-red-50/40">
+        <div class="bg-red-600 text-white font-black text-xs px-2 py-0.5 uppercase tracking-wider flex justify-between items-center rounded-sm mb-2">
+          <span>HONG (홍) - MERAH</span>
+          <span class="text-[10px] font-normal">Sudut Merah</span>
+        </div>
+        <table class="w-full text-xs space-y-1">
+          <tr>
+            <td class="font-bold w-24 py-0.5">Nama Atlet:</td>
+            <td><input type="text" id="k-hong-name" class="w-full font-bold uppercase text-red-900" value="DIMAS PRASETYO"></td>
+          </tr>
+          <tr>
+            <td class="font-bold py-0.5">Tim/Kontingen:</td>
+            <td><input type="text" id="k-hong-team" class="w-full" value="DKI JAKARTA (JAKSEL)"></td>
+          </tr>
+          <tr>
+            <td class="font-bold py-0.5">No. Lisensi/GAL:</td>
+            <td><input type="text" id="k-hong-gal" class="w-full font-mono text-[11px]" value="INA-20011105"></td>
+          </tr>
+          <tr>
+            <td class="font-bold py-0.5">Nama Pelatih:</td>
+            <td><input type="text" id="k-hong-coach" class="w-full" value="Sabeum Nim Suryo (INA)"></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Round-by-Round Breakdown Table (WT Best of 3) -->
+    <div class="mb-4">
+      <div class="text-[11px] font-black uppercase tracking-wider bg-slate-800 text-white px-2 py-1 flex justify-between items-center">
+        <span>HASIL SKOR PER-RONDE (BEST OF 3 ROUND SYSTEM)</span>
+        <span class="text-[10px] font-normal">Skor di-reset ke 0 - 0 pada tiap awal ronde</span>
+      </div>
+      <table class="w-full text-xs border border-black text-center border-collapse">
+        <thead>
+          <tr class="bg-slate-200 border-b border-black">
+            <th class="border border-black p-1 w-16">Ronde</th>
+            <th class="border border-black p-1 bg-blue-100 text-blue-900" colspan="2">CHUNG (BIRU)</th>
+            <th class="border border-black p-1 bg-red-100 text-red-900" colspan="2">HONG (MERAH)</th>
+            <th class="border border-black p-1 w-32">Pemenang Ronde</th>
+            <th class="border border-black p-1">Keterangan / Kriteria Kemenangan</th>
+          </tr>
+          <tr class="bg-slate-100 text-[10px] border-b border-black font-semibold">
+            <th class="border border-black"></th>
+            <th class="border border-black p-0.5 w-16 text-blue-800">Poin</th>
+            <th class="border border-black p-0.5 w-16 text-blue-800">Gam-jeom</th>
+            <th class="border border-black p-0.5 w-16 text-red-800">Poin</th>
+            <th class="border border-black p-0.5 w-16 text-red-800">Gam-jeom</th>
+            <th class="border border-black p-0.5">Sudut</th>
+            <th class="border border-black p-0.5">Alasan (Poin Akhir / PTG 12pt / Tie-Break)</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-black font-mono">
+          <!-- Ronde 1 -->
+          <tr>
+            <td class="border border-black font-bold bg-slate-100">Ronde 1</td>
+            <td class="border border-black font-bold text-blue-700"><input type="number" class="w-12 text-center" value="12"></td>
+            <td class="border border-black"><input type="number" class="w-10 text-center" value="1"></td>
+            <td class="border border-black font-bold text-red-700"><input type="number" class="w-12 text-center" value="8"></td>
+            <td class="border border-black"><input type="number" class="w-10 text-center" value="2"></td>
+            <td class="border border-black font-bold text-blue-600 bg-blue-50/50">CHUNG (BIRU)</td>
+            <td class="border border-black text-left px-2 font-sans text-[11px]">Menang Skor Akhir (12 - 8)</td>
+          </tr>
+          <!-- Ronde 2 -->
+          <tr>
+            <td class="border border-black font-bold bg-slate-100">Ronde 2</td>
+            <td class="border border-black font-bold text-blue-700"><input type="number" class="w-12 text-center" value="6"></td>
+            <td class="border border-black"><input type="number" class="w-10 text-center" value="2"></td>
+            <td class="border border-black font-bold text-red-700"><input type="number" class="w-12 text-center" value="7"></td>
+            <td class="border border-black"><input type="number" class="w-10 text-center" value="0"></td>
+            <td class="border border-black font-bold text-red-600 bg-red-50/50">HONG (MERAH)</td>
+            <td class="border border-black text-left px-2 font-sans text-[11px]">Menang Skor Akhir (6 - 7)</td>
+          </tr>
+          <!-- Ronde 3 -->
+          <tr>
+            <td class="border border-black font-bold bg-slate-100">Ronde 3</td>
+            <td class="border border-black font-bold text-blue-700"><input type="number" class="w-12 text-center" value="15"></td>
+            <td class="border border-black"><input type="number" class="w-10 text-center" value="1"></td>
+            <td class="border border-black font-bold text-red-700"><input type="number" class="w-12 text-center" value="3"></td>
+            <td class="border border-black"><input type="number" class="w-10 text-center" value="3"></td>
+            <td class="border border-black font-bold text-blue-600 bg-blue-50/50">CHUNG (BIRU)</td>
+            <td class="border border-black text-left px-2 font-sans text-[11px]">PTG (Point Gap 12 Poin: 15 - 3)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Video Replay & Match Decision Box -->
+    <div class="grid grid-cols-12 gap-3 mb-4">
+      <!-- IVR Log -->
+      <div class="col-span-6 border border-black p-2 bg-slate-50 text-[11px]">
+        <div class="font-bold uppercase border-b border-black pb-1 mb-1.5 flex justify-between">
+          <span>CATATAN INSTANT VIDEO REPLAY (IVR)</span>
+          <span class="text-[9px] text-slate-500">KARTU COACH</span>
+        </div>
+        <table class="w-full text-center border-collapse">
+          <thead>
+            <tr class="bg-slate-200 text-[10px] border border-slate-400">
+              <th class="p-0.5">Rnd</th>
+              <th class="p-0.5">Sudut</th>
+              <th class="p-0.5 text-left">Objek Banding</th>
+              <th class="p-0.5">Hasil</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-300 font-mono text-[10px]">
+            <tr>
+              <td>R2</td>
+              <td class="text-blue-600 font-bold">CHUNG</td>
+              <td class="text-left font-sans">Head Kick Sensor (3 Poin)</td>
+              <td class="text-red-600 font-bold">REJECTED</td>
+            </tr>
+            <tr>
+              <td>R3</td>
+              <td class="text-red-600 font-bold">HONG</td>
+              <td class="text-left font-sans">Gam-jeom Lawan (Keluar Garis)</td>
+              <td class="text-emerald-700 font-bold">ACCEPTED</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="mt-2 text-[10px] text-slate-600">
+          Sisa Kartu Kuota: CHUNG [ <b>0</b> ] | HONG [ <b>1</b> ]
+        </div>
+      </div>
+
+      <!-- Result Declaration -->
+      <div class="col-span-6 border-2 border-black p-2 bg-amber-50/30 text-xs flex flex-col justify-between">
+        <div>
+          <div class="font-black uppercase tracking-wider text-black border-b border-black pb-1 mb-1">
+            KEPUTUSAN HASIL RESMI (OFFICIAL DECISION)
+          </div>
+          <div class="flex items-center space-x-2 my-1">
+            <span class="font-bold text-xs uppercase">Pemenang:</span>
+            <span class="font-black text-sm text-blue-700 bg-blue-100 px-2 py-0.5 rounded border border-blue-400">
+              CHUNG (BAMBANG WIJAYA)
+            </span>
+          </div>
+          <div class="text-[11px] font-semibold text-slate-700">
+            Skor Ronde: <span class="font-bold text-black">2 - 1</span> (CHUNG Menang)
+          </div>
+        </div>
+
+        <div class="grid grid-cols-4 gap-1 text-[10px] font-bold border-t border-black pt-1.5 mt-1">
+          <div><label><input type="checkbox" checked> PTF</label></div>
+          <div><label><input type="checkbox" checked> PTG</label></div>
+          <div><label><input type="checkbox"> RSC</label></div>
+          <div><label><input type="checkbox"> WDR</label></div>
+          <div><label><input type="checkbox"> DSQ</label></div>
+          <div><label><input type="checkbox"> PUN</label></div>
+          <div><label><input type="checkbox"> SUP</label></div>
+          <div><label><input type="checkbox"> GDP</label></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Official Signatures Grid -->
+    <div class="border-t-2 border-black pt-2">
+      <div class="text-[10px] font-bold uppercase tracking-wider mb-2 text-center text-slate-600">
+        PENGESAHAN DEWAN WASIT DAN PANITIA PERTANDINGAN (OFFICIAL VALIDATION)
+      </div>
+      <div class="grid grid-cols-4 gap-2 text-center text-xs">
+        <div>
+          <p class="text-[10px] font-bold text-slate-600 mb-8">Wasit Tengah (Referee)</p>
+          <div class="border-t border-black pt-1">
+            <p class="font-bold text-[11px]">( ................................ )</p>
+            <p class="text-[9px] text-slate-500">Lisensi IR / Wasit Nasional</p>
+          </div>
+        </div>
+        <div>
+          <p class="text-[10px] font-bold text-slate-600 mb-8">Juri 1 & Juri 2 (Judges)</p>
+          <div class="border-t border-black pt-1">
+            <p class="font-bold text-[11px]">( ................................ )</p>
+            <p class="text-[9px] text-slate-500">Corner Judge Panel</p>
+          </div>
+        </div>
+        <div>
+          <p class="text-[10px] font-bold text-slate-600 mb-8">Juri Replay (Review Jury)</p>
+          <div class="border-t border-black pt-1">
+            <p class="font-bold text-[11px]">( ................................ )</p>
+            <p class="text-[9px] text-slate-500">Instant Video Replay Jury</p>
+          </div>
+        </div>
+        <div>
+          <p class="text-[10px] font-bold text-slate-600 mb-8">Ketua Pertandingan (CS/TD)</p>
+          <div class="border-t border-black pt-1">
+            <p class="font-bold text-[11px]">( ................................ )</p>
+            <p class="text-[9px] text-slate-500">Technical Delegate PBTI</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 2. POOMSAE RECOGNISED OFFICIAL SCORESHEET -->
+  <!-- ========================================================================= -->
+  <div id="sheet-poomsae-rec" class="sheet-container max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-300 hidden">
+    <!-- Header -->
+    <div class="border-b-2 border-black pb-3 mb-4 flex items-center justify-between">
+      <div class="w-16 h-16 flex items-center justify-center border-2 border-black font-black text-xl tracking-tighter">
+        WT
+      </div>
+      <div class="text-center flex-1 px-4">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-slate-600">PENGURUS BESAR TAEKWONDO INDONESIA / WORLD TAEKWONDO</h2>
+        <h1 class="text-lg font-black uppercase text-black tracking-tight">BERITA ACARA & LEMBAR PENILAIAN POOMSAE RECOGNISED</h1>
+        <p class="text-[11px] font-mono text-slate-500 uppercase tracking-wider">OFFICIAL RECOGNISED POOMSAE SCORESHEET (TRUNCATED MEAN)</p>
+      </div>
+      <div class="text-right text-[11px] font-mono border-l-2 border-black pl-3 leading-tight">
+        <div>FORM: <b>WT-FR-02</b></div>
+        <div>SKALA: <b>10.00</b></div>
+        <div>STATUS: <b>RESMI</b></div>
+      </div>
+    </div>
+
+    <!-- Metadata Grid -->
+    <div class="grid grid-cols-12 gap-2 text-xs mb-4 border border-black p-2 bg-slate-50">
+      <div class="col-span-8 flex items-center space-x-2">
+        <span class="font-bold uppercase w-28">Nama Turnamen:</span>
+        <input type="text" class="flex-1 font-semibold" value="KEJUARAAN NASIONAL TAEKWONDO TAHUN 2026">
+      </div>
+      <div class="col-span-4 flex items-center space-x-2">
+        <span class="font-bold uppercase w-20">Gelanggang:</span>
+        <input type="text" class="flex-1 font-bold text-center border-b border-black" value="COURT 2">
+      </div>
+
+      <div class="col-span-4 flex items-center space-x-2">
+        <span class="font-bold uppercase w-28">Nomor Partai:</span>
+        <input type="text" class="flex-1 font-black text-center border-b border-black text-red-600" value="POOMSAE #42">
+      </div>
+      <div class="col-span-4 flex items-center space-x-2">
+        <span class="font-bold uppercase w-20">Tanggal:</span>
+        <input type="text" class="flex-1" value="17 November 2026">
+      </div>
+      <div class="col-span-4 flex items-center space-x-2">
+        <span class="font-bold uppercase w-20">Kategori:</span>
+        <input type="text" class="flex-1 font-semibold" value="Individu Putri">
+      </div>
+
+      <div class="col-span-6 flex items-center space-x-2">
+        <span class="font-bold uppercase w-28">Nama Peserta:</span>
+        <input type="text" class="flex-1 font-bold uppercase text-blue-900" value="SITI NURHALIZA">
+      </div>
+      <div class="col-span-6 flex items-center space-x-2">
+        <span class="font-bold uppercase w-24">Kontingen:</span>
+        <input type="text" class="flex-1 font-semibold" value="JAWA TENGAH (KOTA SEMARANG)">
+      </div>
+
+      <div class="col-span-6 flex items-center space-x-2">
+        <span class="font-bold uppercase w-28">Jurus Wajib 1:</span>
+        <input type="text" class="flex-1 font-bold text-black" value="TAEGEUK 8 JANG">
+      </div>
+      <div class="col-span-6 flex items-center space-x-2">
+        <span class="font-bold uppercase w-24">Jurus Wajib 2:</span>
+        <input type="text" class="flex-1 font-bold text-black" value="KORYO">
+      </div>
+    </div>
+
+    <!-- Judge Scoring Table (Truncated Mean) -->
+    <div class="mb-4">
+      <div class="text-[11px] font-black uppercase tracking-wider bg-slate-800 text-white px-2 py-1 flex justify-between items-center">
+        <span>PENILAIAN PANEL 5 JURI (TRUNCATED MEAN SYSTEM)</span>
+        <span class="text-[10px] font-normal">Nilai tertinggi & terendah dibuang otomatis</span>
+      </div>
+      <table class="w-full text-xs border border-black text-center border-collapse">
+        <thead>
+          <tr class="bg-slate-200 border-b border-black font-bold">
+            <th class="border border-black p-1 w-16">Panel Juri</th>
+            <th class="border border-black p-1">AKURASI (Max 4.00)<br><span class="font-normal text-[10px]">Ketepatan Kuda-kuda, Tangkisan, Tendangan</span></th>
+            <th class="border border-black p-1">PRESENTASI (Max 6.00)<br><span class="font-normal text-[10px]">Kekuatan, Kecepatan, Irama, Pernapasan</span></th>
+            <th class="border border-black p-1 w-24">Total Juri</th>
+            <th class="border border-black p-1 w-32">Status Perhitungan</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-black font-mono">
+          <tr class="bg-red-50 text-slate-400">
+            <td class="border border-black font-bold text-black">Juri 1</td>
+            <td class="border border-black line-through font-semibold text-red-600">3.20 (Min)</td>
+            <td class="border border-black">4.70</td>
+            <td class="border border-black">7.90</td>
+            <td class="border border-black text-red-600 font-sans font-bold text-[10px]">DIBUANG (Acc Min)</td>
+          </tr>
+          <tr>
+            <td class="border border-black font-bold">Juri 2</td>
+            <td class="border border-black font-semibold text-blue-700">3.40</td>
+            <td class="border border-black font-semibold text-blue-700">4.80</td>
+            <td class="border border-black font-bold">8.20</td>
+            <td class="border border-black text-emerald-700 font-sans font-bold text-[10px]">DIHITUNG</td>
+          </tr>
+          <tr>
+            <td class="border border-black font-bold">Juri 3</td>
+            <td class="border border-black font-semibold text-blue-700">3.50</td>
+            <td class="border border-black font-semibold text-blue-700">4.90</td>
+            <td class="border border-black font-bold">8.40</td>
+            <td class="border border-black text-emerald-700 font-sans font-bold text-[10px]">DIHITUNG</td>
+          </tr>
+          <tr class="bg-red-50 text-slate-400">
+            <td class="border border-black font-bold text-black">Juri 4</td>
+            <td class="border border-black font-semibold">3.60</td>
+            <td class="border border-black line-through font-semibold text-red-600">5.20 (Max)</td>
+            <td class="border border-black">8.80</td>
+            <td class="border border-black text-red-600 font-sans font-bold text-[10px]">DIBUANG (Pres Max)</td>
+          </tr>
+          <tr>
+            <td class="border border-black font-bold">Juri 5</td>
+            <td class="border border-black font-semibold text-blue-700">3.50</td>
+            <td class="border border-black font-semibold text-blue-700">4.90</td>
+            <td class="border border-black font-bold">8.40</td>
+            <td class="border border-black text-emerald-700 font-sans font-bold text-[10px]">DIHITUNG</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="bg-slate-200 border-t-2 border-black font-black text-xs">
+            <td class="border border-black p-1 text-black uppercase">RATA-RATA</td>
+            <td class="border border-black p-1 text-blue-900 font-mono text-sm">3.467</td>
+            <td class="border border-black p-1 text-blue-900 font-mono text-sm">4.867</td>
+            <td colspan="2" class="border border-black p-1 text-emerald-800 font-mono text-base bg-emerald-100">
+              SUBTOTAL: 8.334
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- Final Scores & Penalties -->
+    <div class="grid grid-cols-12 gap-3 mb-4">
+      <div class="col-span-7 border border-black p-2 bg-slate-50 text-xs">
+        <div class="font-bold uppercase border-b border-black pb-1 mb-1.5">
+          PENGURANGAN NILAI / DEDUCTION (GAM-JEOM)
+        </div>
+        <div class="space-y-1 text-[11px]">
+          <div class="flex justify-between items-center">
+            <span>Melebihi Waktu Penampilan (30s - 90s):</span>
+            <span class="font-mono font-bold">- 0.0</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span>Keluar Garis Batas Pertandingan:</span>
+            <span class="font-mono font-bold">- 0.0</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span>Permintaan Mulai Ulang (Restart):</span>
+            <span class="font-mono font-bold">- 0.0</span>
+          </div>
+          <div class="border-t border-slate-300 pt-1 flex justify-between items-center font-bold">
+            <span>TOTAL PENGURANGAN:</span>
+            <span class="font-mono text-red-600 font-bold">- 0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-span-5 border-2 border-black p-2 bg-emerald-50 text-center flex flex-col justify-center">
+        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-600">SKOR AKHIR RESMI (FINAL SCORE)</div>
+        <div class="text-3xl font-black font-mono text-emerald-800 my-1">8.334</div>
+        <div class="text-xs font-bold text-slate-700">PERINGKAT: <b>1 (GOLD CANDIDATE)</b></div>
+      </div>
+    </div>
+
+    <!-- Poomsae Signatures -->
+    <div class="border-t-2 border-black pt-2">
+      <div class="text-[10px] font-bold uppercase tracking-wider mb-2 text-center text-slate-600">
+        PENGESAHAN DEWAN JURI POOMSAE & TECHNICAL DELEGATE
+      </div>
+      <div class="grid grid-cols-4 gap-2 text-center text-xs">
+        <div>
+          <p class="text-[10px] font-bold text-slate-600 mb-8">Wasit Ketua (Head Referee)</p>
+          <div class="border-t border-black pt-1">
+            <p class="font-bold text-[11px]">( ................................ )</p>
+          </div>
+        </div>
+        <div>
+          <p class="text-[10px] font-bold text-slate-600 mb-8">Juri Penilai (Judges 1-5)</p>
+          <div class="border-t border-black pt-1">
+            <p class="font-bold text-[11px]">( ................................ )</p>
+          </div>
+        </div>
+        <div>
+          <p class="text-[10px] font-bold text-slate-600 mb-8">Operator Komputer / Meja</p>
+          <div class="border-t border-black pt-1">
+            <p class="font-bold text-[11px]">( ................................ )</p>
+          </div>
+        </div>
+        <div>
+          <p class="text-[10px] font-bold text-slate-600 mb-8">Ketua Pertandingan / TD</p>
+          <div class="border-t border-black pt-1">
+            <p class="font-bold text-[11px]">( ................................ )</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 3. POOMSAE FREESTYLE OFFICIAL SCORESHEET -->
+  <!-- ========================================================================= -->
+  <div id="sheet-poomsae-free" class="sheet-container max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-300 hidden">
+    <!-- Header -->
+    <div class="border-b-2 border-black pb-3 mb-4 flex items-center justify-between">
+      <div class="w-16 h-16 flex items-center justify-center border-2 border-black font-black text-xl tracking-tighter">
+        WT
+      </div>
+      <div class="text-center flex-1 px-4">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-slate-600">PENGURUS BESAR TAEKWONDO INDONESIA / WORLD TAEKWONDO</h2>
+        <h1 class="text-lg font-black uppercase text-black tracking-tight">BERITA ACARA & LEMBAR PENILAIAN POOMSAE FREESTYLE</h1>
+        <p class="text-[11px] font-mono text-slate-500 uppercase tracking-wider">OFFICIAL FREESTYLE POOMSAE SCORESHEET (MUSIC & ACROBATIC)</p>
+      </div>
+      <div class="text-right text-[11px] font-mono border-l-2 border-black pl-3 leading-tight">
+        <div>FORM: <b>WT-FR-03</b></div>
+        <div>DURASI: <b>90-100s</b></div>
+        <div>STATUS: <b>RESMI</b></div>
+      </div>
+    </div>
+
+    <!-- Metadata Grid -->
+    <div class="grid grid-cols-12 gap-2 text-xs mb-4 border border-black p-2 bg-slate-50">
+      <div class="col-span-8 flex items-center space-x-2">
+        <span class="font-bold uppercase w-28">Nama Turnamen:</span>
+        <input type="text" class="flex-1 font-semibold" value="KEJUARAAN NASIONAL TAEKWONDO TAHUN 2026">
+      </div>
+      <div class="col-span-4 flex items-center space-x-2">
+        <span class="font-bold uppercase w-20">Gelanggang:</span>
+        <input type="text" class="flex-1 font-bold text-center border-b border-black" value="COURT 1">
+      </div>
+
+      <div class="col-span-4 flex items-center space-x-2">
+        <span class="font-bold uppercase w-28">Nomor Undian:</span>
+        <input type="text" class="flex-1 font-black text-center border-b border-black text-purple-600" value="FREE #07">
+      </div>
+      <div class="col-span-4 flex items-center space-x-2">
+        <span class="font-bold uppercase w-20">Tanggal:</span>
+        <input type="text" class="flex-1" value="17 November 2026">
+      </div>
+      <div class="col-span-4 flex items-center space-x-2">
+        <span class="font-bold uppercase w-20">Kategori:</span>
+        <input type="text" class="flex-1 font-semibold" value="Individu Putra">
+      </div>
+
+      <div class="col-span-6 flex items-center space-x-2">
+        <span class="font-bold uppercase w-28">Nama Peserta:</span>
+        <input type="text" class="flex-1 font-bold uppercase text-purple-900" value="REZA ADITYA PRATAMA">
+      </div>
+      <div class="col-span-6 flex items-center space-x-2">
+        <span class="font-bold uppercase w-24">Kontingen:</span>
+        <input type="text" class="flex-1 font-semibold" value="DI YOGYAKARTA">
+      </div>
+
+      <div class="col-span-12 flex items-center space-x-2">
+        <span class="font-bold uppercase w-28">Judul Lagu/Tema:</span>
+        <input type="text" class="flex-1 font-semibold" value="Epic Taekwondo Beats - 128 BPM (Remix Traditional)">
+      </div>
+    </div>
+
+    <!-- Freestyle Scoring Split -->
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <!-- 1. Technical Criteria (6.0) -->
+      <div class="border border-black p-2 bg-slate-50 text-xs">
+        <div class="font-bold uppercase bg-slate-800 text-white px-1.5 py-0.5 mb-2 flex justify-between text-[11px]">
+          <span>1. TEKNIK WAJIB (TECHNICAL SKILL)</span>
+          <span>MAKS 6.00</span>
+        </div>
+        <table class="w-full text-[11px] space-y-1">
+          <tr class="border-b border-slate-300">
+            <td class="py-1">1. Tinggi Tendangan Samping Melompat:</td>
+            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" class="w-12 text-center" value="0.9"></td>
+          </tr>
+          <tr class="border-b border-slate-300">
+            <td class="py-1">2. Tendangan Beruntun di Udara (Multiple):</td>
+            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" class="w-12 text-center" value="0.8"></td>
+          </tr>
+          <tr class="border-b border-slate-300">
+            <td class="py-1">3. Tendangan Berputar (540° / 720°):</td>
+            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" class="w-12 text-center" value="0.9"></td>
+          </tr>
+          <tr class="border-b border-slate-300">
+            <td class="py-1">4. Gerakan Akrobatik Kaki Tumbukan:</td>
+            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" class="w-12 text-center" value="0.8"></td>
+          </tr>
+          <tr class="border-b border-slate-300">
+            <td class="py-1">5. Kerapian Kuda-kuda Dasar Taekwondo:</td>
+            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" class="w-12 text-center" value="0.8"></td>
+          </tr>
+          <tr>
+            <td class="py-1">6. Tingkat Kesulitan Kombinasi:</td>
+            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" class="w-12 text-center" value="0.9"></td>
+          </tr>
+          <tr class="border-t-2 border-black font-black bg-slate-200">
+            <td class="py-1 px-1">TOTAL TEKNIK (TECH SCORE):</td>
+            <td class="text-right pr-2 font-mono text-sm text-purple-900">5.10</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- 2. Presentation Criteria (4.0) -->
+      <div class="border border-black p-2 bg-slate-50 text-xs">
+        <div class="font-bold uppercase bg-slate-800 text-white px-1.5 py-0.5 mb-2 flex justify-between text-[11px]">
+          <span>2. PRESENTASI (PRESENTATION)</span>
+          <span>MAKS 4.00</span>
+        </div>
+        <table class="w-full text-[11px] space-y-1">
+          <tr class="border-b border-slate-300">
+            <td class="py-1">1. Kreativitas & Orisinalitas Koreografi:</td>
+            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" class="w-12 text-center" value="0.8"></td>
+          </tr>
+          <tr class="border-b border-slate-300">
+            <td class="py-1">2. Harmonisasi Gerak dengan Musik:</td>
+            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" class="w-12 text-center" value="0.9"></td>
+          </tr>
+          <tr class="border-b border-slate-300">
+            <td class="py-1">3. Ekspresi Energi, Kihap & Kharisma:</td>
+            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" class="w-12 text-center" value="0.9"></td>
+          </tr>
+          <tr>
+            <td class="py-1">4. Sinkronisasi & Keluwesan Gerak:</td>
+            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" class="w-12 text-center" value="0.8"></td>
+          </tr>
+          <tr class="border-t-2 border-black font-black bg-slate-200">
+            <td class="py-1 px-1">TOTAL PRESENTASI (PRES SCORE):</td>
+            <td class="text-right pr-2 font-mono text-sm text-purple-900">3.40</td>
+          </tr>
+        </table>
+
+        <!-- Result Recapitulation -->
+        <div class="mt-4 border-2 border-black p-2 bg-purple-50 text-center">
+          <div class="text-[10px] font-bold uppercase text-slate-600">SKOR AKHIR FREESTYLE</div>
+          <div class="text-2xl font-black font-mono text-purple-900">8.50</div>
+          <div class="text-[10px] text-slate-600">(Teknik 5.10 + Pres 3.40 - Pinalti 0.0)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Freestyle Signatures -->
+    <div class="border-t-2 border-black pt-2">
+      <div class="text-[10px] font-bold uppercase tracking-wider mb-2 text-center text-slate-600">
+        PENGESAHAN DEWAN JURI FREESTYLE & TECHNICAL DELEGATE
+      </div>
+      <div class="grid grid-cols-4 gap-2 text-center text-xs">
+        <div>
+          <p class="text-[10px] font-bold text-slate-600 mb-8">Wasit Ketua (Head Referee)</p>
+          <div class="border-t border-black pt-1">
+            <p class="font-bold text-[11px]">( ................................ )</p>
+          </div>
+        </div>
+        <div>
+          <p class="text-[10px] font-bold text-slate-600 mb-8">Juri Penilai Freestyle</p>
+          <div class="border-t border-black pt-1">
+            <p class="font-bold text-[11px]">( ................................ )</p>
+          </div>
+        </div>
+        <div>
+          <p class="text-[10px] font-bold text-slate-600 mb-8">Operator Musik / Meja</p>
+          <div class="border-t border-black pt-1">
+            <p class="font-bold text-[11px]">( ................................ )</p>
+          </div>
+        </div>
+        <div>
+          <p class="text-[10px] font-bold text-slate-600 mb-8">Ketua Pertandingan / TD</p>
+          <div class="border-t border-black pt-1">
+            <p class="font-bold text-[11px]">( ................................ )</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function switchTab(cat) {
+      document.getElementById('sheet-kyorugi').classList.add('hidden');
+      document.getElementById('sheet-poomsae-rec').classList.add('hidden');
+      document.getElementById('sheet-poomsae-free').classList.add('hidden');
+
+      document.getElementById('btn-kyorugi').className = "px-3 py-1.5 text-xs font-medium rounded text-slate-300 hover:text-white";
+      document.getElementById('btn-poomsae-rec').className = "px-3 py-1.5 text-xs font-medium rounded text-slate-300 hover:text-white";
+      document.getElementById('btn-poomsae-free').className = "px-3 py-1.5 text-xs font-medium rounded text-slate-300 hover:text-white";
+
+      if (cat === 'kyorugi') {
+        document.getElementById('sheet-kyorugi').classList.remove('hidden');
+        document.getElementById('btn-kyorugi').className = "px-3 py-1.5 text-xs font-bold rounded bg-blue-600 text-white shadow";
+      } else if (cat === 'poomsae_rec') {
+        document.getElementById('sheet-poomsae-rec').classList.remove('hidden');
+        document.getElementById('btn-poomsae-rec').className = "px-3 py-1.5 text-xs font-bold rounded bg-blue-600 text-white shadow";
+      } else if (cat === 'poomsae_free') {
+        document.getElementById('sheet-poomsae-free').classList.remove('hidden');
+        document.getElementById('btn-poomsae-free').className = "px-3 py-1.5 text-xs font-bold rounded bg-purple-600 text-white shadow";
+      }
+    }
+
+    function fillSampleData() {
+      // Prompt sample notice
+      alert('Contoh data pertandingan standar WT telah terisi dan siap dicetak.');
+    }
+  </script>
+</body>
+</html>
