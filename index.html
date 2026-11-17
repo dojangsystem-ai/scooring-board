@@ -80,6 +80,8 @@
           e.preventDefault();
           if (window.app.data.category === 'kyorugi') {
             window.app.toggleKyorugiTimer();
+          } else if (window.app.data.category === 'poomsae_free') {
+            window.app.toggleFreestyleMusicTimer();
           }
         } else if (e.key === 'b' || e.key === 'B') {
           window.soundSys.playBuzzer();

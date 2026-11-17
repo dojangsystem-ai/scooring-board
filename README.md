@@ -42,16 +42,19 @@ Aplikasi ini dilengkapi 4 mode tampilan interaktif yang dapat dipilih langsung m
 
 ## 🚀 Cara Menjalankan
 
-### Cara 1: Buka Langsung (Tanpa Install Apapun)
-Cukup klik ganda (double-click) file `index.html` di browser Anda (Google Chrome, Microsoft Edge, atau Mozilla Firefox).
+### Pilihan 1: Versi Mandiri All-in-One (Satu File Lengkap — 100% Offline)
+Buka file **`taekwondo_scoring_board_all_in_one.html`** langsung dengan klik ganda di browser apa pun. Semua kode CSS, JavaScript logika, suara buzzer Web Audio, dan tampilan sudah terbundel utuh dalam 1 file tunggal (sangat cocok dipindahkan via flashdisk ke laptop pertandingan tanpa risiko file terpisah hilang).
 
-### Cara 2: Menjalankan di Dua Layar (Laptop Operator + Layar TV Lapangan)
+### Pilihan 2: Versi Modular (`index.html`)
+Buka file **`index.html`** yang terhubung secara modular dengan sub-folder `css/custom.css` dan modul `js/` (sangat cocok untuk pengembangan kode lebih lanjut).
+
+### Menjalankan di Dua Layar (Laptop Operator + Layar TV Lapangan)
 1. Sambungkan laptop ke TV LED atau Proyektor via kabel HDMI.
 2. Atur display mode Windows ke **Extend** (`Windows Key + P` -> pilih **Extend**).
 3. Buka browser:
-   - **Layar 1 (Laptop Operator):** Buka `index.html` dan pilih mode **🎛️ Operator Meja**.
-   - **Layar 2 (TV Lapangan):** Buka jendela baru di layar TV: `index.html?mode=tv`, lalu tekan **F11** untuk layar penuh.
-4. Semua klik tombol skor, timer, dan ronde di laptop operator akan langsung menggerakkan layar TV secara instan!
+   - **Layar 1 (Laptop Operator):** Buka `taekwondo_scoring_board_all_in_one.html?mode=operator` (atau `index.html?mode=operator`).
+   - **Layar 2 (TV Lapangan):** Buka jendela baru di layar TV: `taekwondo_scoring_board_all_in_one.html?mode=tv`, lalu tekan **F11** untuk layar penuh.
+4. Semua klik tombol skor, timer, dan ronde di laptop operator akan langsung menggerakkan layar TV secara instan via `BroadcastChannel` (0ms latensi tanpa internet)!
 
 ---
 

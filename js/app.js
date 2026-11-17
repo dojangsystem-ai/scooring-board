@@ -352,9 +352,60 @@ class AppState {
     }
   }
 
+  startGoldenPointRound() {
+    this.pauseKyorugiTimer();
+    this.data.kyorugi.round = 4;
+    this.data.kyorugi.roundName = 'GOLDEN ROUND (골든라운드)';
+    this.data.kyorugi.timerSeconds = 60;
+    this.data.kyorugi.timerInitial = 60;
+    this.data.kyorugi.chung.score = 0;
+    this.data.kyorugi.chung.gamjeom = 0;
+    this.data.kyorugi.hong.score = 0;
+    this.data.kyorugi.hong.gamjeom = 0;
+    this.data.kyorugi.pointGapAlert = false;
+    window.soundSys.playBeep(880, 0.3);
+    this.notifyChange();
+  }
+
   resetKyorugiMatch() {
     this.pauseKyorugiTimer();
     this.data.kyorugi = JSON.parse(JSON.stringify(DEFAULT_STATE.kyorugi));
+    this.notifyChange();
+  }
+
+  // --- POOMSAE FREESTYLE MUSIC TIMER ---
+  toggleFreestyleMusicTimer() {
+    if (this.data.poomsaeFree.timerRunning) {
+      clearInterval(this.data.poomsaeFree.timerInterval);
+      this.data.poomsaeFree.timerRunning = false;
+      window.soundSys.stopFreestyleBeat();
+    } else {
+      this.data.poomsaeFree.timerRunning = true;
+      window.soundSys.startFreestyleBeat();
+      this.data.poomsaeFree.timerInterval = setInterval(() => {
+        if (this.data.poomsaeFree.musicDuration > 0) {
+          this.data.poomsaeFree.musicDuration--;
+          if (this.data.poomsaeFree.musicDuration >= 90 && this.data.poomsaeFree.musicDuration <= 100) {
+            this.data.poomsaeFree.statusNote = 'Optimal (90s - 100s)';
+          } else if (this.data.poomsaeFree.musicDuration < 90) {
+            this.data.poomsaeFree.statusNote = 'Di Bawah 90s (-0.3/10s)';
+          }
+          this.notifyChange();
+        } else {
+          this.toggleFreestyleMusicTimer();
+          window.soundSys.playBuzzer();
+        }
+      }, 1000);
+    }
+    this.notifyChange();
+  }
+
+  resetFreestyleMusicTimer(seconds = 95) {
+    if (this.data.poomsaeFree.timerRunning) {
+      this.toggleFreestyleMusicTimer();
+    }
+    this.data.poomsaeFree.musicDuration = seconds;
+    this.data.poomsaeFree.statusNote = 'Optimal (90s - 100s)';
     this.notifyChange();
   }
 

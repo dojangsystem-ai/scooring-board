@@ -1,0 +1,2667 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Taekwondo Scoring Board Pro - Electronic Tournament System (World Taekwondo Standard)</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+/* Custom CSS for Taekwondo Scoring Board */
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,400;0,600;0,700;1,700&family=Rajdhani:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --font-digital: 'Chakra Petch', monospace, sans-serif;
+  --font-display: 'Rajdhani', sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  
+  --chung-blue: #0062cc;
+  --chung-dark: #003e85;
+  --hong-red: #d90429;
+  --hong-dark: #8d0801;
+  --tkd-gold: #f59e0b;
+}
+
+body {
+  font-family: var(--font-sans);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.font-digital {
+  font-family: var(--font-digital);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Glow effects for scoreboard */
+.glow-blue {
+  text-shadow: 0 0 15px rgba(0, 122, 255, 0.7), 0 0 30px rgba(0, 122, 255, 0.4);
+}
+
+.glow-red {
+  text-shadow: 0 0 15px rgba(239, 68, 68, 0.7), 0 0 30px rgba(239, 68, 68, 0.4);
+}
+
+.glow-gold {
+  text-shadow: 0 0 15px rgba(245, 158, 11, 0.7), 0 0 30px rgba(245, 158, 11, 0.4);
+}
+
+/* Pulse animation for active timer */
+@keyframes timerPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+.timer-running {
+  animation: timerPulse 2s infinite ease-in-out;
+}
+
+/* Score change animation */
+@keyframes scorePop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.score-updated {
+  animation: scorePop 0.25s ease-out;
+}
+
+/* Strikethrough for truncated scores in Poomsae */
+.score-dropped {
+  position: relative;
+  opacity: 0.45;
+  filter: grayscale(0.8);
+}
+
+.score-dropped::after {
+  content: '';
+  position: absolute;
+  left: -5%;
+  top: 50%;
+  width: 110%;
+  height: 3px;
+  background-color: #ef4444;
+  transform: rotate(-12deg);
+  border-radius: 2px;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #111827;
+}
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+
+/* =========================================
+   PRINT STYLES FOR OFFICIAL MATCH SCORESHEET
+   ========================================= */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  header, .no-print, button, nav {
+    display: none !important;
+  }
+
+  #print-scoresheet {
+    display: block !important;
+    color: black !important;
+    background: white !important;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+
+  .print-table th, .print-table td {
+    border: 1px solid #333;
+    padding: 8px 12px;
+    text-align: center;
+  }
+
+  .print-table th {
+    background-color: #f3f4f6;
+  }
+}
+
+/* Default state: hide print scoresheet container on screen */
+#print-scoresheet {
+  display: none;
+}
+
+
+
+  </style>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            chung: {
+              DEFAULT: '#0062cc',
+              dark: '#003e85',
+              glow: '#007aff'
+            },
+            hong: {
+              DEFAULT: '#d90429',
+              dark: '#8d0801',
+              glow: '#ef4444'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-black text-slate-100 min-h-screen antialiased overflow-x-hidden">
+  
+  <!-- Container Aplikasi Utama -->
+  <div id="app-root"></div>
+
+  <!-- Container Cetak Berita Acara Pertandingan (@media print) -->
+  <div id="print-scoresheet"></div>
+
+  <script>
+  // ==========================================
+  // 1. SOUND SYNTHESIZER & BROADCAST SYNC
+  // ==========================================
+/**
+ * Web Audio API Sound Synthesizer & Real-time Window Synchronizer
+ * Standar suara turnamen Taekwondo tanpa perlu file MP3 eksternal (100% offline).
+ */
+
+class SoundSynthesizer {
+  constructor() {
+    this.audioCtx = null;
+    this.soundEnabled = true;
+  }
+
+  init() {
+    if (!this.audioCtx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) {
+        this.audioCtx = new AudioContext();
+      }
+    }
+    if (this.audioCtx && this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume();
+    }
+  }
+
+  playBuzzer() {
+    if (!this.soundEnabled) return;
+    this.init();
+    if (!this.audioCtx) return;
+
+    const ctx = this.audioCtx;
+    const now = ctx.currentTime;
+    const duration = 1.35; // Durasi buzzer khas turnamen
+
+    // Dual-oscillator untuk menghasilkan suara klakson buzzer profesional
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    osc1.type = 'sawtooth';
+    osc1.frequency.setValueAtTime(285, now);
+    osc1.frequency.exponentialRampToValueAtTime(270, now + duration);
+
+    osc2.type = 'square';
+    osc2.frequency.setValueAtTime(427.5, now);
+    osc2.frequency.exponentialRampToValueAtTime(405, now + duration);
+
+    gainNode.gain.setValueAtTime(0.001, now);
+    gainNode.gain.linearRampToValueAtTime(0.4, now + 0.05);
+    gainNode.gain.setValueAtTime(0.4, now + duration - 0.1);
+    gainNode.gain.linearRampToValueAtTime(0.001, now + duration);
+
+    osc1.connect(gainNode);
+    osc2.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + duration);
+    osc2.stop(now + duration);
+  }
+
+  playBeep(freq = 880, duration = 0.18, type = 'sine') {
+    if (!this.soundEnabled) return;
+    this.init();
+    if (!this.audioCtx) return;
+
+    const ctx = this.audioCtx;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.25, now + 0.02);
+    gain.gain.linearRampToValueAtTime(0.001, now + duration);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + duration);
+  }
+
+  playKalyeo() {
+    // 2 nada cepat tanda jeda wasit
+    this.playBeep(659.25, 0.12, 'square');
+    setTimeout(() => this.playBeep(523.25, 0.18, 'square'), 120);
+  }
+
+  playGamJeom() {
+    // Nada peringatan rendah
+    this.playBeep(330, 0.25, 'triangle');
+  }
+
+  playPoint() {
+    // Nada ringan saat poin bertambah
+    this.playBeep(1046.5, 0.08, 'sine');
+  }
+
+  // Rhythmic Synth Beat untuk Poomsae Freestyle (128 BPM)
+  startFreestyleBeat() {
+    if (!this.soundEnabled || this.beatInterval) return;
+    this.init();
+    let step = 0;
+    this.beatInterval = setInterval(() => {
+      if (!this.soundEnabled) return;
+      if (step % 2 === 0) {
+        this.playBeep(110, 0.08, 'triangle'); // Kick bass
+      } else {
+        this.playBeep(1200, 0.03, 'sine'); // Hi-hat
+      }
+      step++;
+    }, 468);
+  }
+
+  stopFreestyleBeat() {
+    if (this.beatInterval) {
+      clearInterval(this.beatInterval);
+      this.beatInterval = null;
+    }
+  }
+}
+
+// Sinkronisasi Antar Tab / Jendela (Operator <-> Layar Tampilan LED)
+class BoardSync {
+  constructor(onMessageCallback) {
+    this.channelName = 'tkd_scoreboard_event_channel';
+    this.onMessage = onMessageCallback;
+    this.channel = null;
+
+    if ('BroadcastChannel' in window) {
+      try {
+        this.channel = new BroadcastChannel(this.channelName);
+        this.channel.onmessage = (event) => {
+          if (this.onMessage && event.data) {
+            this.onMessage(event.data);
+          }
+        };
+      } catch (e) {
+        console.warn('BroadcastChannel not available, falling back to localStorage');
+      }
+    }
+
+    // Fallback via window storage event
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'tkd_sync_payload' && e.newValue) {
+        try {
+          const data = JSON.parse(e.newValue);
+          if (this.onMessage) this.onMessage(data);
+        } catch (err) {}
+      }
+    });
+  }
+
+  broadcast(type, payload) {
+    const data = { type, payload, timestamp: Date.now() };
+    if (this.channel) {
+      this.channel.postMessage(data);
+    }
+    // Update local storage for fallback cross-tab sync
+    try {
+      localStorage.setItem('tkd_sync_payload', JSON.stringify(data));
+    } catch (e) {}
+  }
+}
+
+window.soundSys = new SoundSynthesizer();
+
+
+
+  // ==========================================
+  // 2. STATE MANAGEMENT & WT TOURNAMENT LOGIC
+  // ==========================================
+/**
+ * Main Application Logic for Taekwondo Scoring Board
+ * Mengatur state Kyorugi, Poomsae Recognised, dan Poomsae Freestyle
+ * serta switching antara Mode TV Display dan Mode Operator Meja.
+ */
+
+const DEFAULT_STATE = {
+  viewMode: 'tv', // 'tv' (Layar TV) | 'operator' (Panel Meja) | 'judge' (Pad Juri) | 'matches' (Jadwal Partai) | 'obs' (OBS Overlay)
+  category: 'kyorugi', // 'kyorugi' | 'poomsae_rec' | 'poomsae_free'
+  court: 'COURT 1',
+  division: 'SENIOR PUTRA UNDER 68 KG',
+  matchNumber: 'PARTAI #04',
+  selectedJudgeId: 'J1', // Untuk Mode Pad Juri (J1 s/d J5)
+  settingsModalOpen: false,
+  
+  // Konfigurasi Turnamen
+  settings: {
+    tournamentTitle: 'KEJUARAAN NASIONAL TAEKWONDO CHAMPIONSHIP 2026',
+    courtName: 'COURT 1',
+    roundDuration: 120,
+    restDuration: 60,
+    pointGapEnabled: true,
+    pointGapThreshold: 12,
+    judgeCount: 5,
+    soundMuted: false
+  },
+  
+  // State Video Replay (IVR) Challenge
+  ivr: {
+    active: false,
+    requestedBy: null, // 'chung' | 'hong'
+    cardItem: 'Tendangan Kepala (Head Kick)',
+    decision: null // 'ACCEPTED' | 'REJECTED'
+  },
+
+  // State Medical Timeout (1:00)
+  medical: {
+    active: false,
+    fighter: null, // 'chung' | 'hong'
+    seconds: 60,
+    interval: null
+  },
+
+  // Daftar Jadwal Partai (Match Queue)
+  matches: [
+    { id: 'M-01', number: 'PARTAI #01', category: 'kyorugi', division: 'Senior Putra -58 kg', chung: 'Dimas Pratama (Jabar)', hong: 'Rian Hidayat (Jatim)', status: 'SELESAI' },
+    { id: 'M-02', number: 'PARTAI #02', category: 'kyorugi', division: 'Senior Putri -49 kg', chung: 'Nabila Putri (DKI)', hong: 'Dewi Lestari (Bali)', status: 'SELESAI' },
+    { id: 'M-03', number: 'PARTAI #03', category: 'poomsae_rec', division: 'Individual Putra Senior', chung: 'Farhan Maulana (DIY)', hong: '-', status: 'SELESAI' },
+    { id: 'M-04', number: 'PARTAI #04', category: 'kyorugi', division: 'Senior Putra -68 kg', chung: 'Ahmad Rizky (Jabar)', hong: 'Budi Santoso (DKI)', status: 'BERLANGSUNG' },
+    { id: 'M-05', number: 'PARTAI #05', category: 'poomsae_free', division: 'Team Freestyle Campuran', chung: 'Tim Garuda Nusantara (INA)', hong: '-', status: 'MENUNGGU' },
+    { id: 'M-06', number: 'PARTAI #06', category: 'kyorugi', division: 'Final Putra -80 kg', chung: 'Kevin Julio (Sumut)', hong: 'Teguh Wibowo (Jateng)', status: 'MENUNGGU' }
+  ],
+
+  // State Kyorugi
+  kyorugi: {
+    round: 1,
+    maxRounds: 3,
+    timerSeconds: 120,
+    timerInitial: 120,
+    timerRunning: false,
+    timerInterval: null,
+    pointGapAlert: false,
+    winner: null, // null | 'chung' | 'hong'
+    winReason: '',
+    roundHistory: [],
+    chung: {
+      name: 'AHMAD RIZKY',
+      team: 'JAWA BARAT',
+      score: 0,
+      gamjeom: 0,
+      roundsWon: 0,
+      hits: 0,
+      replayCardRemaining: 1 // Kuota kartu banding video replay
+    },
+    hong: {
+      name: 'BUDI SANTOSO',
+      team: 'DKI JAKARTA',
+      score: 0,
+      gamjeom: 0,
+      roundsWon: 0,
+      hits: 0,
+      replayCardRemaining: 1
+    }
+  },
+
+  // State Poomsae Recognised
+  poomsaeRec: {
+    athleteName: 'SITI RAHMAWATI',
+    team: 'JAWA TENGAH',
+    poomsaeName: 'KORYO (ê³ ë ¤)',
+    roundType: '1st Poomsae',
+    judges: [
+      { id: 'J1', accuracy: 3.7, presentation: 4.5 },
+      { id: 'J2', accuracy: 3.8, presentation: 4.6 },
+      { id: 'J3', accuracy: 3.6, presentation: 4.3 },
+      { id: 'J4', accuracy: 3.9, presentation: 4.7 },
+      { id: 'J5', accuracy: 3.5, presentation: 4.4 }
+    ],
+    deductions: 0.0,
+    calculated: true,
+    result: {
+      accuracyFinal: 3.70,
+      presentationFinal: 4.50,
+      totalScore: 8.20,
+      droppedAccMin: 'J5',
+      droppedAccMax: 'J4',
+      droppedPresMin: 'J3',
+      droppedPresMax: 'J4'
+    }
+  },
+
+  // State Poomsae Freestyle
+  poomsaeFree: {
+    athleteName: 'TIM GARUDA NUSANTARA',
+    team: 'INDONESIA',
+    musicTitle: 'Taekwondo Beats & Orchestral Epic',
+    musicDuration: 95,
+    timerRunning: false,
+    timerInterval: null,
+    statusNote: 'Optimal (90s - 100s)',
+    judges: [
+      {
+        id: 'J1',
+        tech: { jumpKick: 0.9, multipleKick: 0.8, spinKick: 0.9, basicMoves: 0.8, acrobatic: 0.9, basicStance: 0.8 },
+        pres: { creativity: 0.9, harmony: 0.8, energy: 0.9, rhythm: 0.8 }
+      },
+      {
+        id: 'J2',
+        tech: { jumpKick: 0.8, multipleKick: 0.7, spinKick: 0.8, basicMoves: 0.8, acrobatic: 0.8, basicStance: 0.7 },
+        pres: { creativity: 0.8, harmony: 0.8, energy: 0.8, rhythm: 0.8 }
+      },
+      {
+        id: 'J3',
+        tech: { jumpKick: 0.9, multipleKick: 0.9, spinKick: 0.9, basicMoves: 0.9, acrobatic: 0.9, basicStance: 0.8 },
+        pres: { creativity: 0.9, harmony: 0.9, energy: 0.9, rhythm: 0.9 }
+      },
+      {
+        id: 'J4',
+        tech: { jumpKick: 0.7, multipleKick: 0.7, spinKick: 0.8, basicMoves: 0.7, acrobatic: 0.8, basicStance: 0.7 },
+        pres: { creativity: 0.7, harmony: 0.7, energy: 0.8, rhythm: 0.7 }
+      },
+      {
+        id: 'J5',
+        tech: { jumpKick: 0.8, multipleKick: 0.8, spinKick: 0.8, basicMoves: 0.8, acrobatic: 0.8, basicStance: 0.8 },
+        pres: { creativity: 0.8, harmony: 0.8, energy: 0.8, rhythm: 0.8 }
+      }
+    ],
+    penalty: 0.0,
+    result: {
+      technicalFinal: 5.10,
+      presentationFinal: 3.30,
+      totalScore: 8.40
+    }
+  }
+};
+
+class AppState {
+  constructor() {
+    const saved = localStorage.getItem('tkd_saved_state');
+    if (saved) {
+      try {
+        this.data = JSON.parse(saved);
+        this.data.kyorugi.timerRunning = false;
+        this.data.kyorugi.timerInterval = null;
+        this.data.medical.active = false;
+        this.data.medical.interval = null;
+        if (this.data.poomsaeFree) {
+          this.data.poomsaeFree.timerRunning = false;
+          this.data.poomsaeFree.timerInterval = null;
+        }
+      } catch (e) {
+        this.data = JSON.parse(JSON.stringify(DEFAULT_STATE));
+      }
+    } else {
+      this.data = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    }
+    this.sync = new BoardSync((incoming) => this.handleSync(incoming));
+  }
+
+  handleSync(incoming) {
+    if (incoming.type === 'STATE_UPDATE') {
+      // Perbarui data lokal jika dari tab lain
+      this.data = { ...this.data, ...incoming.payload };
+      this.render();
+    } else if (incoming.type === 'PLAY_BUZZER') {
+      window.soundSys.playBuzzer();
+    }
+  }
+
+  notifyChange() {
+    this.render();
+    this.sync.broadcast('STATE_UPDATE', this.data);
+    try {
+      localStorage.setItem('tkd_saved_state', JSON.stringify(this.data));
+    } catch (e) {}
+  }
+
+  setCategory(cat) {
+    this.data.category = cat;
+    this.notifyChange();
+  }
+
+  setViewMode(mode) {
+    this.data.viewMode = mode;
+    this.notifyChange();
+  }
+
+  // --- KYORUGI LOGIC ---
+  startKyorugiTimer() {
+    if (this.data.kyorugi.timerRunning) return;
+    window.soundSys.playBeep(880, 0.15); // Kye-sok tone
+    this.data.kyorugi.timerRunning = true;
+    this.data.kyorugi.timerInterval = setInterval(() => {
+      if (this.data.kyorugi.timerSeconds > 0) {
+        this.data.kyorugi.timerSeconds--;
+        this.renderTimerOnly();
+        this.sync.broadcast('STATE_UPDATE', this.data);
+      } else {
+        this.pauseKyorugiTimer();
+        window.soundSys.playBuzzer();
+        this.sync.broadcast('PLAY_BUZZER', {});
+        this.evaluateRoundWinner();
+      }
+    }, 1000);
+    this.notifyChange();
+  }
+
+  pauseKyorugiTimer() {
+    if (!this.data.kyorugi.timerRunning) return;
+    clearInterval(this.data.kyorugi.timerInterval);
+    this.data.kyorugi.timerRunning = false;
+    window.soundSys.playKalyeo();
+    this.notifyChange();
+  }
+
+  toggleKyorugiTimer() {
+    if (this.data.kyorugi.timerRunning) {
+      this.pauseKyorugiTimer();
+    } else {
+      this.startKyorugiTimer();
+    }
+  }
+
+  resetKyorugiTimer(seconds = 120) {
+    this.pauseKyorugiTimer();
+    this.data.kyorugi.timerSeconds = seconds;
+    this.data.kyorugi.timerInitial = seconds;
+    this.notifyChange();
+  }
+
+  addKyorugiPoint(side, points) {
+    const fighter = this.data.kyorugi[side];
+    fighter.score = Math.max(0, fighter.score + points);
+    fighter.hits += (points > 0 ? 1 : 0);
+    window.soundSys.playPoint();
+    this.checkPointGap();
+    this.notifyChange();
+  }
+
+  addGamJeom(side) {
+    const fighter = this.data.kyorugi[side];
+    const opponentSide = side === 'chung' ? 'hong' : 'chung';
+    const opponent = this.data.kyorugi[opponentSide];
+
+    if (fighter.gamjeom < 5) {
+      fighter.gamjeom++;
+      opponent.score++; // Gamjeom lawan memberikan 1 poin untuk kita
+      window.soundSys.playGamJeom();
+
+      // Cek limit 5 gam-jeom dalam 1 ronde
+      if (fighter.gamjeom >= 5) {
+        this.pauseKyorugiTimer();
+        window.soundSys.playBuzzer();
+        this.declareRoundWinner(opponentSide, `Kemenangan Ronde karena 5 Gam-jeom (${side.toUpperCase()})`);
+      } else {
+        this.checkPointGap();
+      }
+    }
+    this.notifyChange();
+  }
+
+  subtractGamJeom(side) {
+    const fighter = this.data.kyorugi[side];
+    const opponentSide = side === 'chung' ? 'hong' : 'chung';
+    const opponent = this.data.kyorugi[opponentSide];
+
+    if (fighter.gamjeom > 0) {
+      fighter.gamjeom--;
+      opponent.score = Math.max(0, opponent.score - 1);
+    }
+    this.notifyChange();
+  }
+
+  checkPointGap() {
+    const diff = Math.abs(this.data.kyorugi.chung.score - this.data.kyorugi.hong.score);
+    if (diff >= 12) {
+      this.data.kyorugi.pointGapAlert = true;
+    } else {
+      this.data.kyorugi.pointGapAlert = false;
+    }
+  }
+
+  evaluateRoundWinner() {
+    const cScore = this.data.kyorugi.chung.score;
+    const hScore = this.data.kyorugi.hong.score;
+
+    if (cScore > hScore) {
+      this.declareRoundWinner('chung', 'Pemenang Ronde berdasarkan Skor Poin');
+    } else if (hScore > cScore) {
+      this.declareRoundWinner('hong', 'Pemenang Ronde berdasarkan Skor Poin');
+    } else {
+      // Tie-break (Superiority / Hits)
+      if (this.data.kyorugi.chung.hits > this.data.kyorugi.hong.hits) {
+        this.declareRoundWinner('chung', 'Pemenang Ronde melalui Tie-Break (Jumlah Pukulan/Hits)');
+      } else {
+        this.declareRoundWinner('hong', 'Pemenang Ronde melalui Tie-Break (Jumlah Pukulan/Hits)');
+      }
+    }
+  }
+
+  declareRoundWinner(winnerSide, reason) {
+    this.data.kyorugi[winnerSide].roundsWon++;
+    this.data.kyorugi.roundHistory.push({
+      round: this.data.kyorugi.round,
+      winner: winnerSide,
+      chungScore: this.data.kyorugi.chung.score,
+      hongScore: this.data.kyorugi.hong.score,
+      reason
+    });
+
+    // Cek Best of 3 (2 ronde menang = juara partai)
+    if (this.data.kyorugi[winnerSide].roundsWon >= 2) {
+      this.data.kyorugi.winner = winnerSide;
+      this.data.kyorugi.winReason = `Menang Best of 3 Rounds (${reason})`;
+    }
+
+    this.notifyChange();
+  }
+
+  nextRound() {
+    if (this.data.kyorugi.round < this.data.kyorugi.maxRounds) {
+      this.pauseKyorugiTimer();
+      this.data.kyorugi.round++;
+      this.data.kyorugi.timerSeconds = this.data.kyorugi.timerInitial;
+      // Aturan WT: Skor poin dan gam-jeom di-reset di setiap ronde baru
+      this.data.kyorugi.chung.score = 0;
+      this.data.kyorugi.chung.gamjeom = 0;
+      this.data.kyorugi.hong.score = 0;
+      this.data.kyorugi.hong.gamjeom = 0;
+      this.data.kyorugi.pointGapAlert = false;
+      this.notifyChange();
+    }
+  }
+
+  startGoldenPointRound() {
+    this.pauseKyorugiTimer();
+    this.data.kyorugi.round = 4;
+    this.data.kyorugi.roundName = 'GOLDEN ROUND (ê³¨ë“ ë¼ìš´ë“œ)';
+    this.data.kyorugi.timerSeconds = 60;
+    this.data.kyorugi.timerInitial = 60;
+    this.data.kyorugi.chung.score = 0;
+    this.data.kyorugi.chung.gamjeom = 0;
+    this.data.kyorugi.hong.score = 0;
+    this.data.kyorugi.hong.gamjeom = 0;
+    this.data.kyorugi.pointGapAlert = false;
+    window.soundSys.playBeep(880, 0.3);
+    this.notifyChange();
+  }
+
+  resetKyorugiMatch() {
+    this.pauseKyorugiTimer();
+    this.data.kyorugi = JSON.parse(JSON.stringify(DEFAULT_STATE.kyorugi));
+    this.notifyChange();
+  }
+
+  // --- POOMSAE FREESTYLE MUSIC TIMER ---
+  toggleFreestyleMusicTimer() {
+    if (this.data.poomsaeFree.timerRunning) {
+      clearInterval(this.data.poomsaeFree.timerInterval);
+      this.data.poomsaeFree.timerRunning = false;
+      window.soundSys.stopFreestyleBeat();
+    } else {
+      this.data.poomsaeFree.timerRunning = true;
+      window.soundSys.startFreestyleBeat();
+      this.data.poomsaeFree.timerInterval = setInterval(() => {
+        if (this.data.poomsaeFree.musicDuration > 0) {
+          this.data.poomsaeFree.musicDuration--;
+          if (this.data.poomsaeFree.musicDuration >= 90 && this.data.poomsaeFree.musicDuration <= 100) {
+            this.data.poomsaeFree.statusNote = 'Optimal (90s - 100s)';
+          } else if (this.data.poomsaeFree.musicDuration < 90) {
+            this.data.poomsaeFree.statusNote = 'Di Bawah 90s (-0.3/10s)';
+          }
+          this.notifyChange();
+        } else {
+          this.toggleFreestyleMusicTimer();
+          window.soundSys.playBuzzer();
+        }
+      }, 1000);
+    }
+    this.notifyChange();
+  }
+
+  resetFreestyleMusicTimer(seconds = 95) {
+    if (this.data.poomsaeFree.timerRunning) {
+      this.toggleFreestyleMusicTimer();
+    }
+    this.data.poomsaeFree.musicDuration = seconds;
+    this.data.poomsaeFree.statusNote = 'Optimal (90s - 100s)';
+    this.notifyChange();
+  }
+
+  // --- POOMSAE RECOGNISED LOGIC ---
+  calculatePoomsaeRecognised() {
+    const judges = this.data.poomsaeRec.judges;
+    // Ambil akurasi & presentasi
+    const accScores = judges.map(j => ({ id: j.id, val: parseFloat(j.accuracy) }));
+    const presScores = judges.map(j => ({ id: j.id, val: parseFloat(j.presentation) }));
+
+    // Urutkan untuk mencari min & max
+    const sortedAcc = [...accScores].sort((a, b) => a.val - b.val);
+    const sortedPres = [...presScores].sort((a, b) => a.val - b.val);
+
+    const minAcc = sortedAcc[0];
+    const maxAcc = sortedAcc[sortedAcc.length - 1];
+    const minPres = sortedPres[0];
+    const maxPres = sortedPres[sortedPres.length - 1];
+
+    // Truncated Mean: buang min dan max
+    const filteredAcc = sortedAcc.slice(1, -1).map(x => x.val);
+    const filteredPres = sortedPres.slice(1, -1).map(x => x.val);
+
+    const avgAcc = filteredAcc.reduce((a, b) => a + b, 0) / filteredAcc.length;
+    const avgPres = filteredPres.reduce((a, b) => a + b, 0) / filteredPres.length;
+    const deductions = parseFloat(this.data.poomsaeRec.deductions) || 0.0;
+    const total = avgAcc + avgPres - deductions;
+
+    this.data.poomsaeRec.result = {
+      accuracyFinal: avgAcc.toFixed(2),
+      presentationFinal: avgPres.toFixed(2),
+      totalScore: total.toFixed(2),
+      droppedAccMin: minAcc.id,
+      droppedAccMax: maxAcc.id,
+      droppedPresMin: minPres.id,
+      droppedPresMax: maxPres.id
+    };
+    this.data.poomsaeRec.calculated = true;
+    window.soundSys.playBuzzer();
+    this.notifyChange();
+  }
+
+  // --- POOMSAE FREESTYLE LOGIC ---
+  calculatePoomsaeFreestyle() {
+    const judges = this.data.poomsaeFree.judges;
+    const techTotals = judges.map(j => {
+      const sum = Object.values(j.tech).reduce((acc, v) => acc + parseFloat(v), 0);
+      return { id: j.id, val: sum };
+    });
+    const presTotals = judges.map(j => {
+      const sum = Object.values(j.pres).reduce((acc, v) => acc + parseFloat(v), 0);
+      return { id: j.id, val: sum };
+    });
+
+    const sortedTech = [...techTotals].sort((a, b) => a.val - b.val);
+    const sortedPres = [...presTotals].sort((a, b) => a.val - b.val);
+
+    const filteredTech = sortedTech.slice(1, -1).map(x => x.val);
+    const filteredPres = sortedPres.slice(1, -1).map(x => x.val);
+
+    const avgTech = filteredTech.reduce((a, b) => a + b, 0) / filteredTech.length;
+    const avgPres = filteredPres.reduce((a, b) => a + b, 0) / filteredPres.length;
+    const penalty = parseFloat(this.data.poomsaeFree.penalty) || 0.0;
+    const total = avgTech + avgPres - penalty;
+
+    this.data.poomsaeFree.result = {
+      technicalFinal: avgTech.toFixed(2),
+      presentationFinal: avgPres.toFixed(2),
+      totalScore: total.toFixed(2)
+    };
+    window.soundSys.playBuzzer();
+    this.notifyChange();
+  }
+
+  // --- VIDEO REPLAY (IVR) LOGIC ---
+  triggerIVR(side, item = 'Tendangan Kepala (Head Kick)') {
+    const fighter = this.data.kyorugi[side];
+    if (fighter.replayCardRemaining <= 0) {
+      alert(`Kuota kartu banding Video Replay untuk ${side.toUpperCase()} sudah habis!`);
+      return;
+    }
+    this.pauseKyorugiTimer();
+    this.data.ivr.active = true;
+    this.data.ivr.requestedBy = side;
+    this.data.ivr.cardItem = item;
+    this.data.ivr.decision = null;
+    window.soundSys.playBeep(440, 0.4, 'square');
+    this.notifyChange();
+  }
+
+  resolveIVR(decision) {
+    // decision: 'ACCEPTED' | 'REJECTED'
+    this.data.ivr.decision = decision;
+    const side = this.data.ivr.requestedBy;
+    if (decision === 'REJECTED') {
+      // Kartu kuota hangus
+      if (this.data.kyorugi[side]) {
+        this.data.kyorugi[side].replayCardRemaining = Math.max(0, this.data.kyorugi[side].replayCardRemaining - 1);
+      }
+    }
+    window.soundSys.playBeep(decision === 'ACCEPTED' ? 880 : 330, 0.3);
+    setTimeout(() => {
+      this.data.ivr.active = false;
+      this.notifyChange();
+    }, 2500);
+    this.notifyChange();
+  }
+
+  // --- MEDICAL TIMEOUT (1:00) LOGIC ---
+  startMedicalTimeout(fighter) {
+    this.pauseKyorugiTimer();
+    this.data.medical.active = true;
+    this.data.medical.fighter = fighter;
+    this.data.medical.seconds = 60;
+    
+    if (this.data.medical.interval) clearInterval(this.data.medical.interval);
+    this.data.medical.interval = setInterval(() => {
+      if (this.data.medical.seconds > 0) {
+        this.data.medical.seconds--;
+        this.renderTimerOnly();
+        this.sync.broadcast('STATE_UPDATE', this.data);
+      } else {
+        this.stopMedicalTimeout();
+        window.soundSys.playBuzzer();
+      }
+    }, 1000);
+    window.soundSys.playKalyeo();
+    this.notifyChange();
+  }
+
+  stopMedicalTimeout() {
+    if (this.data.medical.interval) clearInterval(this.data.medical.interval);
+    this.data.medical.active = false;
+    this.notifyChange();
+  }
+
+  // --- JADWAL PARTAI MANAGEMENT ---
+  selectMatch(matchId) {
+    const match = this.data.matches.find(m => m.id === matchId);
+    if (!match) return;
+
+    this.data.matchNumber = match.number;
+    this.data.division = match.division;
+    this.data.category = match.category;
+
+    if (match.category === 'kyorugi') {
+      const partsChung = match.chung.split('(');
+      const partsHong = match.hong.split('(');
+      this.data.kyorugi.chung.name = partsChung[0].trim().toUpperCase();
+      this.data.kyorugi.chung.team = (partsChung[1] || 'KONTINGEN').replace(')', '').trim().toUpperCase();
+      this.data.kyorugi.hong.name = partsHong[0].trim().toUpperCase();
+      this.data.kyorugi.hong.team = (partsHong[1] || 'KONTINGEN').replace(')', '').trim().toUpperCase();
+      this.resetKyorugiMatch();
+    } else {
+      const parts = match.chung.split('(');
+      if (match.category === 'poomsae_rec') {
+        this.data.poomsaeRec.athleteName = parts[0].trim().toUpperCase();
+        this.data.poomsaeRec.team = (parts[1] || 'KONTINGEN').replace(')', '').trim().toUpperCase();
+      } else {
+        this.data.poomsaeFree.athleteName = parts[0].trim().toUpperCase();
+        this.data.poomsaeFree.team = (parts[1] || 'KONTINGEN').replace(')', '').trim().toUpperCase();
+      }
+    }
+
+    this.data.matches.forEach(m => {
+      if (m.id === matchId) m.status = 'BERLANGSUNG';
+      else if (m.status === 'BERLANGSUNG') m.status = 'SELESAI';
+    });
+
+    this.notifyChange();
+  }
+
+  // --- JURUS / JUDGE PAD LOGIC ---
+  setJudgeId(judgeId) {
+    this.data.selectedJudgeId = judgeId;
+    this.notifyChange();
+  }
+
+  updateJudgeScore(judgeId, acc, pres) {
+    const j = this.data.poomsaeRec.judges.find(item => item.id === judgeId);
+    if (j) {
+      if (acc !== undefined) j.accuracy = parseFloat(acc);
+      if (pres !== undefined) j.presentation = parseFloat(pres);
+      this.notifyChange();
+    }
+  }
+
+  formatTime(totalSeconds) {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  renderTimerOnly() {
+    const timerEls = document.querySelectorAll('.dynamic-timer-text');
+    const formatted = this.formatTime(this.data.kyorugi.timerSeconds);
+    timerEls.forEach(el => el.textContent = formatted);
+
+    const medEls = document.querySelectorAll('.dynamic-medical-text');
+    medEls.forEach(el => el.textContent = `${this.data.medical.seconds}s`);
+  }
+
+  printScoresheet() {
+    const printEl = document.getElementById('print-scoresheet');
+    if (!printEl) return;
+
+    const { category, court, division, matchNumber, kyorugi, poomsaeRec } = this.data;
+    const now = new Date().toLocaleString('id-ID');
+
+    let content = `
+      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; color: #111;">
+        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px;">
+          <h2 style="margin: 0; font-size: 16px; text-transform: uppercase;">KEJUARAAN NASIONAL TAEKWONDO CHAMPIONSHIP</h2>
+          <h1 style="margin: 5px 0; font-size: 20px; font-weight: bold;">BERITA ACARA & LEMBAR HASIL RESMI PERTANDINGAN</h1>
+          <p style="margin: 0; font-size: 11px; color: #555;">Official World Taekwondo (WT) Match Scoresheet</p>
+        </div>
+
+        <table style="width: 100%; font-size: 12px; margin-bottom: 15px; border-collapse: collapse;">
+          <tr>
+            <td style="width: 25%; font-weight: bold; padding: 4px;">Ring / Court:</td>
+            <td style="width: 25%; padding: 4px;">${court}</td>
+            <td style="width: 25%; font-weight: bold; padding: 4px;">Nomor Partai:</td>
+            <td style="width: 25%; padding: 4px;">${matchNumber}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: bold; padding: 4px;">Divisi / Kelas:</td>
+            <td style="padding: 4px;">${division}</td>
+            <td style="font-weight: bold; padding: 4px;">Waktu Cetak:</td>
+            <td style="padding: 4px;">${now}</td>
+          </tr>
+        </table>
+    `;
+
+    if (category === 'kyorugi') {
+      content += `
+        <table class="print-table">
+          <thead>
+            <tr>
+              <th>Ronde</th>
+              <th>CHUNG (BIRU)<br/><b>${kyorugi.chung.name}</b></th>
+              <th>HONG (MERAH)<br/><b>${kyorugi.hong.name}</b></th>
+              <th>Pemenang Ronde</th>
+              <th>Keterangan</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${[1, 2, 3].map(r => {
+              const hist = kyorugi.roundHistory.find(h => h.round === r);
+              return `
+                <tr>
+                  <td><b>Ronde ${r}</b></td>
+                  <td>${hist ? `${hist.chungScore} Poin` : (r === kyorugi.round ? `${kyorugi.chung.score} Poin` : '-')}</td>
+                  <td>${hist ? `${hist.hongScore} Poin` : (r === kyorugi.round ? `${kyorugi.hong.score} Poin` : '-')}</td>
+                  <td><b>${hist ? (hist.winner === 'chung' ? 'CHUNG (BIRU)' : 'HONG (MERAH)') : '-'}</b></td>
+                  <td>${hist ? hist.reason : '-'}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+
+        <div style="margin-top: 15px; padding: 10px; border: 2px solid #000; background: #fafafa; text-align: center;">
+          <div style="font-size: 12px; font-weight: bold;">PEMENANG PARTAI RESMI (MATCH WINNER):</div>
+          <div style="font-size: 18px; font-weight: bold; margin: 4px 0;">
+            ${kyorugi.winner ? (kyorugi.winner === 'chung' ? `${kyorugi.chung.name} (CHUNG / BIRU)` : `${kyorugi.hong.name} (HONG / MERAH)`) : 'Sedang Berlangsung'}
+          </div>
+          <div style="font-size: 12px;">Skor Ronde: Chung ${kyorugi.chung.roundsWon} - ${kyorugi.hong.roundsWon} Hong | Gam-jeom: ${kyorugi.chung.gamjeom} vs ${kyorugi.hong.gamjeom}</div>
+        </div>
+      `;
+    } else {
+      content += `
+        <div style="margin-bottom: 10px; font-size: 13px;">
+          <b>Peserta:</b> ${poomsaeRec.athleteName} (${poomsaeRec.team}) | <b>Jurus:</b> ${poomsaeRec.poomsaeName}
+        </div>
+        <table class="print-table">
+          <thead>
+            <tr>
+              <th>Juri</th>
+              <th>Akurasi (Max 4.0)</th>
+              <th>Presentasi (Max 6.0)</th>
+              <th>Total</th>
+              <th>Status Truncated</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${poomsaeRec.judges.map(j => {
+              const isDroppedAcc = j.id === poomsaeRec.result.droppedAccMin || j.id === poomsaeRec.result.droppedAccMax;
+              const isDroppedPres = j.id === poomsaeRec.result.droppedPresMin || j.id === poomsaeRec.result.droppedPresMax;
+              return `
+                <tr>
+                  <td><b>${j.id}</b></td>
+                  <td>${isDroppedAcc ? `<s>${j.accuracy}</s>` : j.accuracy}</td>
+                  <td>${isDroppedPres ? `<s>${j.presentation}</s>` : j.presentation}</td>
+                  <td>${(j.accuracy + j.presentation).toFixed(2)}</td>
+                  <td>${(isDroppedAcc || isDroppedPres) ? 'Dibuang (Min/Max)' : 'Dihitung'}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+          <tfoot>
+            <tr style="font-weight: bold; background: #eee;">
+              <td>SKOR AKHIR</td>
+              <td>${poomsaeRec.result.accuracyFinal}</td>
+              <td>${poomsaeRec.result.presentationFinal}</td>
+              <td colspan="2" style="font-size: 15px;">TOTAL: ${poomsaeRec.result.totalScore}</td>
+            </tr>
+          </tfoot>
+        </table>
+      `;
+    }
+
+    content += `
+        <div style="margin-top: 35px; display: flex; justify-content: space-between; font-size: 12px; text-align: center;">
+          <div style="width: 30%;">
+            <p>Wasit Tengah (Center Referee),</p>
+            <br/><br/><br/>
+            <p style="border-top: 1px solid #000; margin: 0; padding-top: 5px;">( .................................... )</p>
+          </div>
+          <div style="width: 30%;">
+            <p>Operator Meja,</p>
+            <br/><br/><br/>
+            <p style="border-top: 1px solid #000; margin: 0; padding-top: 5px;">( .................................... )</p>
+          </div>
+          <div style="width: 30%;">
+            <p>Ketua Pertandingan (CS),</p>
+            <br/><br/><br/>
+            <p style="border-top: 1px solid #000; margin: 0; padding-top: 5px;">( .................................... )</p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    printEl.innerHTML = content;
+    window.print();
+  }
+
+  // --- PENGATURAN / SETTINGS MODAL ---
+  toggleSettingsModal() {
+    this.data.settingsModalOpen = !this.data.settingsModalOpen;
+    this.notifyChange();
+  }
+
+  saveSettings(title, court, duration, pointGap, muted) {
+    this.data.settings.tournamentTitle = title;
+    this.data.settings.courtName = court;
+    this.data.court = court;
+    this.data.settings.roundDuration = parseInt(duration) || 120;
+    this.data.kyorugi.timerInitial = this.data.settings.roundDuration;
+    this.data.kyorugi.timerSeconds = this.data.settings.roundDuration;
+    this.data.settings.pointGapEnabled = !!pointGap;
+    this.data.settings.soundMuted = !!muted;
+    window.soundSys.soundEnabled = !muted;
+    this.data.settingsModalOpen = false;
+    this.notifyChange();
+  }
+
+  // --- EKSPOR DATA HASIL PERTANDINGAN ---
+  exportMatchesJSON() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data.matches, null, 2));
+    const dlAnchorElem = document.createElement('a');
+    dlAnchorElem.setAttribute("href", dataStr);
+    dlAnchorElem.setAttribute("download", `Hasil_Pertandingan_Taekwondo_${this.data.court.replace(/\s+/g, '_')}.json`);
+    dlAnchorElem.click();
+  }
+
+  exportMatchesCSV() {
+    let csv = "Nomor Partai,Kategori,Divisi,Sudut Biru (Chung),Sudut Merah (Hong),Status\n";
+    this.data.matches.forEach(m => {
+      csv += `"${m.number}","${m.category}","${m.division}","${m.chung}","${m.hong}","${m.status}"\n`;
+    });
+    const dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+    const dlAnchorElem = document.createElement('a');
+    dlAnchorElem.setAttribute("href", dataStr);
+    dlAnchorElem.setAttribute("download", `Hasil_Pertandingan_Taekwondo_${this.data.court.replace(/\s+/g, '_')}.csv`);
+    dlAnchorElem.click();
+  }
+
+  render() {
+    if (typeof window.renderUI === 'function') {
+      window.renderUI(this);
+    }
+  }
+}
+
+window.app = new AppState();
+
+
+
+  // ==========================================
+  // 3. UI RENDERER (ALL VIEWS & MODES)
+  // ==========================================
+/**
+ * UI Renderer for Taekwondo Scoring Board
+ * Menghasilkan komponen HTML untuk Mode Layar TV dan Mode Operator Meja
+ */
+
+window.renderUI = function (appState) {
+  const container = document.getElementById('app-root');
+  if (!container) return;
+
+  const { viewMode, category } = appState.data;
+
+  // Header Bar Navigasi (Pilihan Kategori & Mode)
+  let html = `
+    <!-- Top Control Bar (Bisa disembunyikan saat presentasi TV penuh) -->
+    <header class="bg-slate-900 border-b border-slate-800 px-4 py-2 flex flex-wrap items-center justify-between text-xs sm:text-sm text-slate-300">
+      <div class="flex items-center space-x-3">
+        <div class="flex items-center space-x-1.5 font-bold tracking-wider text-amber-400 font-display text-base sm:text-lg">
+          <span class="inline-block w-3 h-3 bg-red-600 rounded-full animate-ping"></span>
+          <span>TAEKWONDO SCOREBOARD PRO</span>
+        </div>
+        <span class="bg-slate-800 text-slate-400 px-2 py-0.5 rounded text-xs border border-slate-700">WT Standard</span>
+      </div>
+
+      <!-- Kategori Switcher -->
+      <div class="flex items-center space-x-1 bg-slate-950 p-1 rounded-lg border border-slate-800 my-1">
+        <button onclick="app.setCategory('kyorugi')" class="px-3 py-1 rounded transition-all font-semibold ${category === 'kyorugi' ? 'bg-blue-600 text-white shadow' : 'hover:text-white text-slate-400'}">
+          ðŸ¥‹ Kyorugi (Sparring)
+        </button>
+        <button onclick="app.setCategory('poomsae_rec')" class="px-3 py-1 rounded transition-all font-semibold ${category === 'poomsae_rec' ? 'bg-amber-600 text-white shadow' : 'hover:text-white text-slate-400'}">
+          ðŸ… Poomsae Recognised
+        </button>
+        <button onclick="app.setCategory('poomsae_free')" class="px-3 py-1 rounded transition-all font-semibold ${category === 'poomsae_free' ? 'bg-purple-600 text-white shadow' : 'hover:text-white text-slate-400'}">
+          âš¡ Poomsae Freestyle
+        </button>
+      </div>
+
+      <!-- View Mode Switcher & Tools -->
+      <div class="flex items-center space-x-2 my-1">
+        <div class="bg-slate-950 p-1 rounded-lg border border-slate-800 flex items-center space-x-0.5">
+          <button onclick="app.setViewMode('tv')" class="px-2.5 py-1 rounded font-medium ${viewMode === 'tv' ? 'bg-emerald-600 text-white font-bold' : 'text-slate-400 hover:text-white'}">
+            ðŸ“º Layar TV
+          </button>
+          <button onclick="app.setViewMode('operator')" class="px-2.5 py-1 rounded font-medium ${viewMode === 'operator' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-white'}">
+            ðŸŽ›ï¸ Operator Meja
+          </button>
+          <button onclick="app.setViewMode('judge')" class="px-2.5 py-1 rounded font-medium ${viewMode === 'judge' ? 'bg-amber-600 text-white font-bold' : 'text-slate-400 hover:text-white'}">
+            ðŸ“± Pad Juri
+          </button>
+          <button onclick="app.setViewMode('matches')" class="px-2.5 py-1 rounded font-medium ${viewMode === 'matches' ? 'bg-purple-600 text-white font-bold' : 'text-slate-400 hover:text-white'}">
+            ðŸ“‹ Jadwal Partai
+          </button>
+          <button onclick="app.setViewMode('obs')" class="px-2.5 py-1 rounded font-medium ${viewMode === 'obs' ? 'bg-rose-600 text-white font-bold' : 'text-slate-400 hover:text-white'}">
+            ðŸŽ¥ OBS Stream
+          </button>
+        </div>
+
+        <button onclick="window.soundSys.playBuzzer()" title="Uji Suara Klakson Buzzer" class="p-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded border border-slate-700 flex items-center space-x-1">
+          <span>ðŸ”Š</span> <span class="hidden sm:inline">Buzzer</span>
+        </button>
+
+        <button onclick="app.printScoresheet()" title="Cetak Berita Acara Pertandingan" class="p-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded border border-slate-700 flex items-center space-x-1">
+          <span>ðŸ–¨ï¸</span> <span class="hidden sm:inline">Cetak</span>
+        </button>
+
+        <button onclick="app.toggleSettingsModal()" title="Pengaturan Turnamen & Durasi" class="p-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 flex items-center space-x-1">
+          <span>âš™ï¸</span> <span class="hidden sm:inline">Setelan</span>
+        </button>
+
+        <button onclick="toggleFullscreen()" class="p-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-700">
+          â›¶ Fullscreen
+        </button>
+      </div>
+    </header>
+  `;
+
+  // Content Area Sesuai Mode
+  if (viewMode === 'tv') {
+    html += renderTVDisplay(appState);
+  } else if (viewMode === 'operator') {
+    html += renderOperatorConsole(appState);
+  } else if (viewMode === 'judge') {
+    html += renderJudgePad(appState);
+  } else if (viewMode === 'matches') {
+    html += renderMatchSchedule(appState);
+  } else if (viewMode === 'obs') {
+    html += renderOBSOverlay(appState);
+  }
+
+  // Render Modal Pengaturan jika aktif
+  if (appState.data.settingsModalOpen) {
+    html += renderSettingsModal(appState);
+  }
+
+  container.innerHTML = html;
+};
+
+// ==========================================
+// 1. RENDER DISPLAY LAYAR TV (BIG SCREEN VIEW)
+// ==========================================
+function renderTVDisplay(appState) {
+  const { category, court, division } = appState.data;
+
+  return `
+    <main class="w-full min-h-[calc(100vh-50px)] bg-black text-white flex flex-col justify-between p-3 sm:p-5 select-none overflow-hidden">
+      <!-- Broadcast Info Header -->
+      <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border border-slate-700 rounded-xl px-6 py-2.5 flex items-center justify-between shadow-2xl mb-3">
+        <div class="flex items-center space-x-4">
+          <span class="bg-amber-500 text-black font-extrabold px-3 py-0.5 rounded text-sm sm:text-base font-display tracking-wider">
+            ${court}
+          </span>
+          <span class="text-base sm:text-xl font-bold tracking-wide text-slate-200 font-display">
+            ${division}
+          </span>
+        </div>
+        <div class="flex items-center space-x-3 text-slate-400 text-xs sm:text-sm font-semibold">
+          <span class="flex items-center space-x-1.5 text-emerald-400">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>LIVE MATCH</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- BANNER VIDEO REPLAY (IVR) OVERLAY JIKA AKTIF -->
+      ${appState.data.ivr.active ? `
+        <div class="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black px-6 py-3 rounded-xl mb-3 flex items-center justify-between font-black text-sm sm:text-lg shadow-2xl border-2 border-white animate-pulse">
+          <div class="flex items-center space-x-3">
+            <span class="text-2xl animate-spin">ðŸ“¹</span>
+            <span>INSTANT VIDEO REPLAY (IVR): SUDUT ${appState.data.ivr.requestedBy.toUpperCase()} â€” ${appState.data.ivr.cardItem.toUpperCase()}</span>
+          </div>
+          ${appState.data.ivr.decision ? `
+            <span class="px-4 py-1.5 bg-black text-white rounded-lg text-sm font-extrabold uppercase tracking-wider">
+              KEPUTUSAN: ${appState.data.ivr.decision}
+            </span>
+          ` : `
+            <span class="text-xs uppercase bg-black/80 text-amber-300 px-3 py-1 rounded-full">
+              SEDANG DITINJAU JURI REPLAY...
+            </span>
+          `}
+        </div>
+      ` : ''}
+
+      <!-- BANNER MEDICAL TIMEOUT JIKA AKTIF -->
+      ${appState.data.medical.active ? `
+        <div class="bg-red-600 text-white px-6 py-3 rounded-xl mb-3 flex items-center justify-between font-black text-sm sm:text-lg shadow-2xl border-2 border-white animate-pulse">
+          <div class="flex items-center space-x-3">
+            <span class="text-2xl">ðŸš‘</span>
+            <span>KESIAPAN MEDIS (MEDICAL TIMEOUT): ATLET ${appState.data.medical.fighter.toUpperCase()}</span>
+          </div>
+          <div class="font-digital text-3xl font-black text-amber-300 dynamic-medical-text">
+            ${appState.data.medical.seconds}s
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- Category Specific TV Screen -->
+      <div class="flex-1 flex flex-col justify-center">
+        ${category === 'kyorugi' ? renderKyorugiTV(appState) : ''}
+        ${category === 'poomsae_rec' ? renderPoomsaeRecTV(appState) : ''}
+        ${category === 'poomsae_free' ? renderPoomsaeFreeTV(appState) : ''}
+      </div>
+
+      <!-- TV Footer Sponsor/Bar -->
+      <div class="mt-3 pt-2 border-t border-slate-800 flex items-center justify-between text-slate-500 text-xs font-medium">
+        <span>World Taekwondo Official Rules â€¢ Electronic Scoring Board</span>
+        <span class="text-slate-400">Tekan <kbd class="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-300">F11</kbd> untuk Tampilan TV Layar Penuh</span>
+      </div>
+    </main>
+  `;
+}
+
+// ------------------------------------------
+// TV Display: Kyorugi (Sparring)
+// ------------------------------------------
+function renderKyorugiTV(appState) {
+  const { kyorugi } = appState.data;
+  const { chung, hong, round, maxRounds, timerSeconds, timerRunning, winner, pointGapAlert } = kyorugi;
+  const timeFormatted = appState.formatTime(timerSeconds);
+
+  return `
+    <div class="relative w-full grid grid-cols-12 gap-3 lg:gap-5 items-stretch">
+      
+      <!-- SISI BIRU (CHUNG) -->
+      <div class="col-span-5 bg-gradient-to-b from-[#004899] via-[#005cb8] to-[#003366] rounded-2xl border-4 border-blue-500 p-4 sm:p-6 flex flex-col justify-between shadow-2xl relative overflow-hidden">
+        <div class="absolute -right-16 -top-16 w-52 h-52 bg-blue-400/10 rounded-full blur-2xl pointer-events-none"></div>
+
+        <!-- Nama & Kontingen -->
+        <div>
+          <div class="flex items-center justify-between">
+            <span class="bg-blue-900/80 text-blue-200 border border-blue-400/30 px-3 py-1 rounded text-xs sm:text-sm font-extrabold tracking-wider font-display">
+              CHUNG (ì²­)
+            </span>
+            <!-- Round Won Indicator Badges -->
+            <div class="flex items-center space-x-1.5">
+              ${[1, 2].map(r => `
+                <div class="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-amber-400 ${chung.roundsWon >= r ? 'bg-amber-400 shadow-[0_0_12px_#fbbf24]' : 'bg-transparent'}"></div>
+              `).join('')}
+            </div>
+          </div>
+          <h2 class="text-2xl sm:text-4xl lg:text-5xl font-black text-white font-display tracking-tight mt-2 truncate">
+            ${chung.name}
+          </h2>
+          <p class="text-blue-200 text-sm sm:text-lg font-bold tracking-wider">${chung.team}</p>
+        </div>
+
+        <!-- SKOR BESAR CHUNG -->
+        <div class="my-auto text-center py-4">
+          <div class="font-digital text-8xl sm:text-9xl lg:text-[13rem] font-black leading-none text-white glow-blue">
+            ${chung.score}
+          </div>
+        </div>
+
+        <!-- GAM-JEOM (PENALTI) CHUNG -->
+        <div class="bg-black/40 backdrop-blur-md rounded-xl p-2.5 sm:p-3.5 border border-blue-400/30">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-xs sm:text-sm font-bold text-amber-300 tracking-wider">GAM-JEOM (ê°ì )</span>
+            <span class="text-sm sm:text-base font-extrabold text-white">${chung.gamjeom} / 5</span>
+          </div>
+          <!-- 5 Kotak Indikator Gam-jeom -->
+          <div class="grid grid-cols-5 gap-1.5">
+            ${[1, 2, 3, 4, 5].map(idx => `
+              <div class="h-3 sm:h-4 rounded ${chung.gamjeom >= idx ? 'bg-amber-400 shadow-[0_0_8px_#f59e0b]' : 'bg-slate-700/60'}"></div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- BAGIAN TENGAH (TIMER, RONDE & STATUS) -->
+      <div class="col-span-2 flex flex-col justify-between items-center bg-slate-950/80 rounded-2xl border border-slate-800 p-2 sm:p-4 text-center">
+        <!-- Ronde Badge -->
+        <div class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 px-1">
+          <div class="text-slate-400 text-[10px] sm:text-xs font-bold tracking-widest uppercase">RONDE</div>
+          <div class="font-digital text-2xl sm:text-4xl lg:text-5xl font-extrabold text-amber-400">
+            R${round}
+          </div>
+          <div class="text-[10px] text-slate-400 font-medium">BEST OF 3</div>
+        </div>
+
+        <!-- TIMER BESAR DIGITAL -->
+        <div class="my-auto w-full py-4">
+          <div class="font-digital text-4xl sm:text-6xl lg:text-7xl font-black ${timerRunning ? 'text-emerald-400 timer-running' : 'text-amber-500'} tracking-tighter dynamic-timer-text">
+            ${timeFormatted}
+          </div>
+          <div class="mt-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full inline-block ${timerRunning ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-amber-950 text-amber-400 border border-amber-800'}">
+            ${timerRunning ? 'KYE-SOK (ê³„ì†)' : 'KAL-YEO (ê°ˆë ¤)'}
+          </div>
+        </div>
+
+        <!-- Point Gap / Alert Notification -->
+        ${pointGapAlert ? `
+          <div class="w-full bg-red-950/80 border border-red-600 text-red-300 p-1.5 rounded-lg text-[10px] sm:text-xs font-bold animate-pulse">
+            âš ï¸ POINT GAP (12+)
+          </div>
+        ` : `
+          <div class="text-[10px] sm:text-xs text-slate-500">
+            Hits: ${chung.hits} - ${hong.hits}
+          </div>
+        `}
+      </div>
+
+      <!-- SISI MERAH (HONG) -->
+      <div class="col-span-5 bg-gradient-to-b from-[#b3001e] via-[#c90022] to-[#800014] rounded-2xl border-4 border-red-500 p-4 sm:p-6 flex flex-col justify-between shadow-2xl relative overflow-hidden text-right">
+        <div class="absolute -left-16 -top-16 w-52 h-52 bg-red-400/10 rounded-full blur-2xl pointer-events-none"></div>
+
+        <!-- Nama & Kontingen -->
+        <div>
+          <div class="flex items-center justify-between flex-row-reverse">
+            <span class="bg-red-900/80 text-red-200 border border-red-400/30 px-3 py-1 rounded text-xs sm:text-sm font-extrabold tracking-wider font-display">
+              HONG (í™)
+            </span>
+            <!-- Round Won Indicator Badges -->
+            <div class="flex items-center space-x-1.5 flex-row-reverse">
+              ${[1, 2].map(r => `
+                <div class="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-amber-400 ${hong.roundsWon >= r ? 'bg-amber-400 shadow-[0_0_12px_#fbbf24]' : 'bg-transparent'}"></div>
+              `).join('')}
+            </div>
+          </div>
+          <h2 class="text-2xl sm:text-4xl lg:text-5xl font-black text-white font-display tracking-tight mt-2 truncate">
+            ${hong.name}
+          </h2>
+          <p class="text-red-200 text-sm sm:text-lg font-bold tracking-wider">${hong.team}</p>
+        </div>
+
+        <!-- SKOR BESAR HONG -->
+        <div class="my-auto text-center py-4">
+          <div class="font-digital text-8xl sm:text-9xl lg:text-[13rem] font-black leading-none text-white glow-red">
+            ${hong.score}
+          </div>
+        </div>
+
+        <!-- GAM-JEOM (PENALTI) HONG -->
+        <div class="bg-black/40 backdrop-blur-md rounded-xl p-2.5 sm:p-3.5 border border-red-400/30 text-left">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-xs sm:text-sm font-bold text-amber-300 tracking-wider">GAM-JEOM (ê°ì )</span>
+            <span class="text-sm sm:text-base font-extrabold text-white">${hong.gamjeom} / 5</span>
+          </div>
+          <div class="grid grid-cols-5 gap-1.5">
+            ${[1, 2, 3, 4, 5].map(idx => `
+              <div class="h-3 sm:h-4 rounded ${hong.gamjeom >= idx ? 'bg-amber-400 shadow-[0_0_8px_#f59e0b]' : 'bg-slate-700/60'}"></div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL PEMENANG PARTAI JIKA ADA (WT OFFICIAL WINNER DECLARATION) -->
+      ${winner ? `
+        <div class="absolute inset-0 bg-black/95 backdrop-blur-xl z-50 flex flex-col items-center justify-center p-6 rounded-2xl border-4 ${winner === 'chung' ? 'border-blue-500' : 'border-red-500'} animate-fade-in">
+          <div class="text-amber-400 text-sm sm:text-base font-bold tracking-widest uppercase mb-1">
+            ðŸ† WORLD TAEKWONDO â€¢ OFFICIAL WINNER DECLARATION
+          </div>
+          <div class="text-2xl sm:text-4xl font-black text-amber-300 font-display mb-1">
+            ${winner === 'chung' ? 'CHUNG SEUNG (ì²­ìŠ¹)' : 'HONG SEUNG (í™ìŠ¹)'}
+          </div>
+          <div class="text-4xl sm:text-7xl font-black font-display tracking-wider ${winner === 'chung' ? 'text-blue-400 glow-blue' : 'text-red-400 glow-red'}">
+            ${winner === 'chung' ? chung.name : hong.name}
+          </div>
+          <div class="text-xl sm:text-3xl font-bold text-white mt-1">
+            ${winner === 'chung' ? chung.team : hong.team}
+          </div>
+          <div class="mt-3 px-4 py-1.5 bg-slate-900 rounded-lg text-xs sm:text-sm text-slate-300 border border-slate-700">
+            ${kyorugi.winReason} â€¢ Skor Ronde: ${chung.roundsWon} - ${hong.roundsWon}
+          </div>
+          <div class="mt-6 flex items-center space-x-3">
+            <button onclick="app.printScoresheet()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500 font-bold rounded-xl shadow-lg flex items-center space-x-1.5 text-sm">
+              <span>ðŸ–¨ï¸</span> <span>Cetak Berita Acara</span>
+            </button>
+            <button onclick="app.resetKyorugiMatch()" class="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl shadow-lg text-sm">
+              Partai Baru / Reset ðŸ”„
+            </button>
+          </div>
+        </div>
+      ` : ''}
+
+    </div>
+  `;
+}
+
+// ------------------------------------------
+// TV Display: Poomsae Recognised
+// ------------------------------------------
+function renderPoomsaeRecTV(appState) {
+  const { poomsaeRec } = appState.data;
+  const { athleteName, team, poomsaeName, roundType, judges, result } = poomsaeRec;
+
+  return `
+    <div class="w-full bg-slate-900 border-2 border-amber-500/50 rounded-2xl p-4 sm:p-8 shadow-2xl">
+      <!-- Info Peserta & Jurus -->
+      <div class="flex flex-wrap items-center justify-between border-b border-slate-800 pb-4 mb-6">
+        <div>
+          <span class="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1 rounded text-xs font-extrabold uppercase">
+            ${roundType}
+          </span>
+          <h2 class="text-3xl sm:text-5xl font-black text-white font-display mt-2">${athleteName}</h2>
+          <p class="text-slate-400 text-base sm:text-xl font-bold">${team}</p>
+        </div>
+        <div class="text-right mt-3 sm:mt-0">
+          <div class="text-xs sm:text-sm text-slate-400 font-semibold uppercase">POOMSAE DIUJI</div>
+          <div class="text-2xl sm:text-4xl font-extrabold text-amber-400 font-display">${poomsaeName}</div>
+        </div>
+      </div>
+
+      <!-- Skor Utama & Sub-Skor -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+        <!-- Kotak Total Nilai Akhir -->
+        <div class="md:col-span-5 bg-gradient-to-br from-amber-950 via-slate-900 to-slate-950 border-2 border-amber-400 rounded-2xl p-6 text-center shadow-xl">
+          <span class="text-amber-400 text-sm sm:text-base font-extrabold tracking-widest uppercase">
+            TOTAL SCORE (FINAL)
+          </span>
+          <div class="font-digital text-7xl sm:text-9xl font-black text-amber-400 glow-gold my-2">
+            ${result.totalScore}
+          </div>
+          <div class="text-xs text-slate-400 font-medium">Skala 10.00 â€¢ Standar WT Truncated Mean</div>
+        </div>
+
+        <!-- Breakdown Akurasi & Presentasi -->
+        <div class="md:col-span-7 grid grid-cols-2 gap-4">
+          <!-- Akurasi (Max 4.0) -->
+          <div class="bg-slate-950/80 border border-blue-500/40 rounded-xl p-4 sm:p-6 text-center">
+            <span class="text-blue-400 text-xs sm:text-sm font-bold uppercase">ACCURACY (AKURASI)</span>
+            <div class="font-digital text-4xl sm:text-6xl font-bold text-white mt-1">
+              ${result.accuracyFinal}
+            </div>
+            <span class="text-xs text-slate-500">Nilai Dasar: 4.00</span>
+          </div>
+
+          <!-- Presentasi (Max 6.0) -->
+          <div class="bg-slate-950/80 border border-emerald-500/40 rounded-xl p-4 sm:p-6 text-center">
+            <span class="text-emerald-400 text-xs sm:text-sm font-bold uppercase">PRESENTATION</span>
+            <div class="font-digital text-4xl sm:text-6xl font-bold text-white mt-1">
+              ${result.presentationFinal}
+            </div>
+            <span class="text-xs text-slate-500">Nilai Dasar: 6.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel Rincian 5 Juri (Dengan visual strikethrough nilai terbuang) -->
+      <div class="mt-8">
+        <h4 class="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">
+          Panel Penilaian Juri (5 Judges System)
+        </h4>
+        <div class="grid grid-cols-5 gap-2 sm:gap-4">
+          ${judges.map(j => {
+            const isAccDropped = j.id === result.droppedAccMin || j.id === result.droppedAccMax;
+            const isPresDropped = j.id === result.droppedPresMin || j.id === result.droppedPresMax;
+            return `
+              <div class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 sm:p-4 text-center">
+                <div class="text-xs sm:text-sm font-extrabold text-amber-400 mb-2">${j.id}</div>
+                <div class="border-t border-slate-800 pt-1.5">
+                  <div class="text-[10px] text-slate-400">Acc</div>
+                  <div class="text-sm sm:text-xl font-bold ${isAccDropped ? 'score-dropped text-red-400' : 'text-blue-400'}">
+                    ${j.accuracy}
+                  </div>
+                </div>
+                <div class="border-t border-slate-800 pt-1.5 mt-1">
+                  <div class="text-[10px] text-slate-400">Pres</div>
+                  <div class="text-sm sm:text-xl font-bold ${isPresDropped ? 'score-dropped text-red-400' : 'text-emerald-400'}">
+                    ${j.presentation}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <p class="text-[11px] text-slate-500 text-center mt-2.5">
+          * Angka bergaris merah merupakan skor tertinggi dan terendah yang otomatis dibuang (*dropped*) sesuai regulasi resmi.
+        </p>
+      </div>
+    </div>
+  `;
+}
+
+// ------------------------------------------
+// TV Display: Poomsae Freestyle
+// ------------------------------------------
+function renderPoomsaeFreeTV(appState) {
+  const { poomsaeFree } = appState.data;
+  const { athleteName, team, musicTitle, musicDuration, statusNote, result } = poomsaeFree;
+
+  return `
+    <div class="w-full bg-slate-900 border-2 border-purple-500/50 rounded-2xl p-4 sm:p-8 shadow-2xl">
+      <!-- Header -->
+      <div class="flex flex-wrap items-center justify-between border-b border-slate-800 pb-4 mb-6">
+        <div>
+          <span class="bg-purple-500/20 text-purple-400 border border-purple-500/30 px-3 py-1 rounded text-xs font-extrabold uppercase">
+            POOMSAE FREE STYLE
+          </span>
+          <h2 class="text-3xl sm:text-5xl font-black text-white font-display mt-2">${athleteName}</h2>
+          <p class="text-slate-400 text-base sm:text-xl font-bold">${team}</p>
+        </div>
+        <div class="text-right mt-3 sm:mt-0">
+          <div class="text-xs sm:text-sm text-slate-400 font-semibold uppercase">TRACK MUSIK & DURASI</div>
+          <div class="text-lg sm:text-2xl font-bold text-purple-300 font-display">${musicTitle}</div>
+          <div class="text-sm sm:text-base font-digital text-emerald-400 font-bold mt-0.5">
+            â±ï¸ ${musicDuration} Detik (${statusNote})
+          </div>
+        </div>
+      </div>
+
+      <!-- Skor Freestyle -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+        <!-- Big Total Box -->
+        <div class="md:col-span-5 bg-gradient-to-br from-purple-950 via-slate-900 to-slate-950 border-2 border-purple-400 rounded-2xl p-6 text-center shadow-xl">
+          <span class="text-purple-400 text-sm sm:text-base font-extrabold tracking-widest uppercase">
+            TOTAL SCORE (FINAL)
+          </span>
+          <div class="font-digital text-7xl sm:text-9xl font-black text-purple-400 glow-blue my-2">
+            ${result.totalScore}
+          </div>
+          <div class="text-xs text-slate-400 font-medium">Skala 10.00 â€¢ 5 Elemen Wajib + Koreografi Musik</div>
+        </div>
+
+        <!-- Breakdown Technical & Presentation -->
+        <div class="md:col-span-7 grid grid-cols-2 gap-4">
+          <div class="bg-slate-950/80 border border-purple-500/40 rounded-xl p-4 sm:p-6 text-center">
+            <span class="text-purple-400 text-xs sm:text-sm font-bold uppercase">TECHNICAL SKILLS</span>
+            <div class="font-digital text-4xl sm:text-6xl font-bold text-white mt-1">
+              ${result.technicalFinal}
+            </div>
+            <span class="text-xs text-slate-500">Maksimal: 6.00</span>
+          </div>
+
+          <div class="bg-slate-950/80 border border-pink-500/40 rounded-xl p-4 sm:p-6 text-center">
+            <span class="text-pink-400 text-xs sm:text-sm font-bold uppercase">PRESENTATION & MUSIC</span>
+            <div class="font-digital text-4xl sm:text-6xl font-bold text-white mt-1">
+              ${result.presentationFinal}
+            </div>
+            <span class="text-xs text-slate-500">Maksimal: 4.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5 Teknik Wajib Freestyle (Compulsory Kicks Breakdown) -->
+      <div class="mt-8 bg-slate-950 border border-slate-800 rounded-xl p-4">
+        <h4 class="text-xs sm:text-sm font-bold text-slate-300 uppercase tracking-wider mb-2">
+          5 Elemen Teknik Wajib Diuji (Compulsory Requirements):
+        </h4>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs text-center text-slate-400">
+          <div class="bg-slate-900 p-2 rounded border border-slate-800">
+            <div class="font-bold text-purple-400">1. Jump Side Kick</div>
+            <div>Tinggi Lompatan</div>
+          </div>
+          <div class="bg-slate-900 p-2 rounded border border-slate-800">
+            <div class="font-bold text-purple-400">2. Multiple Kicks</div>
+            <div>Tendangan Beruntun</div>
+          </div>
+          <div class="bg-slate-900 p-2 rounded border border-slate-800">
+            <div class="font-bold text-purple-400">3. Spinning Kick</div>
+            <div>Putaran 540Â°/720Â°</div>
+          </div>
+          <div class="bg-slate-900 p-2 rounded border border-slate-800">
+            <div class="font-bold text-purple-400">4. Basic Moves</div>
+            <div>Kuda-kuda & Tangkisan</div>
+          </div>
+          <div class="bg-slate-900 p-2 rounded border border-slate-800">
+            <div class="font-bold text-purple-400">5. Acrobatic Kick</div>
+            <div>Tendangan Salto</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ==========================================
+// 2. RENDER PANEL OPERATOR MEJA (CONTROL DESK)
+// ==========================================
+function renderOperatorConsole(appState) {
+  const { category } = appState.data;
+
+  return `
+    <main class="w-full min-h-[calc(100vh-50px)] bg-slate-950 text-slate-200 p-4 sm:p-6 overflow-y-auto">
+      <div class="max-w-7xl mx-auto">
+        <div class="bg-indigo-950/40 border border-indigo-700/50 rounded-xl p-3.5 mb-6 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <span class="text-xl">ðŸŽ›ï¸</span>
+            <div>
+              <h3 class="font-bold text-white text-base">Panel Kontrol Meja Pertandingan (Table Operator Console)</h3>
+              <p class="text-xs text-indigo-300">Setiap perubahan skor dan timer akan langsung disinkronkan ke Layar TV secara real-time.</p>
+            </div>
+          </div>
+          <button onclick="openDisplayWindow()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold">
+            Buka TV di Jendela Baru (Dual Screen) â†—
+          </button>
+        </div>
+
+        ${category === 'kyorugi' ? renderKyorugiOperator(appState) : ''}
+        ${category === 'poomsae_rec' ? renderPoomsaeRecOperator(appState) : ''}
+        ${category === 'poomsae_free' ? renderPoomsaeFreeOperator(appState) : ''}
+      </div>
+    </main>
+  `;
+}
+
+function renderKyorugiOperator(appState) {
+  const { kyorugi } = appState.data;
+  const { chung, hong, round, timerSeconds, timerRunning } = kyorugi;
+  const timeFormatted = appState.formatTime(timerSeconds);
+
+  return `
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- CONTROLS CHUNG (BIRU) -->
+      <div class="lg:col-span-5 bg-slate-900 border-2 border-blue-600/70 rounded-xl p-5 shadow-lg">
+        <div class="flex items-center justify-between border-b border-blue-800 pb-3 mb-4">
+          <div>
+            <span class="text-blue-400 font-bold text-xs uppercase tracking-wider">SUDUT BIRU</span>
+            <input type="text" value="${chung.name}" onchange="app.data.kyorugi.chung.name = this.value; app.notifyChange()" class="bg-slate-950 border border-blue-500/50 px-2 py-1 rounded text-white font-bold w-full mt-1">
+          </div>
+          <div class="text-right">
+            <span class="text-4xl font-digital font-black text-blue-400">${chung.score}</span>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <div class="text-xs font-bold text-slate-400 uppercase">Input Poin Cepat:</div>
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="app.addKyorugiPoint('chung', 1)" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded text-sm shadow">
+              +1 Pukulan
+            </button>
+            <button onclick="app.addKyorugiPoint('chung', 2)" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded text-sm shadow">
+              +2 Badan
+            </button>
+            <button onclick="app.addKyorugiPoint('chung', 3)" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded text-sm shadow">
+              +3 Kepala
+            </button>
+            <button onclick="app.addKyorugiPoint('chung', 4)" class="bg-indigo-700 hover:bg-indigo-600 text-white font-bold py-2 rounded text-sm shadow">
+              +4 Putar Badan
+            </button>
+            <button onclick="app.addKyorugiPoint('chung', 5)" class="bg-indigo-700 hover:bg-indigo-600 text-white font-bold py-2 rounded text-sm shadow">
+              +5 Putar Kepala
+            </button>
+            <button onclick="app.addKyorugiPoint('chung', -1)" class="bg-slate-800 hover:bg-slate-700 text-red-400 font-bold py-2 rounded text-sm border border-slate-700">
+              -1 Koreksi
+            </button>
+          </div>
+
+          <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
+            <span class="text-xs font-bold text-amber-400">Gam-jeom (Penalti): ${chung.gamjeom}</span>
+            <div class="space-x-2">
+              <button onclick="app.addGamJeom('chung')" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-1 rounded text-xs">
+                +1 Gam-jeom
+              </button>
+              <button onclick="app.subtractGamJeom('chung')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1 rounded text-xs border border-slate-700">
+                -1
+              </button>
+            </div>
+          </div>
+
+          <!-- Tools Tambahan Wasit / Juri: IVR & Medis Chung -->
+          <div class="pt-2 border-t border-slate-800 grid grid-cols-2 gap-2 text-xs">
+            <button onclick="app.triggerIVR('chung')" class="bg-blue-950 hover:bg-blue-900 text-blue-300 border border-blue-700 p-1.5 rounded font-bold">
+              ðŸ“¹ Banding IVR (${chung.replayCardRemaining})
+            </button>
+            <button onclick="app.startMedicalTimeout('chung')" class="bg-red-950/80 hover:bg-red-900 text-red-200 border border-red-700 p-1.5 rounded font-bold">
+              ðŸš‘ Medis (1:00)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TIMER & ROUND MANAGEMENT (TENGAH) -->
+      <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between text-center">
+        <div>
+          <div class="text-xs text-slate-400 font-bold uppercase mb-1">PENGATUR RONDE</div>
+          <div class="text-2xl font-digital font-bold text-amber-400 mb-2">RONDE ${round}</div>
+          <button onclick="app.nextRound()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold py-1.5 rounded border border-slate-700 mb-4">
+            Ronde Berikutnya â©
+          </button>
+        </div>
+
+        <div class="py-4 border-y border-slate-800">
+          <div class="text-3xl font-digital font-black text-amber-400 dynamic-timer-text">${timeFormatted}</div>
+          <div class="mt-3 space-y-1.5">
+            <button onclick="app.toggleKyorugiTimer()" class="w-full ${timerRunning ? 'bg-amber-600 hover:bg-amber-500' : 'bg-emerald-600 hover:bg-emerald-500'} text-white font-bold py-2 rounded text-sm shadow">
+              ${timerRunning ? 'PAUSE (KAL-YEO)' : 'START (KYE-SOK)'}
+            </button>
+            <div class="grid grid-cols-3 gap-1 text-[11px]">
+              <button onclick="app.resetKyorugiTimer(60)" class="bg-slate-800 hover:bg-slate-700 p-1 rounded text-slate-300">1:00</button>
+              <button onclick="app.resetKyorugiTimer(90)" class="bg-slate-800 hover:bg-slate-700 p-1 rounded text-slate-300">1:30</button>
+              <button onclick="app.resetKyorugiTimer(120)" class="bg-slate-800 hover:bg-slate-700 p-1 rounded text-slate-300">2:00</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel Review IVR Aktif di Meja Operator -->
+        ${appState.data.ivr.active ? `
+          <div class="my-2 bg-amber-950/80 border border-amber-500 p-2 rounded text-[11px] text-amber-200">
+            <div class="font-bold mb-1">Putusan Juri Replay:</div>
+            <div class="grid grid-cols-2 gap-1">
+              <button onclick="app.resolveIVR('ACCEPTED')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1 rounded">
+                DITERIMA âœ“
+              </button>
+              <button onclick="app.resolveIVR('REJECTED')" class="bg-red-700 hover:bg-red-600 text-white font-bold py-1 rounded">
+                DITOLAK âœ—
+              </button>
+            </div>
+          </div>
+        ` : ''}
+
+        <button onclick="app.resetKyorugiMatch()" class="mt-4 w-full bg-red-950 hover:bg-red-900 text-red-300 text-xs py-1.5 rounded border border-red-800">
+          Reset Partai
+        </button>
+      </div>
+
+      <!-- CONTROLS HONG (MERAH) -->
+      <div class="lg:col-span-5 bg-slate-900 border-2 border-red-600/70 rounded-xl p-5 shadow-lg">
+        <div class="flex items-center justify-between border-b border-red-800 pb-3 mb-4">
+          <div class="text-right w-full mr-3">
+            <span class="text-red-400 font-bold text-xs uppercase tracking-wider">SUDUT MERAH</span>
+            <input type="text" value="${hong.name}" onchange="app.data.kyorugi.hong.name = this.value; app.notifyChange()" class="bg-slate-950 border border-red-500/50 px-2 py-1 rounded text-white font-bold w-full mt-1 text-right">
+          </div>
+          <div>
+            <span class="text-4xl font-digital font-black text-red-400">${hong.score}</span>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <div class="text-xs font-bold text-slate-400 uppercase">Input Poin Cepat:</div>
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="app.addKyorugiPoint('hong', 1)" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded text-sm shadow">
+              +1 Pukulan
+            </button>
+            <button onclick="app.addKyorugiPoint('hong', 2)" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded text-sm shadow">
+              +2 Badan
+            </button>
+            <button onclick="app.addKyorugiPoint('hong', 3)" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded text-sm shadow">
+              +3 Kepala
+            </button>
+            <button onclick="app.addKyorugiPoint('hong', 4)" class="bg-pink-700 hover:bg-pink-600 text-white font-bold py-2 rounded text-sm shadow">
+              +4 Putar Badan
+            </button>
+            <button onclick="app.addKyorugiPoint('hong', 5)" class="bg-pink-700 hover:bg-pink-600 text-white font-bold py-2 rounded text-sm shadow">
+              +5 Putar Kepala
+            </button>
+            <button onclick="app.addKyorugiPoint('hong', -1)" class="bg-slate-800 hover:bg-slate-700 text-red-400 font-bold py-2 rounded text-sm border border-slate-700">
+              -1 Koreksi
+            </button>
+          </div>
+
+          <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
+            <span class="text-xs font-bold text-amber-400">Gam-jeom (Penalti): ${hong.gamjeom}</span>
+            <div class="space-x-2">
+              <button onclick="app.addGamJeom('hong')" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-1 rounded text-xs">
+                +1 Gam-jeom
+              </button>
+              <button onclick="app.subtractGamJeom('hong')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1 rounded text-xs border border-slate-700">
+                -1
+              </button>
+            </div>
+          </div>
+
+          <!-- Tools Tambahan Wasit / Juri: IVR & Medis Hong -->
+          <div class="pt-2 border-t border-slate-800 grid grid-cols-2 gap-2 text-xs">
+            <button onclick="app.triggerIVR('hong')" class="bg-red-950 hover:bg-red-900 text-red-300 border border-red-700 p-1.5 rounded font-bold">
+              ðŸ“¹ Banding IVR (${hong.replayCardRemaining})
+            </button>
+            <button onclick="app.startMedicalTimeout('hong')" class="bg-red-950/80 hover:bg-red-900 text-red-200 border border-red-700 p-1.5 rounded font-bold">
+              ðŸš‘ Medis (1:00)
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  `;
+}
+
+function renderPoomsaeRecOperator(appState) {
+  const { poomsaeRec } = appState.data;
+
+  return `
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg">
+      <h4 class="text-base font-bold text-white mb-4">Input Nilai Juri Poomsae Recognised</h4>
+      
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        ${poomsaeRec.judges.map((j, i) => `
+          <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+            <div class="font-bold text-amber-400 text-sm mb-2">${j.id}</div>
+            <label class="block text-xs text-slate-400 mb-1">Akurasi (Max 4.0):</label>
+            <input type="number" step="0.1" min="0" max="4.0" value="${j.accuracy}" onchange="app.data.poomsaeRec.judges[${i}].accuracy = parseFloat(this.value); app.notifyChange()" class="w-full bg-slate-900 border border-slate-700 px-2 py-1 rounded text-white text-sm mb-2 font-mono">
+            
+            <label class="block text-xs text-slate-400 mb-1">Presentasi (Max 6.0):</label>
+            <input type="number" step="0.1" min="0" max="6.0" value="${j.presentation}" onchange="app.data.poomsaeRec.judges[${i}].presentation = parseFloat(this.value); app.notifyChange()" class="w-full bg-slate-900 border border-slate-700 px-2 py-1 rounded text-white text-sm font-mono">
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="flex items-center justify-between border-t border-slate-800 pt-4">
+        <div>
+          <label class="text-xs text-slate-400 mr-2">Pengurangan Penalti Panitia (-0.1 / -0.3):</label>
+          <input type="number" step="0.1" value="${poomsaeRec.deductions}" onchange="app.data.poomsaeRec.deductions = parseFloat(this.value); app.notifyChange()" class="bg-slate-950 border border-slate-700 px-2 py-1 rounded text-white text-sm w-24">
+        </div>
+        <button onclick="app.calculatePoomsaeRecognised()" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-6 py-2 rounded-lg shadow-lg">
+          Kalkulasi Nilai Truncated Mean & Tampilkan ke TV ðŸ“¢
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function renderPoomsaeFreeOperator(appState) {
+  return `
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg">
+      <h4 class="text-base font-bold text-white mb-2">Panel Operator Poomsae Freestyle</h4>
+      <p class="text-xs text-slate-400 mb-4">Pengaturan durasi musik dan kalkulasi komprehensif 5 teknik wajib.</p>
+      
+      <div class="flex items-center space-x-4 mb-6">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Durasi Penampilan (Detik):</label>
+          <input type="number" value="${appState.data.poomsaeFree.musicDuration}" onchange="app.data.poomsaeFree.musicDuration = parseInt(this.value); app.notifyChange()" class="bg-slate-950 border border-slate-700 px-3 py-1.5 rounded text-white text-sm w-32 font-mono">
+        </div>
+        <button onclick="app.calculatePoomsaeFreestyle()" class="mt-5 bg-purple-600 hover:bg-purple-500 text-white font-bold px-6 py-2 rounded-lg shadow-lg">
+          Kalkulasi Nilai Freestyle & Tampilkan ke TV ðŸ“¢
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// ==========================================
+// 3. RENDER PAD JURI (KPNP & DAEDO WT STANDARD JSD)
+// ==========================================
+function renderJudgePad(appState) {
+  const { category, selectedJudgeId, poomsaeRec, kyorugi, court, division } = appState.data;
+  const currentJudge = poomsaeRec.judges.find(j => j.id === selectedJudgeId) || poomsaeRec.judges[0];
+
+  return `
+    <main class="w-full min-h-[calc(100vh-50px)] bg-neutral-950 text-white p-2 sm:p-5 flex flex-col justify-between select-none">
+      <div class="max-w-4xl mx-auto w-full">
+        
+        <!-- HARDWARE CASING KPNP / DAEDO WIRELESS CONTROLLER -->
+        <div class="border-4 sm:border-8 border-neutral-800 rounded-3xl sm:rounded-[2.5rem] bg-gradient-to-b from-neutral-900 via-neutral-950 to-neutral-900 p-3 sm:p-5 shadow-[0_20px_50px_rgba(0,0,0,0.9)] relative">
+          
+          <!-- TOP HARDWARE STATUS TELEMETRY BAR (KPNP / DAEDO STANDARD) -->
+          <div class="bg-black border border-neutral-800 rounded-xl px-4 py-2 mb-4 flex flex-wrap items-center justify-between text-xs text-neutral-400 font-mono">
+            <div class="flex items-center space-x-3">
+              <span class="flex items-center space-x-1.5 text-emerald-400 font-bold">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="tracking-wider">DAEDO Gen2 / KPNP PSS</span>
+              </span>
+              <span class="text-neutral-600">|</span>
+              <span class="text-amber-400 font-bold">${court}</span>
+              <span class="text-neutral-600">|</span>
+              <span class="text-slate-300 font-bold font-sans">${selectedJudgeId}</span>
+            </div>
+
+            <div class="flex items-center space-x-3 my-0.5">
+              <span class="bg-neutral-900 border border-neutral-700 px-2 py-0.5 rounded text-[11px] text-amber-300 font-bold">
+                ${kyorugi.round ? `R${kyorugi.round}` : 'R1'} [BEST OF 3]
+              </span>
+              <span class="text-emerald-400 font-bold font-digital text-sm dynamic-timer-text">
+                ${appState.formatTime(kyorugi.timerSeconds)}
+              </span>
+              <span class="text-cyan-400 font-bold">ðŸ“¶ 2.4GHz RF</span>
+              <span class="text-emerald-400 font-bold">ðŸ”‹ 98%</span>
+            </div>
+
+            <!-- Selector ID Juri (J1 s/d J5) -->
+            <div class="flex items-center space-x-1 bg-neutral-900 p-1 rounded-lg border border-neutral-800">
+              <span class="text-[10px] text-neutral-500 px-1 font-sans">JURI:</span>
+              ${['J1', 'J2', 'J3', 'J4', 'J5'].map(id => `
+                <button onclick="app.setJudgeId('${id}')" class="px-2 py-0.5 rounded text-xs font-bold transition-all ${id === selectedJudgeId ? 'bg-amber-500 text-black shadow' : 'text-neutral-400 hover:text-white'}">
+                  ${id}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- KONTEN PAD SESUAI KATEGORI -->
+          ${category === 'kyorugi' ? `
+            <!-- ============================================== -->
+            <!-- KYORUGI CONTROLLER (KPNP & DAEDO PSS JOYSTICK) -->
+            <!-- ============================================== -->
+            <div class="grid grid-cols-2 gap-3 sm:gap-6 my-2">
+              
+              <!-- SISI KIRI: CHUNG (BIRU) -->
+              <div class="bg-gradient-to-b from-[#003875] via-[#004f9e] to-[#002855] rounded-2xl sm:rounded-3xl p-3 sm:p-5 border-4 border-blue-500 shadow-2xl flex flex-col justify-between min-h-[360px] relative overflow-hidden">
+                <div class="flex items-center justify-between border-b border-blue-400/40 pb-2 mb-2">
+                  <div class="flex items-center space-x-2">
+                    <span class="w-3 h-3 rounded-full bg-blue-400 animate-ping"></span>
+                    <span class="text-blue-100 font-black tracking-widest text-base sm:text-lg font-display">CHUNG (ì²­)</span>
+                  </div>
+                  <span class="text-xs bg-blue-950/80 text-blue-200 border border-blue-400/40 px-2 py-0.5 rounded font-mono">SKOR: ${kyorugi.chung.score}</span>
+                </div>
+
+                <!-- TOMBOL PUKULAN UTAMA (PUNCH 1 PT) -->
+                <button onclick="app.addKyorugiPoint('chung', 1); triggerJudgeFeedback(this);" class="my-auto w-full py-8 sm:py-10 bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 active:scale-95 text-white font-black text-2xl sm:text-4xl rounded-2xl shadow-[0_10px_25px_rgba(0,102,204,0.6)] border-2 border-blue-300 flex flex-col items-center justify-center space-y-1 transition-all">
+                  <span class="text-3xl sm:text-4xl">ðŸ¥Š</span>
+                  <span>PUKULAN (PUNCH)</span>
+                  <span class="text-xs sm:text-sm font-medium text-blue-100 bg-blue-900/60 px-3 py-0.5 rounded-full border border-blue-400/40">1 POIN RESMI WT</span>
+                </button>
+
+                <!-- TOMBOL TEKNIK PUTAR & KEPALA BACKUP -->
+                <div class="space-y-2 mt-2">
+                  <button onclick="app.addKyorugiPoint('chung', 2); triggerJudgeFeedback(this);" class="w-full py-3 bg-gradient-to-r from-indigo-800 to-blue-900 hover:from-indigo-700 hover:to-blue-800 active:scale-95 text-blue-100 font-extrabold text-xs sm:text-sm rounded-xl border border-blue-400/50 shadow flex items-center justify-center space-x-2">
+                    <span>âš¡</span>
+                    <span>TEKNIK PUTAR (TECH +2 PTS)</span>
+                  </button>
+                  <button onclick="app.addKyorugiPoint('chung', 3); triggerJudgeFeedback(this);" class="w-full py-2 bg-neutral-900/80 hover:bg-neutral-800 active:scale-95 text-blue-200 font-semibold text-xs rounded-lg border border-neutral-700 flex items-center justify-center space-x-1">
+                    <span>ðŸŽ¯</span>
+                    <span>KEPALA MANUAL (HEAD +3 PTS)</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- SISI KANAN: HONG (MERAH) -->
+              <div class="bg-gradient-to-b from-[#8c0018] via-[#b30020] to-[#660012] rounded-2xl sm:rounded-3xl p-3 sm:p-5 border-4 border-red-500 shadow-2xl flex flex-col justify-between min-h-[360px] relative overflow-hidden">
+                <div class="flex items-center justify-between border-b border-red-400/40 pb-2 mb-2">
+                  <div class="flex items-center space-x-2">
+                    <span class="w-3 h-3 rounded-full bg-red-400 animate-ping"></span>
+                    <span class="text-red-100 font-black tracking-widest text-base sm:text-lg font-display">HONG (í™)</span>
+                  </div>
+                  <span class="text-xs bg-red-950/80 text-red-200 border border-red-400/40 px-2 py-0.5 rounded font-mono">SKOR: ${kyorugi.hong.score}</span>
+                </div>
+
+                <!-- TOMBOL PUKULAN UTAMA (PUNCH 1 PT) -->
+                <button onclick="app.addKyorugiPoint('hong', 1); triggerJudgeFeedback(this);" class="my-auto w-full py-8 sm:py-10 bg-gradient-to-b from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 active:scale-95 text-white font-black text-2xl sm:text-4xl rounded-2xl shadow-[0_10px_25px_rgba(217,4,41,0.6)] border-2 border-red-300 flex flex-col items-center justify-center space-y-1 transition-all">
+                  <span class="text-3xl sm:text-4xl">ðŸ¥Š</span>
+                  <span>PUKULAN (PUNCH)</span>
+                  <span class="text-xs sm:text-sm font-medium text-red-100 bg-red-900/60 px-3 py-0.5 rounded-full border border-red-400/40">1 POIN RESMI WT</span>
+                </button>
+
+                <!-- TOMBOL TEKNIK PUTAR & KEPALA BACKUP -->
+                <div class="space-y-2 mt-2">
+                  <button onclick="app.addKyorugiPoint('hong', 2); triggerJudgeFeedback(this);" class="w-full py-3 bg-gradient-to-r from-rose-900 to-red-900 hover:from-rose-800 hover:to-red-800 active:scale-95 text-red-100 font-extrabold text-xs sm:text-sm rounded-xl border border-red-400/50 shadow flex items-center justify-center space-x-2">
+                    <span>âš¡</span>
+                    <span>TEKNIK PUTAR (TECH +2 PTS)</span>
+                  </button>
+                  <button onclick="app.addKyorugiPoint('hong', 3); triggerJudgeFeedback(this);" class="w-full py-2 bg-neutral-900/80 hover:bg-neutral-800 active:scale-95 text-red-200 font-semibold text-xs rounded-lg border border-neutral-700 flex items-center justify-center space-x-1">
+                    <span>ðŸŽ¯</span>
+                    <span>KEPALA MANUAL (HEAD +3 PTS)</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- FOOTER STATUS WINDOW TOLERANSI WT (1.0 DETIK) -->
+            <div class="mt-3 bg-black/80 border border-neutral-800 rounded-xl p-2.5 px-4 flex items-center justify-between text-xs text-neutral-400">
+              <span class="flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>Standar Validasi Pukulan WT: Minimal 2 dari 3 juri menekan dalam jendela waktu <b>1.0 detik</b>.</span>
+              </span>
+              <span class="text-amber-400 font-mono font-bold">READY 1.0s</span>
+            </div>
+          ` : category === 'poomsae_rec' ? `
+            <!-- ============================================== -->
+            <!-- POOMSAE RECOGNISED TERMINAL (KPNP & DAEDO)     -->
+            <!-- ============================================== -->
+            <div class="space-y-4 my-2">
+              
+              <!-- Info Peserta -->
+              <div class="bg-black/70 border border-neutral-800 rounded-xl p-3 flex items-center justify-between">
+                <div>
+                  <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">PESERTA POOMSAE STANDAR</span>
+                  <div class="font-bold text-white text-base font-display">${poomsaeRec.athleteName} (${poomsaeRec.team})</div>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] text-neutral-400 uppercase">JURUS DIUJI</span>
+                  <div class="text-amber-400 font-bold text-sm font-display">${poomsaeRec.poomsaeName}</div>
+                </div>
+              </div>
+
+              <!-- 1. MATRIKS AKURASI (MAX 4.00) DENGAN COUNTER DEDUKSI RESMI WT -->
+              <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <div>
+                    <span class="text-blue-400 font-bold text-xs uppercase tracking-wider block">1. NILAI AKURASI (ACCURACY)</span>
+                    <span class="text-[11px] text-neutral-400">Pengurangan bertahap dari nilai dasar 4.00</span>
+                  </div>
+                  <div class="text-right">
+                    <span class="font-digital text-4xl font-black text-blue-400">${currentJudge.accuracy.toFixed(1)}</span>
+                    <span class="text-xs text-neutral-500 block">/ 4.00 MAX</span>
+                  </div>
+                </div>
+
+                <!-- Tombol Deduksi KPNP / Daedo Standard -->
+                <div class="grid grid-cols-4 gap-2">
+                  <button onclick="app.updateJudgeScore('${selectedJudgeId}', Math.max(0, currentJudge.accuracy - 0.1).toFixed(1), currentJudge.presentation)" class="py-4 bg-amber-500/15 hover:bg-amber-500/25 active:scale-95 text-amber-400 font-black rounded-xl border border-amber-500/40 text-center flex flex-col items-center justify-center">
+                    <span class="text-xl sm:text-2xl font-digital">-0.1</span>
+                    <span class="text-[10px] uppercase font-sans mt-0.5">Minor (Kecil)</span>
+                  </button>
+                  <button onclick="app.updateJudgeScore('${selectedJudgeId}', Math.max(0, currentJudge.accuracy - 0.3).toFixed(1), currentJudge.presentation)" class="py-4 bg-red-500/15 hover:bg-red-500/25 active:scale-95 text-red-400 font-black rounded-xl border border-red-500/40 text-center flex flex-col items-center justify-center">
+                    <span class="text-xl sm:text-2xl font-digital">-0.3</span>
+                    <span class="text-[10px] uppercase font-sans mt-0.5">Major (Besar)</span>
+                  </button>
+                  <button onclick="app.updateJudgeScore('${selectedJudgeId}', Math.min(4.0, currentJudge.accuracy + 0.1).toFixed(1), currentJudge.presentation)" class="py-4 bg-blue-500/15 hover:bg-blue-500/25 active:scale-95 text-blue-300 font-bold rounded-xl border border-blue-500/40 text-center flex flex-col items-center justify-center">
+                    <span class="text-xl sm:text-2xl font-digital">+0.1</span>
+                    <span class="text-[10px] uppercase font-sans mt-0.5">Batal / Undo</span>
+                  </button>
+                  <button onclick="app.updateJudgeScore('${selectedJudgeId}', 4.0, currentJudge.presentation)" class="py-4 bg-neutral-800 hover:bg-neutral-700 active:scale-95 text-neutral-300 font-bold rounded-xl border border-neutral-700 text-center flex flex-col items-center justify-center">
+                    <span class="text-lg font-mono">4.00</span>
+                    <span class="text-[10px] uppercase font-sans mt-0.5">Reset Dasar</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 2. MATRIKS PRESENTASI 3 SUB-SKOR (MAX 6.00) -->
+              <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <div>
+                    <span class="text-emerald-400 font-bold text-xs uppercase tracking-wider block">2. NILAI PRESENTASI (PRESENTATION)</span>
+                    <span class="text-[11px] text-neutral-400">Kecepatan & Daya, Irama, dan Penguasaan Energi</span>
+                  </div>
+                  <div class="text-right">
+                    <span class="font-digital text-4xl font-black text-emerald-400">${currentJudge.presentation.toFixed(1)}</span>
+                    <span class="text-xs text-neutral-500 block">/ 6.00 MAX</span>
+                  </div>
+                </div>
+
+                <div class="space-y-3">
+                  <input type="range" min="0" max="6.0" step="0.1" value="${currentJudge.presentation}" oninput="app.updateJudgeScore('${selectedJudgeId}', currentJudge.accuracy, this.value)" class="w-full accent-emerald-500 h-3 bg-neutral-800 rounded-lg cursor-pointer">
+                  <div class="flex justify-between text-xs text-neutral-400 font-mono">
+                    <span>0.0 (Sangat Kurang)</span>
+                    <span>3.0 (Cukup)</span>
+                    <span>4.5 (Baik)</span>
+                    <span>6.0 (Sempurna)</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TOTAL LIVE PRATINJAU & TOMBOL TRANSMIT -->
+              <div class="bg-black/60 border border-neutral-800 rounded-2xl p-3 flex items-center justify-between">
+                <div class="text-left">
+                  <span class="text-[10px] text-neutral-400 uppercase">AKUMULASI SKOR JURI ${selectedJudgeId}:</span>
+                  <div class="font-digital text-3xl font-black text-amber-400">
+                    ${(currentJudge.accuracy + currentJudge.presentation).toFixed(2)}
+                  </div>
+                </div>
+
+                <button onclick="app.calculatePoomsaeRecognised(); triggerTransmitFeedback(this);" class="py-3.5 px-6 sm:px-8 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white font-extrabold text-sm sm:text-base rounded-xl shadow-xl flex items-center space-x-2 border border-emerald-400">
+                  <span>âœ“</span>
+                  <span>KIRIM NILAI KE SERVER PSS (TRANSMIT)</span>
+                </button>
+              </div>
+
+            </div>
+          ` : `
+            <!-- ============================================== -->
+            <!-- POOMSAE FREESTYLE TERMINAL (KPNP & DAEDO)      -->
+            <!-- ============================================== -->
+            <div class="space-y-4 my-2">
+              
+              <!-- Header Freestyle -->
+              <div class="bg-black/70 border border-purple-900/60 rounded-xl p-3 flex items-center justify-between">
+                <div>
+                  <span class="text-[10px] text-purple-400 font-bold uppercase tracking-wider">FREESTYLE JURY TERMINAL</span>
+                  <div class="font-bold text-white text-base font-display">${appState.data.poomsaeFree.athleteName}</div>
+                  <div class="text-xs text-purple-300">Musik: ${appState.data.poomsaeFree.musicTitle}</div>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] text-neutral-400 uppercase">DURASI MUSIK</span>
+                  <div class="text-emerald-400 font-digital text-xl font-bold">â±ï¸ 95s (Optimal)</div>
+                </div>
+              </div>
+
+              <!-- 5 ELEMEN WAJIB DIUJI (TECHNICAL SKILLS 6.0) -->
+              <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-4">
+                <span class="text-purple-400 font-bold text-xs uppercase tracking-wider block mb-2.5">
+                  1. TECHNICAL SKILLS: 5 ELEMEN WAJIB RESMI WT (MAX 6.00)
+                </span>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                  <div class="bg-black/60 p-2.5 rounded-xl border border-neutral-800">
+                    <div class="font-bold text-neutral-200">1. Jump Side Kick</div>
+                    <div class="text-[10px] text-neutral-400 mb-1">Tinggi Lompatan</div>
+                    <input type="number" step="0.1" min="0" max="1.0" value="0.9" class="w-full bg-neutral-900 border border-purple-500/50 rounded px-2 py-1 text-purple-300 font-mono text-center font-bold">
+                  </div>
+                  <div class="bg-black/60 p-2.5 rounded-xl border border-neutral-800">
+                    <div class="font-bold text-neutral-200">2. Multiple Kicks</div>
+                    <div class="text-[10px] text-neutral-400 mb-1">Jumlah Target Udara</div>
+                    <input type="number" step="0.1" min="0" max="1.0" value="0.8" class="w-full bg-neutral-900 border border-purple-500/50 rounded px-2 py-1 text-purple-300 font-mono text-center font-bold">
+                  </div>
+                  <div class="bg-black/60 p-2.5 rounded-xl border border-neutral-800">
+                    <div class="font-bold text-neutral-200">3. Spinning Kick</div>
+                    <div class="text-[10px] text-neutral-400 mb-1">Putaran 540Â°/720Â°</div>
+                    <input type="number" step="0.1" min="0" max="1.0" value="0.9" class="w-full bg-neutral-900 border border-purple-500/50 rounded px-2 py-1 text-purple-300 font-mono text-center font-bold">
+                  </div>
+                  <div class="bg-black/60 p-2.5 rounded-xl border border-neutral-800">
+                    <div class="font-bold text-neutral-200">4. Basic Moves</div>
+                    <div class="text-[10px] text-neutral-400 mb-1">Kuda-kuda Baku</div>
+                    <input type="number" step="0.1" min="0" max="1.0" value="0.8" class="w-full bg-neutral-900 border border-purple-500/50 rounded px-2 py-1 text-purple-300 font-mono text-center font-bold">
+                  </div>
+                  <div class="bg-black/60 p-2.5 rounded-xl border border-neutral-800">
+                    <div class="font-bold text-neutral-200">5. Acrobatic Kick</div>
+                    <div class="text-[10px] text-neutral-400 mb-1">Tendangan Salto</div>
+                    <input type="number" step="0.1" min="0" max="1.0" value="0.9" class="w-full bg-neutral-900 border border-purple-500/50 rounded px-2 py-1 text-purple-300 font-mono text-center font-bold">
+                  </div>
+                  <div class="bg-black/60 p-2.5 rounded-xl border border-neutral-800">
+                    <div class="font-bold text-neutral-200">6. Basic TKD Stances</div>
+                    <div class="text-[10px] text-neutral-400 mb-1">Ketepatan Mendarat</div>
+                    <input type="number" step="0.1" min="0" max="1.0" value="0.8" class="w-full bg-neutral-900 border border-purple-500/50 rounded px-2 py-1 text-purple-300 font-mono text-center font-bold">
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. PRESENTASI & KOREOGRAFI (MAX 4.00) -->
+              <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-4">
+                <span class="text-pink-400 font-bold text-xs uppercase tracking-wider block mb-2">
+                  2. PRESENTATION & HARMONY DENGAN MUSIK (MAX 4.00)
+                </span>
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                  <div class="bg-black/60 p-2.5 rounded-xl border border-neutral-800">
+                    <div class="font-bold text-neutral-300 mb-1">Kreativitas & Koreografi:</div>
+                    <input type="number" step="0.1" min="0" max="1.0" value="0.9" class="w-full bg-neutral-900 border border-pink-500/50 rounded px-2 py-1 text-pink-300 font-mono text-center font-bold">
+                  </div>
+                  <div class="bg-black/60 p-2.5 rounded-xl border border-neutral-800">
+                    <div class="font-bold text-neutral-300 mb-1">Keselarasan Musik & Beat:</div>
+                    <input type="number" step="0.1" min="0" max="1.0" value="0.8" class="w-full bg-neutral-900 border border-pink-500/50 rounded px-2 py-1 text-pink-300 font-mono text-center font-bold">
+                  </div>
+                </div>
+              </div>
+
+              <!-- TRANSMIT FREESTYLE SCORE -->
+              <button onclick="app.calculatePoomsaeFreestyle(); triggerTransmitFeedback(this);" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-95 text-white font-extrabold text-sm sm:text-base rounded-2xl shadow-xl flex items-center justify-center space-x-2 border border-purple-400">
+                <span>âš¡</span>
+                <span>KIRIM NILAI FREESTYLE KE SERVER PSS (TRANSMIT)</span>
+              </button>
+
+            </div>
+          `}
+
+        </div>
+
+      </div>
+      <div class="text-center text-[11px] text-neutral-500 mt-3 font-mono">
+        World Taekwondo Electronic Scoring System â€¢ Daedo & KPNP Standard Wireless JSD Protocol
+      </div>
+    </main>
+  `;
+}
+
+// Visual Feedback Helpers for Judge Pad Buttons
+function triggerJudgeFeedback(btnEl) {
+  if (!btnEl) return;
+  btnEl.classList.add('ring-4', 'ring-white', 'scale-95');
+  setTimeout(() => {
+    btnEl.classList.remove('ring-4', 'ring-white', 'scale-95');
+  }, 200);
+}
+
+function triggerTransmitFeedback(btnEl) {
+  if (!btnEl) return;
+  const original = btnEl.innerHTML;
+  btnEl.innerHTML = `<span>âœ“ TERKIRIM KE MEJA OPERATOR!</span>`;
+  btnEl.classList.add('bg-emerald-500');
+  setTimeout(() => {
+    btnEl.innerHTML = original;
+    btnEl.classList.remove('bg-emerald-500');
+  }, 1800);
+}
+
+      </div>
+      <div class="text-center text-xs text-slate-500 mt-4">
+        Taekwondo Corner Judge Handheld Tablet System â€¢ Real-Time Synchronized
+      </div>
+    </main>
+  `;
+}
+
+// ==========================================
+// 4. RENDER JADWAL PARTAI (MATCH QUEUE)
+// ==========================================
+function renderMatchSchedule(appState) {
+  const { matches, matchNumber } = appState.data;
+
+  return `
+    <main class="w-full min-h-[calc(100vh-50px)] bg-slate-950 text-slate-200 p-4 sm:p-6 overflow-y-auto">
+      <div class="max-w-6xl mx-auto">
+        
+        <div class="flex flex-wrap items-center justify-between border-b border-slate-800 pb-4 mb-4">
+          <div>
+            <h2 class="text-2xl font-black text-white font-display">Bagan & Jadwal Pertandingan Ring</h2>
+            <p class="text-xs text-slate-400">Pilih partai pertandingan untuk langsung dimuat ke Layar TV dan Meja Operator.</p>
+          </div>
+          <div class="text-right">
+            <span class="text-xs text-slate-400">Partai Aktif Saat Ini:</span>
+            <div class="text-lg font-bold text-amber-400 font-display">${matchNumber}</div>
+          </div>
+        </div>
+
+        <!-- Tombol Aksi Jadwal: Ekspor Data & Tambah Partai -->
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div class="flex items-center space-x-2">
+            <button onclick="app.exportMatchesJSON()" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 flex items-center space-x-1.5 shadow">
+              <span>ðŸ’¾</span> <span>Ekspor JSON (Bagan)</span>
+            </button>
+            <button onclick="app.exportMatchesCSV()" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 flex items-center space-x-1.5 shadow">
+              <span>ðŸ“Š</span> <span>Ekspor Excel / CSV</span>
+            </button>
+          </div>
+          <button onclick="addNewMatchPrompt()" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-black rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow">
+            <span>âž•</span> <span>Tambah Partai Baru</span>
+          </button>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-950 text-slate-400 uppercase text-[11px] tracking-wider border-b border-slate-800">
+              <tr>
+                <th class="p-3 sm:p-4">No. Partai</th>
+                <th class="p-3 sm:p-4">Kategori</th>
+                <th class="p-3 sm:p-4">Divisi / Kelas</th>
+                <th class="p-3 sm:p-4">Sudut Biru (Chung)</th>
+                <th class="p-3 sm:p-4">Sudut Merah (Hong)</th>
+                <th class="p-3 sm:p-4">Status</th>
+                <th class="p-3 sm:p-4 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800 text-slate-300">
+              ${matches.map(m => {
+                const isCurrent = m.number === matchNumber;
+                return `
+                  <tr class="${isCurrent ? 'bg-amber-500/10' : 'hover:bg-slate-800/40'} transition-all">
+                    <td class="p-3 sm:p-4 font-bold text-white font-mono">${m.number}</td>
+                    <td class="p-3 sm:p-4">
+                      <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                        m.category === 'kyorugi' ? 'bg-blue-900/60 text-blue-300 border border-blue-700/50' :
+                        m.category === 'poomsae_rec' ? 'bg-amber-900/60 text-amber-300 border border-amber-700/50' :
+                        'bg-purple-900/60 text-purple-300 border border-purple-700/50'
+                      }">
+                        ${m.category.replace('_', ' ')}
+                      </span>
+                    </td>
+                    <td class="p-3 sm:p-4 font-semibold text-slate-200">${m.division}</td>
+                    <td class="p-3 sm:p-4 text-blue-400 font-bold">${m.chung}</td>
+                    <td class="p-3 sm:p-4 text-red-400 font-bold">${m.hong}</td>
+                    <td class="p-3 sm:p-4">
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        m.status === 'BERLANGSUNG' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse' :
+                        m.status === 'SELESAI' ? 'bg-slate-800 text-slate-400' :
+                        'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                      }">
+                        ${m.status}
+                      </span>
+                    </td>
+                    <td class="p-3 sm:p-4 text-center">
+                      <button onclick="app.selectMatch('${m.id}')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isCurrent ? 'bg-slate-800 text-slate-400 cursor-default' : 'bg-amber-600 hover:bg-amber-500 text-white shadow'}">
+                        ${isCurrent ? 'Aktif' : 'Muat Partai â†—'}
+                      </button>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </main>
+  `;
+}
+
+// ==========================================
+// 5. RENDER OBS / BROADCAST LIVE STREAM OVERLAY
+// ==========================================
+function renderOBSOverlay(appState) {
+  const { category, court, division, kyorugi, poomsaeRec } = appState.data;
+
+  return `
+    <main class="w-full min-h-[calc(100vh-50px)] bg-transparent p-4 flex flex-col justify-between select-none">
+      
+      <!-- Top Broadcast Overlay Bar -->
+      <div class="max-w-5xl mx-auto w-full drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]">
+        
+        <!-- Header Kecil Ring & Kelas -->
+        <div class="bg-black/85 backdrop-blur-md text-slate-300 px-4 py-1 rounded-t-xl text-xs font-bold flex items-center justify-between border-t border-x border-slate-700/60">
+          <div class="flex items-center space-x-2">
+            <span class="w-2 h-2 rounded-full bg-red-600 animate-ping"></span>
+            <span class="text-amber-400 font-display">${court}</span>
+            <span>â€¢</span>
+            <span class="truncate">${division}</span>
+          </div>
+          <span class="text-slate-400 font-mono text-[11px]">TAEKWONDO LIVE</span>
+        </div>
+
+        ${category === 'kyorugi' ? `
+          <!-- Kyorugi Broadcast Scoreboard Bar -->
+          <div class="grid grid-cols-12 bg-slate-950/95 backdrop-blur-lg border-2 border-slate-700 rounded-b-xl overflow-hidden shadow-2xl">
+            
+            <!-- CHUNG (BIRU) -->
+            <div class="col-span-5 bg-gradient-to-r from-blue-900 to-blue-700 p-2.5 px-4 flex items-center justify-between text-white border-r-2 border-slate-900">
+              <div class="truncate mr-2">
+                <div class="text-[10px] text-blue-200 font-bold tracking-wider">CHUNG (ì²­)</div>
+                <div class="font-bold text-base sm:text-lg font-display truncate">${kyorugi.chung.name}</div>
+                <div class="text-[11px] text-blue-200">${kyorugi.chung.team} â€¢ Gamjeom: ${kyorugi.chung.gamjeom}</div>
+              </div>
+              <div class="flex items-center space-x-3">
+                <div class="flex flex-col space-y-1">
+                  ${[1, 2].map(r => `
+                    <div class="w-2.5 h-2.5 rounded-full border border-amber-400 ${kyorugi.chung.roundsWon >= r ? 'bg-amber-400 shadow-[0_0_6px_#fbbf24]' : 'bg-transparent'}"></div>
+                  `).join('')}
+                </div>
+                <div class="font-digital text-4xl sm:text-5xl font-black text-white glow-blue">
+                  ${kyorugi.chung.score}
+                </div>
+              </div>
+            </div>
+
+            <!-- CENTER TIMER & ROUND -->
+            <div class="col-span-2 bg-slate-900 p-2 flex flex-col items-center justify-center text-center">
+              <div class="text-[10px] text-slate-400 font-bold uppercase">R${kyorugi.round} [BEST OF 3]</div>
+              <div class="font-digital text-2xl sm:text-3xl font-black ${kyorugi.timerRunning ? 'text-emerald-400' : 'text-amber-400'} dynamic-timer-text">
+                ${appState.formatTime(kyorugi.timerSeconds)}
+              </div>
+            </div>
+
+            <!-- HONG (MERAH) -->
+            <div class="col-span-5 bg-gradient-to-l from-red-900 to-red-700 p-2.5 px-4 flex items-center justify-between text-white border-l-2 border-slate-900 flex-row-reverse text-right">
+              <div class="truncate ml-2">
+                <div class="text-[10px] text-red-200 font-bold tracking-wider">HONG (í™)</div>
+                <div class="font-bold text-base sm:text-lg font-display truncate">${kyorugi.hong.name}</div>
+                <div class="text-[11px] text-red-200">${kyorugi.hong.team} â€¢ Gamjeom: ${kyorugi.hong.gamjeom}</div>
+              </div>
+              <div class="flex items-center space-x-3 flex-row-reverse">
+                <div class="flex flex-col space-y-1">
+                  ${[1, 2].map(r => `
+                    <div class="w-2.5 h-2.5 rounded-full border border-amber-400 ${kyorugi.hong.roundsWon >= r ? 'bg-amber-400 shadow-[0_0_6px_#fbbf24]' : 'bg-transparent'}"></div>
+                  `).join('')}
+                </div>
+                <div class="font-digital text-4xl sm:text-5xl font-black text-white glow-red">
+                  ${kyorugi.hong.score}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        ` : `
+          <!-- Poomsae Broadcast Scoreboard Bar -->
+          <div class="bg-slate-950/95 backdrop-blur-lg border-2 border-amber-500/60 rounded-b-xl p-3 px-6 flex items-center justify-between text-white shadow-2xl">
+            <div>
+              <span class="text-xs text-amber-400 font-bold uppercase">${poomsaeRec.roundType} â€¢ ${poomsaeRec.poomsaeName}</span>
+              <h3 class="text-xl font-black text-white font-display">${poomsaeRec.athleteName}</h3>
+              <p class="text-xs text-slate-400">${poomsaeRec.team}</p>
+            </div>
+            <div class="flex items-center space-x-6 text-center">
+              <div>
+                <span class="text-[10px] text-blue-400 uppercase">Akurasi</span>
+                <div class="font-digital text-xl font-bold">${poomsaeRec.result.accuracyFinal}</div>
+              </div>
+              <div>
+                <span class="text-[10px] text-emerald-400 uppercase">Presentasi</span>
+                <div class="font-digital text-xl font-bold">${poomsaeRec.result.presentationFinal}</div>
+              </div>
+              <div class="bg-amber-500/20 border border-amber-500 px-4 py-1 rounded-xl">
+                <span class="text-[10px] text-amber-400 font-bold uppercase">TOTAL</span>
+                <div class="font-digital text-3xl font-black text-amber-400 glow-gold">${poomsaeRec.result.totalScore}</div>
+              </div>
+            </div>
+          </div>
+        `}
+
+      </div>
+
+      <!-- Petunjuk OBS untuk Streamer -->
+      <div class="max-w-md mx-auto bg-black/70 backdrop-blur-md border border-slate-700/80 p-2.5 rounded-xl text-center text-xs text-slate-400 shadow-xl">
+        ðŸ’¡ <b>Tips OBS Studio:</b> Tambahkan <i>Browser Source</i> dengan URL: <code class="text-amber-300">index.html?mode=obs</code>, lalu centang <i>Shutdown source when not visible</i>.
+      </div>
+
+    </main>
+  `;
+}
+
+// Fullscreen & Window Helpers
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(err => alert(err.message));
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+function openDisplayWindow() {
+  window.open(window.location.pathname + '?mode=tv', '_blank', 'width=1280,height=720');
+}
+
+// ==========================================
+// 6. MODAL PENGATURAN TURNAMEN STANDAR WT
+// ==========================================
+function renderSettingsModal(appState) {
+  const s = appState.data.settings;
+  return `
+    <div class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 select-none">
+      <div class="bg-slate-900 border-2 border-slate-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl text-slate-200">
+        
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-5">
+          <div class="flex items-center space-x-2">
+            <span class="text-2xl">âš™ï¸</span>
+            <div>
+              <h3 class="text-xl font-black text-white font-display">Pengaturan Turnamen Standar WT</h3>
+              <p class="text-[11px] text-slate-400">World Taekwondo Official Electronic Scoring Configuration</p>
+            </div>
+          </div>
+          <button onclick="app.toggleSettingsModal()" class="text-slate-400 hover:text-white text-xl font-bold p-1">
+            âœ•
+          </button>
+        </div>
+
+        <div class="space-y-4 text-xs sm:text-sm">
+          <!-- Nama Event / Kejuaraan -->
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Nama Kejuaraan / Turnamen:</label>
+            <input id="set-title" type="text" value="${s.tournamentTitle}" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white font-semibold">
+          </div>
+
+          <!-- Nama Ring / Court -->
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Nama Ring / Court:</label>
+            <input id="set-court" type="text" value="${s.courtName}" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white font-semibold">
+          </div>
+
+          <!-- Preset Durasi Ronde WT -->
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Durasi Ronde Kyorugi (Standar WT):</label>
+            <select id="set-duration" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white font-semibold">
+              <option value="120" ${s.roundDuration === 120 ? 'selected' : ''}>120 Detik (Senior - 2 Menit)</option>
+              <option value="90" ${s.roundDuration === 90 ? 'selected' : ''}>90 Detik (Junior - 1.5 Menit)</option>
+              <option value="60" ${s.roundDuration === 60 ? 'selected' : ''}>60 Detik (Cadet / Pra-Cadet - 1 Menit)</option>
+            </select>
+          </div>
+
+          <!-- Aturan Point Gap & Audio -->
+          <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+            <label class="flex items-center space-x-2 cursor-pointer bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+              <input id="set-gap" type="checkbox" ${s.pointGapEnabled ? 'checked' : ''} class="w-4 h-4 accent-amber-500 rounded">
+              <span class="text-xs font-semibold">Point Gap WT (12 Poin)</span>
+            </label>
+
+            <label class="flex items-center space-x-2 cursor-pointer bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+              <input id="set-mute" type="checkbox" ${s.soundMuted ? 'checked' : ''} class="w-4 h-4 accent-red-500 rounded">
+              <span class="text-xs font-semibold">Mode Hening (Mute Audio)</span>
+            </label>
+          </div>
+
+          <!-- Generator Suara WT -->
+          <div class="pt-2 border-t border-slate-800">
+            <span class="text-[11px] font-bold text-slate-400 uppercase block mb-2">Uji Generator Suara Turnamen:</span>
+            <div class="grid grid-cols-4 gap-1.5 text-center text-xs">
+              <button onclick="window.soundSys.playBuzzer()" class="bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 py-1.5 rounded border border-amber-600/50">
+                ðŸ”Š Buzzer
+              </button>
+              <button onclick="window.soundSys.playKalyeo()" class="bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 py-1.5 rounded border border-blue-600/50">
+                ðŸ”” Kal-yeo
+              </button>
+              <button onclick="window.soundSys.playGamJeom()" class="bg-red-600/30 hover:bg-red-600/50 text-red-300 py-1.5 rounded border border-red-600/50">
+                âš ï¸ Gamjeom
+              </button>
+              <button onclick="window.soundSys.playPoint()" class="bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 py-1.5 rounded border border-emerald-600/50">
+                ðŸ¥Š Point
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tombol Aksi Simpan -->
+        <div class="mt-6 flex items-center justify-end space-x-3 border-t border-slate-800 pt-4">
+          <button onclick="app.toggleSettingsModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold">
+            Batal
+          </button>
+          <button onclick="saveSettingsFromModal()" class="px-6 py-2 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-black shadow-lg">
+            Simpan Setelan âœ“
+          </button>
+        </div>
+
+      </div>
+    </div>
+  `;
+}
+
+function saveSettingsFromModal() {
+  const title = document.getElementById('set-title').value;
+  const court = document.getElementById('set-court').value;
+  const duration = document.getElementById('set-duration').value;
+  const pointGap = document.getElementById('set-gap').checked;
+  const muted = document.getElementById('set-mute').checked;
+  app.saveSettings(title, court, duration, pointGap, muted);
+}
+
+function addNewMatchPrompt() {
+  const number = prompt('Masukkan Nomor Partai (contoh: PARTAI #07):', `PARTAI #0${app.data.matches.length + 1}`);
+  if (!number) return;
+  const division = prompt('Masukkan Divisi/Kelas (contoh: Senior Putra -63 kg):', 'Senior Putra -63 kg');
+  const chung = prompt('Nama Atlet Sudut Biru (Chung):', 'Atlet Biru (Kontingen A)');
+  const hong = prompt('Nama Atlet Sudut Merah (Hong):', 'Atlet Merah (Kontingen B)');
+  
+  app.data.matches.push({
+    id: `M-0${app.data.matches.length + 1}`,
+    number,
+    category: 'kyorugi',
+    division: division || 'Kyorugi',
+    chung: chung || 'Chung',
+    hong: hong || 'Hong',
+    status: 'MENUNGGU'
+  });
+  app.notifyChange();
+}
+
+
+
+  // ==========================================
+  // 4. INISIALISASI & SHORTCUTS KEYBOARD
+  // ==========================================
+  document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mode') === 'tv') {
+      window.app.data.viewMode = 'tv';
+    } else if (params.get('mode') === 'operator') {
+      window.app.data.viewMode = 'operator';
+    } else if (params.get('mode') === 'judge') {
+      window.app.data.viewMode = 'judge';
+    } else if (params.get('mode') === 'obs') {
+      window.app.data.viewMode = 'obs';
+      document.body.classList.remove('bg-black');
+      document.body.classList.add('bg-transparent');
+    }
+
+    if (params.get('category')) {
+      window.app.data.category = params.get('category');
+    }
+
+    window.app.render();
+
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (window.app.data.category === 'kyorugi') {
+          window.app.toggleKyorugiTimer();
+        } else if (window.app.data.category === 'poomsae_free') {
+          window.app.toggleFreestyleMusicTimer();
+        }
+      } else if (e.key === 'b' || e.key === 'B') {
+        window.soundSys.playBuzzer();
+      } else if (e.key === '1') {
+        window.app.setCategory('kyorugi');
+      } else if (e.key === '2') {
+        window.app.setCategory('poomsae_rec');
+      } else if (e.key === '3') {
+        window.app.setCategory('poomsae_free');
+      }
+    });
+  });
+  </script>
+</body>
+</html>
