@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Official World Taekwondo Match Protocol & Scoresheet</title>
+  <title>Berita Acara & Lembar Hasil Resmi Pertandingan - World Taekwondo (WT)</title>
   
-  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -18,8 +18,8 @@
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
           },
           colors: {
             chung: {
@@ -47,11 +47,11 @@
   </script>
 
   <style>
-    /* Styling Cetak Presisi Standar A4 */
+    /* Mode Cetak Presisi Tinggi Kertas A4 */
     @media print {
       body {
-        background-color: #ffffff !important;
-        color: #0f172a !important;
+        background: #ffffff !important;
+        color: #000000 !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         padding: 0 !important;
@@ -60,363 +60,385 @@
       .no-print {
         display: none !important;
       }
-      .page-container {
+      .print-shadow-none {
+        box-shadow: none !important;
+        border: none !important;
+      }
+      .page-sheet {
         box-shadow: none !important;
         border: none !important;
         padding: 0 !important;
         margin: 0 !important;
         width: 100% !important;
         max-width: 100% !important;
+        page-break-inside: avoid !important;
       }
-      .sheet-card {
-        page-break-inside: avoid;
-        break-inside: avoid;
+      .sig-canvas-container {
+        border-bottom: 1px solid #94a3b8 !important;
+      }
+      .sig-clear-btn {
+        display: none !important;
       }
       @page {
         size: A4 portrait;
-        margin: 8mm 10mm;
+        margin: 7mm 9mm;
       }
       input, select, textarea {
         border-bottom: none !important;
         appearance: none;
+        background: transparent !important;
       }
     }
 
-    /* Input Halus di Mode Layar */
-    .field-input {
+    /* Interaksi Input Lembar Kerja */
+    .smart-input {
       background: transparent;
       border-bottom: 1.5px dashed #cbd5e1;
       transition: all 0.2s ease;
     }
-    .field-input:focus {
+    .smart-input:focus {
       outline: none;
-      border-bottom: 1.5px solid #2563eb;
-      background: rgba(239, 246, 255, 0.5);
+      border-bottom: 2px solid #2563eb;
+      background: rgba(239, 246, 255, 0.6);
     }
 
-    /* Watermark Lembar Resmi */
-    .watermark-bg {
-      background-image: radial-gradient(rgba(15, 23, 42, 0.03) 1px, transparent 0);
-      background-size: 20px 20px;
+    /* Canvas Tanda Tangan */
+    .sig-canvas {
+      cursor: crosshair;
+      touch-action: none;
+      background: #fafafa;
+      border-radius: 8px;
+    }
+
+    /* Toast Notification */
+    #toast-msg {
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-800 font-sans min-h-screen py-6 px-3 sm:px-6 transition-colors duration-300">
+<body class="bg-slate-950 text-slate-800 font-sans min-h-screen py-5 px-3 sm:px-6 antialiased selection:bg-blue-600 selection:text-white">
 
   <!-- ========================================================================= -->
-  <!-- TOP MODERN FLOATING TOOLBAR (NON-PRINTABLE) -->
+  <!-- FLOATING APP TOOLBAR (NON-PRINTABLE) -->
   <!-- ========================================================================= -->
-  <header class="no-print max-w-5xl mx-auto mb-6 bg-slate-800/90 backdrop-blur-md text-white p-3.5 sm:p-4 rounded-2xl shadow-2xl border border-slate-700/80 flex flex-wrap items-center justify-between gap-4">
-    <div class="flex items-center space-x-3.5">
-      <div class="w-11 h-11 bg-gradient-to-tr from-blue-700 via-indigo-600 to-red-600 rounded-xl flex items-center justify-center font-black text-white text-base shadow-lg shadow-indigo-500/20 ring-2 ring-white/20">
+  <header class="no-print max-w-5xl mx-auto mb-5 bg-slate-900/90 backdrop-blur-md text-white p-3 sm:p-4 rounded-2xl shadow-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-3 sticky top-3 z-50">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 bg-gradient-to-tr from-blue-700 via-indigo-600 to-red-600 rounded-xl flex items-center justify-center font-black text-white text-base shadow-lg shadow-indigo-500/20 ring-2 ring-white/10">
         WT
       </div>
       <div>
         <div class="flex items-center space-x-2">
-          <h1 class="text-sm sm:text-base font-black tracking-tight text-white uppercase">Official Match Protocol & Scoresheet</h1>
-          <span class="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">WT 2026.V2</span>
+          <h1 class="text-sm font-black tracking-tight text-white uppercase">Official Match Protocol</h1>
+          <span class="bg-blue-500/20 text-blue-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-500/30">SMART SYSTEM</span>
         </div>
-        <p class="text-xs text-slate-400">Lembar Berita Acara & Skor Resmi World Taekwondo & PBTI</p>
+        <p class="text-[11px] text-slate-400">Formulir Berita Acara & Lembar Skor Resmi World Taekwondo</p>
       </div>
     </div>
 
-    <!-- Category Pill Switcher -->
-    <div class="flex items-center space-x-1.5 bg-slate-900/90 p-1.5 rounded-xl border border-slate-700">
-      <button onclick="switchTab('kyorugi')" id="btn-kyorugi" class="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md transition-all">
-        🥋 Kyorugi (Tarung)
+    <!-- Category Tabs -->
+    <div class="flex items-center space-x-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+      <button onclick="switchTab('kyorugi')" id="btn-kyorugi" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-md transition-all flex items-center space-x-1.5">
+        <span>🥊</span> <span>Kyorugi (Tarung)</span>
       </button>
-      <button onclick="switchTab('poomsae_rec')" id="btn-poomsae-rec" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-white transition-all">
-        🏅 Poomsae Recognised
+      <button onclick="switchTab('poomsae_rec')" id="btn-poomsae-rec" class="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-white transition-all flex items-center space-x-1.5">
+        <span>🏅</span> <span>Poomsae Recognised</span>
       </button>
-      <button onclick="switchTab('poomsae_free')" id="btn-poomsae-free" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-white transition-all">
-        ⚡ Freestyle
+      <button onclick="switchTab('poomsae_free')" id="btn-poomsae-free" class="px-3 py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-white transition-all flex items-center space-x-1.5">
+        <span>⚡</span> <span>Freestyle</span>
       </button>
     </div>
 
-    <!-- Action Buttons -->
-    <div class="flex items-center space-x-2">
-      <button onclick="fillSampleData()" title="Muat contoh pertandingan resmi" class="px-3 py-2 bg-slate-700/80 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded-xl border border-slate-600 flex items-center space-x-1.5 transition">
-        <span>✨</span> <span class="hidden sm:inline">Contoh Data</span>
+    <!-- Smart Action Buttons -->
+    <div class="flex items-center flex-wrap gap-2">
+      <button onclick="syncFromScoringBoard()" title="Ambil skor & atlet yang sedang bertanding di papan skor" class="px-3 py-1.5 bg-indigo-600/90 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-md border border-indigo-400/40 flex items-center space-x-1.5 transition">
+        <span>📥</span> <span>Tarik dari Scoring Board</span>
       </button>
-      <button onclick="clearFormData()" title="Kosongkan untuk cetak blanko wasit" class="px-3 py-2 bg-slate-700/80 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded-xl border border-slate-600 flex items-center space-x-1.5 transition">
-        <span>🧹</span> <span class="hidden sm:inline">Blanko</span>
+      <button onclick="fillSampleData()" title="Muat simulasi data pertandingan resmi" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 flex items-center space-x-1 transition">
+        <span>✨</span> <span>Contoh</span>
       </button>
-      <button onclick="window.print()" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-teal-900/30 flex items-center space-x-1.5 transition">
+      <button onclick="copyWhatsAppRecap()" title="Salin rekap hasil pertandingan dalam format teks WhatsApp" class="px-2.5 py-1.5 bg-emerald-700/80 hover:bg-emerald-600 text-white text-xs font-semibold rounded-xl border border-emerald-600 flex items-center space-x-1 transition">
+        <span>📋</span> <span>Salin WA</span>
+      </button>
+      <button onclick="window.print()" title="Cetak formulir atau simpan ke PDF ukuran A4" class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs rounded-xl shadow-lg flex items-center space-x-1.5 transition">
         <span>🖨️</span> <span>Cetak A4 / PDF</span>
+      </button>
+      <button onclick="clearFormData()" title="Kosongkan formulir untuk blanko" class="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-red-400 text-xs rounded-xl border border-slate-700 transition" title="Reset Form">
+        🧹
       </button>
     </div>
   </header>
 
+  <!-- Toast Notification Pop-up -->
+  <div id="toast-msg" class="no-print fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 pointer-events-none bg-slate-900 text-white border border-slate-700 px-4 py-2.5 rounded-xl shadow-2xl flex items-center space-x-2 text-xs font-medium">
+    <span id="toast-icon">✅</span>
+    <span id="toast-text">Pesan notifikasi</span>
+  </div>
+
   <!-- ========================================================================= -->
   <!-- 1. KYORUGI PROTOCOL SHEET (WT-FR-01) - MODERN EXECUTIVE A4 DESIGN -->
   <!-- ========================================================================= -->
-  <main id="sheet-kyorugi" class="page-container max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 sm:p-9 watermark-bg relative overflow-hidden">
-    
-    <!-- Top Aesthetic Ribbon (Taekwondo Colors: Blue & Red) -->
+  <main id="sheet-kyorugi" class="page-sheet max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl border border-slate-200 p-5 sm:p-8 relative overflow-hidden">
+    <!-- Top Gradient Accent Line (Taekwondo Chung & Hong) -->
     <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-700 via-indigo-600 to-red-600"></div>
 
-    <!-- Official Header Block -->
-    <div class="border-b border-slate-300 pb-4 mb-4 flex items-center justify-between gap-4">
-      <!-- WT / PBTI Vector Badge -->
+    <!-- Official Header -->
+    <div class="border-b border-slate-300 pb-3 mb-3 flex items-center justify-between gap-3">
       <div class="flex items-center space-x-3">
-        <div class="w-14 h-14 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-xl border-2 border-slate-900 flex flex-col items-center justify-center shadow-md p-1">
-          <span class="text-xs font-black tracking-widest text-amber-400">WORLD</span>
+        <div class="w-13 h-13 bg-slate-950 text-white rounded-xl border border-slate-800 flex flex-col items-center justify-center p-1.5 shadow-md">
+          <span class="text-[9px] font-black tracking-widest text-amber-400">WORLD</span>
           <span class="text-base font-black tracking-tighter leading-none">WT</span>
-          <span class="text-[8px] font-bold text-slate-400">TAEKWONDO</span>
+          <span class="text-[7px] font-bold text-slate-400">TAEKWONDO</span>
         </div>
         <div>
-          <div class="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center space-x-1.5">
+          <div class="text-[9px] font-black uppercase tracking-wider text-slate-500 flex items-center space-x-1.5">
             <span>PENGURUS BESAR TAEKWONDO INDONESIA</span>
             <span>•</span>
-            <span class="text-blue-700">MEMBER OF WORLD TAEKWONDO</span>
+            <span class="text-blue-700">OFFICIAL MATCH PROTOCOL</span>
           </div>
           <h1 class="text-base sm:text-lg font-black text-slate-900 uppercase tracking-tight">
             BERITA ACARA & LEMBAR HASIL PERTANDINGAN KYORUGI
           </h1>
           <p class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
-            OFFICIAL MATCH PROTOCOL & SCORESHEET (BEST OF 3 ROUND SYSTEM)
+            OFFICIAL KYORUGI SCORESHEET (WORLD TAEKWONDO BEST OF 3 SYSTEM)
           </p>
         </div>
       </div>
 
-      <!-- Protocol Metadata Badges & Barcode Placeholder -->
+      <!-- Protocol Metadata & Barcode -->
       <div class="text-right flex flex-col items-end">
         <div class="flex items-center space-x-1 mb-1">
-          <span class="bg-slate-100 text-slate-700 border border-slate-300 font-mono text-[10px] font-bold px-2 py-0.5 rounded">FORM: WT-FR-01</span>
-          <span class="bg-blue-50 text-blue-800 border border-blue-200 font-mono text-[10px] font-bold px-2 py-0.5 rounded">BEST OF 3</span>
+          <span class="bg-slate-100 text-slate-700 border border-slate-300 font-mono text-[9px] font-bold px-2 py-0.5 rounded">FORM: WT-FR-01</span>
+          <span class="bg-blue-50 text-blue-800 border border-blue-200 font-mono text-[9px] font-bold px-2 py-0.5 rounded">BEST OF 3</span>
         </div>
-        <!-- Stylized Barcode Vector -->
-        <div class="flex items-center space-x-0.5 h-6 opacity-75" title="Match Serial Barcode">
-          <div class="w-0.5 h-6 bg-slate-900"></div><div class="w-1 h-6 bg-slate-900"></div>
-          <div class="w-0.5 h-6 bg-slate-900"></div><div class="w-1.5 h-6 bg-slate-900"></div>
-          <div class="w-0.5 h-6 bg-slate-900"></div><div class="w-1 h-6 bg-slate-900"></div>
-          <div class="w-2 h-6 bg-slate-900"></div><div class="w-0.5 h-6 bg-slate-900"></div>
-          <div class="w-1 h-6 bg-slate-900"></div><div class="w-0.5 h-6 bg-slate-900"></div>
-          <div class="w-1.5 h-6 bg-slate-900"></div><div class="w-0.5 h-6 bg-slate-900"></div>
-          <div class="w-1 h-6 bg-slate-900"></div><div class="w-2 h-6 bg-slate-900"></div>
+        <!-- Barcode Vector -->
+        <div class="flex items-center space-x-0.5 h-5 opacity-80" title="Match Serial Barcode">
+          <div class="w-0.5 h-5 bg-slate-900"></div><div class="w-1 h-5 bg-slate-900"></div>
+          <div class="w-0.5 h-5 bg-slate-900"></div><div class="w-1.5 h-5 bg-slate-900"></div>
+          <div class="w-0.5 h-5 bg-slate-900"></div><div class="w-1 h-5 bg-slate-900"></div>
+          <div class="w-2 h-5 bg-slate-900"></div><div class="w-0.5 h-5 bg-slate-900"></div>
+          <div class="w-1 h-5 bg-slate-900"></div><div class="w-1.5 h-5 bg-slate-900"></div>
+          <div class="w-0.5 h-5 bg-slate-900"></div><div class="w-2 h-5 bg-slate-900"></div>
         </div>
-        <span class="text-[9px] font-mono text-slate-400">SERI: INA-2026-KY-0492</span>
+        <span class="text-[8px] font-mono text-slate-400">SERI: INA-2026-KY-0492</span>
       </div>
     </div>
 
     <!-- Match Information Context Bar -->
-    <div class="grid grid-cols-12 gap-2 text-xs mb-4 bg-slate-50/90 border border-slate-200 p-2.5 rounded-xl shadow-xs">
+    <div class="grid grid-cols-12 gap-2 text-xs mb-3 bg-slate-50/90 border border-slate-200 p-2.5 rounded-xl shadow-xs">
       <div class="col-span-8 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-28">Nama Turnamen:</span>
-        <input type="text" id="k-tournament" class="field-input flex-1 font-bold text-slate-900" value="KEJUARAAN NASIONAL TAEKWONDO CHAMPIONSHIP 2026">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-28">Nama Turnamen:</span>
+        <input type="text" id="k-tournament" class="smart-input flex-1 font-bold text-slate-900" value="KEJUARAAN NASIONAL TAEKWONDO CHAMPIONSHIP 2026">
       </div>
       <div class="col-span-4 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-24">Gelanggang:</span>
-        <input type="text" id="k-court" class="field-input flex-1 font-mono font-black text-center text-indigo-700" value="COURT 1 (RING A)">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-24">Gelanggang:</span>
+        <input type="text" id="k-court" class="smart-input flex-1 font-mono font-black text-center text-indigo-700" value="COURT 1 (RING A)">
       </div>
 
       <div class="col-span-4 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-28">Nomor Partai:</span>
-        <input type="text" id="k-match-no" class="field-input flex-1 font-mono font-black text-red-600" value="PARTAI #104">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-28">Nomor Partai:</span>
+        <input type="text" id="k-match-no" class="smart-input flex-1 font-mono font-black text-red-600" value="PARTAI #104">
       </div>
       <div class="col-span-4 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-16">Tanggal:</span>
-        <input type="text" id="k-date" class="field-input flex-1 font-medium" value="17 November 2026">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-16">Tanggal:</span>
+        <input type="text" id="k-date" class="smart-input flex-1 font-medium" value="17 November 2026">
       </div>
       <div class="col-span-4 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-16">Babak:</span>
-        <input type="text" id="k-phase" class="field-input flex-1 font-semibold text-slate-800" value="Semifinal / Perebutan Medali">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-16">Babak:</span>
+        <input type="text" id="k-phase" class="smart-input flex-1 font-semibold text-slate-800" value="Semifinal / Perebutan Medali">
       </div>
 
       <div class="col-span-6 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-28">Divisi & Gender:</span>
-        <input type="text" id="k-division" class="field-input flex-1 font-semibold" value="Senior Putra (Male Division)">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-28">Divisi & Gender:</span>
+        <input type="text" id="k-division" class="smart-input flex-1 font-semibold" value="Senior Putra (Male Division)">
       </div>
       <div class="col-span-6 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-24">Kelas Berat:</span>
-        <input type="text" id="k-weight" class="field-input flex-1 font-bold text-slate-900" value="Under 68 kg (Featherweight)">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-24">Kelas Berat:</span>
+        <input type="text" id="k-weight" class="smart-input flex-1 font-bold text-slate-900" value="Under 68 kg (Featherweight)">
       </div>
     </div>
 
     <!-- Contestants Face-Off Dual Cards (Chung vs Hong) -->
-    <div class="grid grid-cols-12 gap-3 mb-4 items-stretch">
+    <div class="grid grid-cols-12 gap-3 mb-3 items-stretch">
       <!-- CHUNG (BLUE CORNER) CARD -->
-      <div class="col-span-6 border-2 border-blue-600 rounded-xl bg-gradient-to-b from-blue-50/50 via-white to-blue-50/30 p-3 shadow-xs relative overflow-hidden flex flex-col justify-between">
-        <div class="absolute -right-6 -bottom-6 text-blue-900/5 font-black text-7xl select-none pointer-events-none">靑</div>
+      <div class="col-span-6 border-2 border-blue-600 rounded-xl bg-gradient-to-b from-blue-50/50 via-white to-blue-50/30 p-2.5 shadow-xs relative overflow-hidden flex flex-col justify-between">
+        <div class="absolute -right-5 -bottom-5 text-blue-900/5 font-black text-7xl select-none pointer-events-none">靑</div>
         <div>
-          <!-- Corner Header Badge -->
-          <div class="bg-gradient-to-r from-blue-700 to-blue-600 text-white font-black text-xs px-2.5 py-1 rounded-lg uppercase tracking-wider flex items-center justify-between shadow-xs mb-2.5">
+          <div class="bg-blue-600 text-white font-black text-xs px-2.5 py-1 rounded-lg uppercase tracking-wider flex items-center justify-between shadow-xs mb-2">
             <div class="flex items-center space-x-1.5">
               <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
               <span>CHUNG (청) • SUDUT BIRU</span>
             </div>
-            <span class="text-[10px] font-mono font-medium text-blue-100">KARTU REPLAY: 🎴 🎴</span>
+            <span id="chung-card-quota" class="text-[9px] font-mono font-medium text-blue-100">KARTU REPLAY: 🎴 🎴</span>
           </div>
 
           <table class="w-full text-xs">
             <tbody>
               <tr>
-                <td class="font-bold text-slate-500 w-24 py-1">Nama Atlet:</td>
-                <td><input type="text" id="k-chung-name" class="field-input w-full font-black text-sm text-blue-950 uppercase" value="BAMBANG WIJAYA"></td>
+                <td class="font-bold text-slate-500 w-22 py-0.5">Nama Atlet:</td>
+                <td><input type="text" id="k-chung-name" class="smart-input w-full font-black text-sm text-blue-950 uppercase" value="BAMBANG WIJAYA"></td>
               </tr>
               <tr>
-                <td class="font-bold text-slate-500 py-1">Kontingen/Tim:</td>
-                <td><input type="text" id="k-chung-team" class="field-input w-full font-bold text-slate-800" value="JAWA BARAT (KAB. BOGOR)"></td>
+                <td class="font-bold text-slate-500 py-0.5">Kontingen/Tim:</td>
+                <td><input type="text" id="k-chung-team" class="smart-input w-full font-bold text-slate-800" value="JAWA BARAT (KAB. BOGOR)"></td>
               </tr>
               <tr>
-                <td class="font-bold text-slate-500 py-1">No. Lisensi/GAL:</td>
-                <td><input type="text" id="k-chung-gal" class="field-input w-full font-mono text-[11px] text-slate-600" value="INA-19980421-GAL"></td>
+                <td class="font-bold text-slate-500 py-0.5">No. Lisensi/GAL:</td>
+                <td><input type="text" id="k-chung-gal" class="smart-input w-full font-mono text-[11px] text-slate-600" value="INA-19980421-GAL"></td>
               </tr>
               <tr>
-                <td class="font-bold text-slate-500 py-1">Nama Pelatih:</td>
-                <td><input type="text" id="k-chung-coach" class="field-input w-full text-slate-700 font-medium" value="Sabeum Nim Hendra Kusuma"></td>
+                <td class="font-bold text-slate-500 py-0.5">Nama Pelatih:</td>
+                <td><input type="text" id="k-chung-coach" class="smart-input w-full text-slate-700 font-medium" value="Sabeum Nim Hendra Kusuma"></td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <div class="mt-2.5 pt-2 border-t border-blue-200 flex items-center justify-between text-[11px]">
+        <div class="mt-2 pt-1.5 border-t border-blue-200 flex items-center justify-between text-xs">
           <span class="font-bold text-blue-900">Ronde Dimenangkan:</span>
-          <span id="chung-won-rounds" class="font-mono font-black text-base bg-blue-600 text-white px-2.5 py-0.5 rounded-md shadow-xs">2 Ronde</span>
+          <span id="chung-won-rounds" class="font-mono font-black text-sm bg-blue-600 text-white px-2.5 py-0.5 rounded shadow-xs">2 Ronde</span>
         </div>
       </div>
 
       <!-- HONG (RED CORNER) CARD -->
-      <div class="col-span-6 border-2 border-red-600 rounded-xl bg-gradient-to-b from-red-50/50 via-white to-red-50/30 p-3 shadow-xs relative overflow-hidden flex flex-col justify-between">
-        <div class="absolute -right-6 -bottom-6 text-red-900/5 font-black text-7xl select-none pointer-events-none">紅</div>
+      <div class="col-span-6 border-2 border-red-600 rounded-xl bg-gradient-to-b from-red-50/50 via-white to-red-50/30 p-2.5 shadow-xs relative overflow-hidden flex flex-col justify-between">
+        <div class="absolute -right-5 -bottom-5 text-red-900/5 font-black text-7xl select-none pointer-events-none">紅</div>
         <div>
-          <!-- Corner Header Badge -->
-          <div class="bg-gradient-to-r from-red-700 to-red-600 text-white font-black text-xs px-2.5 py-1 rounded-lg uppercase tracking-wider flex items-center justify-between shadow-xs mb-2.5">
+          <div class="bg-red-600 text-white font-black text-xs px-2.5 py-1 rounded-lg uppercase tracking-wider flex items-center justify-between shadow-xs mb-2">
             <div class="flex items-center space-x-1.5">
               <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
               <span>HONG (홍) • SUDUT MERAH</span>
             </div>
-            <span class="text-[10px] font-mono font-medium text-red-100">KARTU REPLAY: 🎴</span>
+            <span id="hong-card-quota" class="text-[9px] font-mono font-medium text-red-100">KARTU REPLAY: 🎴</span>
           </div>
 
           <table class="w-full text-xs">
             <tbody>
               <tr>
-                <td class="font-bold text-slate-500 w-24 py-1">Nama Atlet:</td>
-                <td><input type="text" id="k-hong-name" class="field-input w-full font-black text-sm text-red-950 uppercase" value="DIMAS PRASETYO"></td>
+                <td class="font-bold text-slate-500 w-22 py-0.5">Nama Atlet:</td>
+                <td><input type="text" id="k-hong-name" class="smart-input w-full font-black text-sm text-red-950 uppercase" value="DIMAS PRASETYO"></td>
               </tr>
               <tr>
-                <td class="font-bold text-slate-500 py-1">Kontingen/Tim:</td>
-                <td><input type="text" id="k-hong-team" class="field-input w-full font-bold text-slate-800" value="DKI JAKARTA (JAKSEL)"></td>
+                <td class="font-bold text-slate-500 py-0.5">Kontingen/Tim:</td>
+                <td><input type="text" id="k-hong-team" class="smart-input w-full font-bold text-slate-800" value="DKI JAKARTA (JAKSEL)"></td>
               </tr>
               <tr>
-                <td class="font-bold text-slate-500 py-1">No. Lisensi/GAL:</td>
-                <td><input type="text" id="k-hong-gal" class="field-input w-full font-mono text-[11px] text-slate-600" value="INA-20011105-GAL"></td>
+                <td class="font-bold text-slate-500 py-0.5">No. Lisensi/GAL:</td>
+                <td><input type="text" id="k-hong-gal" class="smart-input w-full font-mono text-[11px] text-slate-600" value="INA-20011105-GAL"></td>
               </tr>
               <tr>
-                <td class="font-bold text-slate-500 py-1">Nama Pelatih:</td>
-                <td><input type="text" id="k-hong-coach" class="field-input w-full text-slate-700 font-medium" value="Sabeum Nim Suryo Pratama"></td>
+                <td class="font-bold text-slate-500 py-0.5">Nama Pelatih:</td>
+                <td><input type="text" id="k-hong-coach" class="smart-input w-full text-slate-700 font-medium" value="Sabeum Nim Suryo Pratama"></td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <div class="mt-2.5 pt-2 border-t border-red-200 flex items-center justify-between text-[11px]">
+        <div class="mt-2 pt-1.5 border-t border-red-200 flex items-center justify-between text-xs">
           <span class="font-bold text-red-900">Ronde Dimenangkan:</span>
-          <span id="hong-won-rounds" class="font-mono font-black text-base bg-red-600 text-white px-2.5 py-0.5 rounded-md shadow-xs">1 Ronde</span>
+          <span id="hong-won-rounds" class="font-mono font-black text-sm bg-red-600 text-white px-2.5 py-0.5 rounded shadow-xs">1 Ronde</span>
         </div>
       </div>
     </div>
 
-    <!-- Round-by-Round Breakdown Matrix (WT Best of 3 System) -->
-    <div class="mb-4">
+    <!-- Round Matrix (Auto Calculating WT Best of 3) -->
+    <div class="mb-3">
       <div class="bg-slate-900 text-white px-3 py-1.5 rounded-t-xl flex items-center justify-between text-xs font-bold uppercase tracking-wider">
         <div class="flex items-center space-x-2">
           <span>📊</span>
           <span>HASIL SKOR PER-RONDE (BEST OF 3 ROUNDS)</span>
         </div>
-        <span class="text-[10px] text-slate-400 font-normal">Pemenang adalah atlet yang memenangkan 2 ronde pertama</span>
+        <span class="text-[10px] text-slate-400 font-normal">Kalkulator otomatis Point Gap & Pemenang Ronde</span>
       </div>
 
       <table class="w-full text-xs border-x border-b border-slate-300 text-center border-collapse">
         <thead>
           <tr class="bg-slate-100 border-b border-slate-300 text-[11px] font-bold text-slate-700">
-            <th class="border-r border-slate-300 p-2 w-16">Ronde</th>
-            <th colspan="2" class="border-r border-slate-300 p-2 bg-blue-100/60 text-blue-900 font-black">
+            <th class="border-r border-slate-300 p-1.5 w-14">Ronde</th>
+            <th colspan="2" class="border-r border-slate-300 p-1.5 bg-blue-100/70 text-blue-900 font-black">
               CHUNG (BIRU)
             </th>
-            <th colspan="2" class="border-r border-slate-300 p-2 bg-red-100/60 text-red-900 font-black">
+            <th colspan="2" class="border-r border-slate-300 p-1.5 bg-red-100/70 text-red-900 font-black">
               HONG (MERAH)
             </th>
-            <th class="border-r border-slate-300 p-2 w-32">Pemenang Ronde</th>
-            <th class="p-2 text-left">Metode & Alasan Kemenangan Ronde</th>
+            <th class="border-r border-slate-300 p-1.5 w-32">Pemenang Ronde</th>
+            <th class="p-1.5 text-left">Metode & Keterangan Kemenangan</th>
           </tr>
           <tr class="bg-slate-50 text-[10px] font-semibold text-slate-500 border-b border-slate-300">
             <th class="border-r border-slate-300"></th>
-            <th class="border-r border-slate-300 py-1 text-blue-700">Poin PSS</th>
-            <th class="border-r border-slate-300 py-1 text-blue-700">Gam-jeom (Penalti)</th>
-            <th class="border-r border-slate-300 py-1 text-red-700">Poin PSS</th>
-            <th class="border-r border-slate-300 py-1 text-red-700">Gam-jeom (Penalti)</th>
+            <th class="border-r border-slate-300 py-1 text-blue-700">Poin</th>
+            <th class="border-r border-slate-300 py-1 text-blue-700">Gam-jeom</th>
+            <th class="border-r border-slate-300 py-1 text-red-700">Poin</th>
+            <th class="border-r border-slate-300 py-1 text-red-700">Gam-jeom</th>
             <th class="border-r border-slate-300 py-1">Sudut</th>
-            <th class="py-1 text-left pl-3">Keterangan (Skor Akhir / Point Gap 12pt / Tie-Break)</th>
+            <th class="py-1 text-left pl-3">Keterangan</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-200 font-mono">
           <!-- Ronde 1 -->
-          <tr class="hover:bg-slate-50/50">
+          <tr>
             <td class="border-r border-slate-300 font-black bg-slate-100 text-slate-800">R1</td>
-            <td class="border-r border-slate-300 font-black text-sm text-blue-700 bg-blue-50/30">
-              <input type="number" class="field-input w-12 text-center font-black" value="12">
+            <td class="border-r border-slate-300 font-black text-sm text-blue-700 bg-blue-50/20">
+              <input type="number" id="r1-c-pts" oninput="recalcKyorugiRounds()" class="smart-input w-12 text-center font-black" value="12">
             </td>
             <td class="border-r border-slate-300 text-slate-700">
-              <input type="number" class="field-input w-10 text-center" value="1">
+              <input type="number" id="r1-c-gj" class="smart-input w-10 text-center" value="1">
             </td>
-            <td class="border-r border-slate-300 font-black text-sm text-red-700 bg-red-50/30">
-              <input type="number" class="field-input w-12 text-center font-black" value="8">
+            <td class="border-r border-slate-300 font-black text-sm text-red-700 bg-red-50/20">
+              <input type="number" id="r1-h-pts" oninput="recalcKyorugiRounds()" class="smart-input w-12 text-center font-black" value="8">
             </td>
             <td class="border-r border-slate-300 text-slate-700">
-              <input type="number" class="field-input w-10 text-center" value="2">
+              <input type="number" id="r1-h-gj" class="smart-input w-10 text-center" value="2">
             </td>
-            <td class="border-r border-slate-300 font-black font-sans text-[11px] text-blue-700 bg-blue-50">
+            <td id="r1-winner" class="border-r border-slate-300 font-black font-sans text-[11px] text-blue-700 bg-blue-50">
               🏆 CHUNG (BIRU)
             </td>
-            <td class="text-left pl-3 font-sans text-[11px] text-slate-700">
+            <td id="r1-reason" class="text-left pl-3 font-sans text-[11px] text-slate-700">
               Menang Skor Akhir Ronde (12 - 8)
             </td>
           </tr>
 
           <!-- Ronde 2 -->
-          <tr class="hover:bg-slate-50/50">
+          <tr>
             <td class="border-r border-slate-300 font-black bg-slate-100 text-slate-800">R2</td>
-            <td class="border-r border-slate-300 font-black text-sm text-blue-700 bg-blue-50/30">
-              <input type="number" class="field-input w-12 text-center font-black" value="6">
+            <td class="border-r border-slate-300 font-black text-sm text-blue-700 bg-blue-50/20">
+              <input type="number" id="r2-c-pts" oninput="recalcKyorugiRounds()" class="smart-input w-12 text-center font-black" value="6">
             </td>
             <td class="border-r border-slate-300 text-slate-700">
-              <input type="number" class="field-input w-10 text-center" value="2">
+              <input type="number" id="r2-c-gj" class="smart-input w-10 text-center" value="2">
             </td>
-            <td class="border-r border-slate-300 font-black text-sm text-red-700 bg-red-50/30">
-              <input type="number" class="field-input w-12 text-center font-black" value="7">
+            <td class="border-r border-slate-300 font-black text-sm text-red-700 bg-red-50/20">
+              <input type="number" id="r2-h-pts" oninput="recalcKyorugiRounds()" class="smart-input w-12 text-center font-black" value="7">
             </td>
             <td class="border-r border-slate-300 text-slate-700">
-              <input type="number" class="field-input w-10 text-center" value="0">
+              <input type="number" id="r2-h-gj" class="smart-input w-10 text-center" value="0">
             </td>
-            <td class="border-r border-slate-300 font-black font-sans text-[11px] text-red-700 bg-red-50">
+            <td id="r2-winner" class="border-r border-slate-300 font-black font-sans text-[11px] text-red-700 bg-red-50">
               🏆 HONG (MERAH)
             </td>
-            <td class="text-left pl-3 font-sans text-[11px] text-slate-700">
+            <td id="r2-reason" class="text-left pl-3 font-sans text-[11px] text-slate-700">
               Menang Skor Akhir Ronde (6 - 7)
             </td>
           </tr>
 
           <!-- Ronde 3 -->
-          <tr class="hover:bg-slate-50/50">
+          <tr>
             <td class="border-r border-slate-300 font-black bg-slate-100 text-slate-800">R3</td>
-            <td class="border-r border-slate-300 font-black text-sm text-blue-700 bg-blue-50/30">
-              <input type="number" class="field-input w-12 text-center font-black" value="15">
+            <td class="border-r border-slate-300 font-black text-sm text-blue-700 bg-blue-50/20">
+              <input type="number" id="r3-c-pts" oninput="recalcKyorugiRounds()" class="smart-input w-12 text-center font-black" value="15">
             </td>
             <td class="border-r border-slate-300 text-slate-700">
-              <input type="number" class="field-input w-10 text-center" value="1">
+              <input type="number" id="r3-c-gj" class="smart-input w-10 text-center" value="1">
             </td>
-            <td class="border-r border-slate-300 font-black text-sm text-red-700 bg-red-50/30">
-              <input type="number" class="field-input w-12 text-center font-black" value="3">
+            <td class="border-r border-slate-300 font-black text-sm text-red-700 bg-red-50/20">
+              <input type="number" id="r3-h-pts" oninput="recalcKyorugiRounds()" class="smart-input w-12 text-center font-black" value="3">
             </td>
             <td class="border-r border-slate-300 text-slate-700">
-              <input type="number" class="field-input w-10 text-center" value="3">
+              <input type="number" id="r3-h-gj" class="smart-input w-10 text-center" value="3">
             </td>
-            <td class="border-r border-slate-300 font-black font-sans text-[11px] text-blue-700 bg-blue-50">
+            <td id="r3-winner" class="border-r border-slate-300 font-black font-sans text-[11px] text-blue-700 bg-blue-50">
               🏆 CHUNG (BIRU)
             </td>
-            <td class="text-left pl-3 font-sans text-[11px] text-slate-700 font-semibold text-emerald-800">
+            <td id="r3-reason" class="text-left pl-3 font-sans text-[11px] text-emerald-800 font-semibold">
               PTG (Point Gap 12 Poin: 15 - 3)
             </td>
           </tr>
@@ -424,11 +446,11 @@
       </table>
     </div>
 
-    <!-- IVR Log & Official Decision Dual Section -->
-    <div class="grid grid-cols-12 gap-3 mb-4">
-      <!-- IVR (Instant Video Replay) Protocol Table -->
-      <div class="col-span-6 border border-slate-300 rounded-xl p-3 bg-slate-50/70 text-[11px]">
-        <div class="font-black uppercase text-slate-800 border-b border-slate-300 pb-1.5 mb-2 flex items-center justify-between">
+    <!-- IVR & Official Result Box -->
+    <div class="grid grid-cols-12 gap-3 mb-3">
+      <!-- IVR Log -->
+      <div class="col-span-6 border border-slate-300 rounded-xl p-2.5 bg-slate-50/80 text-[11px]">
+        <div class="font-black uppercase text-slate-800 border-b border-slate-300 pb-1 mb-1.5 flex items-center justify-between">
           <div class="flex items-center space-x-1.5">
             <span>🎥</span>
             <span>CATATAN INSTANT VIDEO REPLAY (IVR)</span>
@@ -439,137 +461,160 @@
         <table class="w-full text-center border-collapse">
           <thead>
             <tr class="bg-slate-200/80 text-[10px] font-bold text-slate-700 rounded">
-              <th class="p-1 rounded-l">Ronde</th>
-              <th class="p-1">Sudut</th>
-              <th class="p-1 text-left">Objek Tantangan Banding</th>
-              <th class="p-1 rounded-r">Keputusan Juri</th>
+              <th class="p-0.5 rounded-l">Ronde</th>
+              <th class="p-0.5">Sudut</th>
+              <th class="p-0.5 text-left">Objek Banding</th>
+              <th class="p-0.5 rounded-r">Keputusan Juri</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-200 font-mono text-[10px]">
             <tr>
-              <td class="py-1">R2</td>
-              <td class="py-1 font-bold text-blue-700">CHUNG</td>
-              <td class="py-1 text-left font-sans">Head Kick Sensor (3 Poin)</td>
-              <td class="py-1">
+              <td class="py-0.5">R2</td>
+              <td class="py-0.5 font-bold text-blue-700">CHUNG</td>
+              <td class="py-0.5 text-left font-sans">Head Kick Sensor (3 Poin)</td>
+              <td class="py-0.5">
                 <span class="bg-red-100 text-red-800 font-bold px-1.5 py-0.5 rounded text-[9px]">REJECTED</span>
               </td>
             </tr>
             <tr>
-              <td class="py-1">R3</td>
-              <td class="py-1 font-bold text-red-700">HONG</td>
-              <td class="py-1 text-left font-sans">Gam-jeom Lawan (Keluar Garis)</td>
-              <td class="py-1">
+              <td class="py-0.5">R3</td>
+              <td class="py-0.5 font-bold text-red-700">HONG</td>
+              <td class="py-0.5 text-left font-sans">Gam-jeom Lawan (Keluar Garis)</td>
+              <td class="py-0.5">
                 <span class="bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded text-[9px]">ACCEPTED</span>
               </td>
             </tr>
           </tbody>
         </table>
 
-        <div class="mt-2.5 pt-2 border-t border-slate-300 flex items-center justify-between text-[10px] text-slate-600 font-medium">
+        <div class="mt-2 pt-1 border-t border-slate-300 flex items-center justify-between text-[10px] text-slate-600 font-medium">
           <span>Sisa Kartu Replay:</span>
           <span>CHUNG: <b class="text-slate-900">0 Kartu</b> | HONG: <b class="text-slate-900">1 Kartu</b></span>
         </div>
       </div>
 
-      <!-- Official Match Decision Box -->
-      <div class="col-span-6 border-2 border-slate-900 rounded-xl p-3 bg-gradient-to-br from-amber-50/60 via-white to-amber-50/30 text-xs flex flex-col justify-between shadow-xs">
+      <!-- Result Declaration -->
+      <div class="col-span-6 border-2 border-slate-900 rounded-xl p-2.5 bg-gradient-to-br from-amber-50/60 via-white to-amber-50/30 text-xs flex flex-col justify-between shadow-xs">
         <div>
-          <div class="font-black uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-1.5 mb-2 flex items-center justify-between">
+          <div class="font-black uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-1 mb-1.5 flex items-center justify-between">
             <span class="flex items-center space-x-1.5">
               <span>🏆</span>
               <span>KEPUTUSAN HASIL RESMI (OFFICIAL RESULT)</span>
             </span>
-            <span class="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full">FINAL RATIFIED</span>
+            <span class="bg-amber-400 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-full">FINAL RATIFIED</span>
           </div>
 
-          <div class="my-1.5 flex items-center space-x-2">
-            <span class="font-bold text-slate-500 uppercase text-[11px]">Pemenang:</span>
-            <div class="flex-1 bg-blue-600 text-white font-black text-sm px-3 py-1 rounded-lg shadow-sm flex items-center justify-between">
-              <span>CHUNG (BAMBANG WIJAYA)</span>
-              <span class="text-xs font-mono font-medium text-blue-200">SKOR 2 - 1</span>
+          <div class="my-1 flex items-center space-x-2">
+            <span class="font-bold text-slate-500 uppercase text-[10px]">Pemenang:</span>
+            <div id="kyorugi-winner-chip" class="flex-1 bg-blue-600 text-white font-black text-xs px-2.5 py-1 rounded-lg shadow-sm flex items-center justify-between">
+              <span id="winner-name-text">CHUNG (BAMBANG WIJAYA)</span>
+              <span id="winner-round-count" class="text-[11px] font-mono font-medium text-blue-200">SKOR 2 - 1</span>
             </div>
           </div>
-
-          <p class="text-[11px] text-slate-600 font-medium mt-1">
-            Menang 2 ronde atas Dimas Prasetyo (DKI Jakarta) melalui Ronde 1 (12-8) dan Ronde 3 (PTG 15-3).
-          </p>
         </div>
 
-        <!-- WT Official Method of Victory Radio/Check Chips -->
-        <div class="border-t border-slate-300 pt-2 mt-2">
-          <div class="text-[10px] font-bold uppercase text-slate-500 mb-1">Kode Keputusan Kemenangan (Method of Victory):</div>
-          <div class="grid grid-cols-4 gap-1.5 text-[10px] font-bold text-center">
-            <div class="p-1 rounded border border-blue-500 bg-blue-50 text-blue-900 shadow-2xs font-mono">☑ PTF</div>
-            <div class="p-1 rounded border border-emerald-500 bg-emerald-50 text-emerald-900 shadow-2xs font-mono">☑ PTG</div>
-            <div class="p-1 rounded border border-slate-200 bg-slate-50 text-slate-400 font-mono">☐ RSC</div>
-            <div class="p-1 rounded border border-slate-200 bg-slate-50 text-slate-400 font-mono">☐ WDR</div>
-            <div class="p-1 rounded border border-slate-200 bg-slate-50 text-slate-400 font-mono">☐ DSQ</div>
-            <div class="p-1 rounded border border-slate-200 bg-slate-50 text-slate-400 font-mono">☐ PUN</div>
-            <div class="p-1 rounded border border-slate-200 bg-slate-50 text-slate-400 font-mono">☐ SUP</div>
-            <div class="p-1 rounded border border-slate-200 bg-slate-50 text-slate-400 font-mono">☐ GDP</div>
+        <!-- Decision Chips -->
+        <div class="border-t border-slate-300 pt-1.5 mt-1">
+          <div class="text-[9px] font-bold uppercase text-slate-500 mb-1">Metode Kemenangan (Decision Method):</div>
+          <div class="grid grid-cols-4 gap-1 text-[10px] font-bold text-center">
+            <label class="p-1 rounded border border-blue-400 bg-blue-50 text-blue-900 font-mono flex items-center justify-center space-x-1 cursor-pointer">
+              <input type="checkbox" id="m-ptf" checked> <span>PTF</span>
+            </label>
+            <label class="p-1 rounded border border-emerald-400 bg-emerald-50 text-emerald-900 font-mono flex items-center justify-center space-x-1 cursor-pointer">
+              <input type="checkbox" id="m-ptg" checked> <span>PTG</span>
+            </label>
+            <label class="p-1 rounded border border-slate-200 bg-slate-50 text-slate-500 font-mono flex items-center justify-center space-x-1 cursor-pointer">
+              <input type="checkbox" id="m-rsc"> <span>RSC</span>
+            </label>
+            <label class="p-1 rounded border border-slate-200 bg-slate-50 text-slate-500 font-mono flex items-center justify-center space-x-1 cursor-pointer">
+              <input type="checkbox" id="m-wdr"> <span>WDR</span>
+            </label>
+            <label class="p-1 rounded border border-slate-200 bg-slate-50 text-slate-500 font-mono flex items-center justify-center space-x-1 cursor-pointer">
+              <input type="checkbox" id="m-dsq"> <span>DSQ</span>
+            </label>
+            <label class="p-1 rounded border border-slate-200 bg-slate-50 text-slate-500 font-mono flex items-center justify-center space-x-1 cursor-pointer">
+              <input type="checkbox" id="m-pun"> <span>PUN</span>
+            </label>
+            <label class="p-1 rounded border border-slate-200 bg-slate-50 text-slate-500 font-mono flex items-center justify-center space-x-1 cursor-pointer">
+              <input type="checkbox" id="m-sup"> <span>SUP</span>
+            </label>
+            <label class="p-1 rounded border border-slate-200 bg-slate-50 text-slate-500 font-mono flex items-center justify-center space-x-1 cursor-pointer">
+              <input type="checkbox" id="m-gdp"> <span>GDP</span>
+            </label>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Official 4-Column Signature & Ratification Panel -->
-    <div class="border-t-2 border-slate-900 pt-3 mt-4 sheet-card">
-      <div class="text-[10px] font-black uppercase tracking-widest text-center text-slate-500 mb-3 flex items-center justify-center space-x-2">
+    <!-- DIGITAL CANVAS SIGNATURES SECTION -->
+    <div class="border-t-2 border-slate-900 pt-2.5 mt-2">
+      <div class="text-[9px] font-black uppercase tracking-widest text-center text-slate-500 mb-2 flex items-center justify-center space-x-2">
         <span class="w-8 h-px bg-slate-300"></span>
-        <span>PENGESAHAN DEWAN WASIT & PANITIA PERTANDINGAN (OFFICIAL VALIDATION)</span>
+        <span>PENGESAHAN DEWAN WASIT & TECHNICAL DELEGATE (DIGITAL SIGNATURE PAD)</span>
         <span class="w-8 h-px bg-slate-300"></span>
       </div>
 
-      <div class="grid grid-cols-4 gap-3 text-center text-xs">
-        <!-- 1. Center Referee -->
-        <div class="border border-slate-200 rounded-xl p-2.5 bg-slate-50/60 flex flex-col justify-between">
-          <p class="text-[10px] font-bold text-slate-500 uppercase">Wasit Tengah (Referee)</p>
-          <div class="h-12 flex items-center justify-center">
-            <!-- Simulated Signature / Stamp line -->
-            <span class="text-xs font-serif italic text-blue-950 opacity-40">M. Ridwan, IR</span>
+      <div class="grid grid-cols-4 gap-2 text-center text-xs">
+        <!-- 1. Referee -->
+        <div class="border border-slate-200 rounded-xl p-2 bg-slate-50/70 flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[9px] font-bold text-slate-500 uppercase">Wasit Tengah</span>
+            <button onclick="clearSig('sig-ref')" class="no-print sig-clear-btn text-[9px] text-red-500 hover:text-red-700">✕ Hapus</button>
           </div>
-          <div class="border-t border-slate-400 pt-1">
-            <p class="font-bold text-[11px] text-slate-900">( M. Ridwan, S.Pd )</p>
-            <p class="text-[9px] font-mono text-slate-500">Lisensi IR PBTI #8492</p>
+          <div class="sig-canvas-container">
+            <canvas id="sig-ref" width="180" height="60" class="sig-canvas w-full h-15 border border-slate-200"></canvas>
+          </div>
+          <div class="border-t border-slate-300 pt-1 mt-1">
+            <input type="text" class="smart-input w-full text-center font-bold text-[11px]" value="M. Ridwan, S.Pd (IR)">
+            <p class="text-[8px] font-mono text-slate-400">Lisensi IR PBTI #8492</p>
           </div>
         </div>
 
-        <!-- 2. Corner Judges -->
-        <div class="border border-slate-200 rounded-xl p-2.5 bg-slate-50/60 flex flex-col justify-between">
-          <p class="text-[10px] font-bold text-slate-500 uppercase">Dewan Juri (Judges 1-3)</p>
-          <div class="h-12 flex items-center justify-center">
-            <span class="text-xs font-serif italic text-blue-950 opacity-40">Corner Judge Panel</span>
+        <!-- 2. Judges -->
+        <div class="border border-slate-200 rounded-xl p-2 bg-slate-50/70 flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[9px] font-bold text-slate-500 uppercase">Dewan Juri Sudut</span>
+            <button onclick="clearSig('sig-judge')" class="no-print sig-clear-btn text-[9px] text-red-500 hover:text-red-700">✕ Hapus</button>
           </div>
-          <div class="border-t border-slate-400 pt-1">
-            <p class="font-bold text-[11px] text-slate-900">( Ahmad Zaelani )</p>
-            <p class="text-[9px] font-mono text-slate-500">Koordinator Juri Sudut</p>
+          <div class="sig-canvas-container">
+            <canvas id="sig-judge" width="180" height="60" class="sig-canvas w-full h-15 border border-slate-200"></canvas>
+          </div>
+          <div class="border-t border-slate-300 pt-1 mt-1">
+            <input type="text" class="smart-input w-full text-center font-bold text-[11px]" value="Ahmad Zaelani (Judge 1)">
+            <p class="text-[8px] font-mono text-slate-400">Corner Judge Panel</p>
           </div>
         </div>
 
         <!-- 3. Review Jury (IVR) -->
-        <div class="border border-slate-200 rounded-xl p-2.5 bg-slate-50/60 flex flex-col justify-between">
-          <p class="text-[10px] font-bold text-slate-500 uppercase">Juri Replay (Review Jury)</p>
-          <div class="h-12 flex items-center justify-center">
-            <span class="text-xs font-serif italic text-blue-950 opacity-40">IVR Official</span>
+        <div class="border border-slate-200 rounded-xl p-2 bg-slate-50/70 flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[9px] font-bold text-slate-500 uppercase">Juri Replay (IVR)</span>
+            <button onclick="clearSig('sig-ivr')" class="no-print sig-clear-btn text-[9px] text-red-500 hover:text-red-700">✕ Hapus</button>
           </div>
-          <div class="border-t border-slate-400 pt-1">
-            <p class="font-bold text-[11px] text-slate-900">( Dr. Bambang S. )</p>
-            <p class="text-[9px] font-mono text-slate-500">Video Replay Jury</p>
+          <div class="sig-canvas-container">
+            <canvas id="sig-ivr" width="180" height="60" class="sig-canvas w-full h-15 border border-slate-200"></canvas>
+          </div>
+          <div class="border-t border-slate-300 pt-1 mt-1">
+            <input type="text" class="smart-input w-full text-center font-bold text-[11px]" value="Dr. Bambang S.">
+            <p class="text-[8px] font-mono text-slate-400">Video Replay Official</p>
           </div>
         </div>
 
-        <!-- 4. Competition Supervisor / Technical Delegate -->
-        <div class="border border-slate-200 rounded-xl p-2.5 bg-slate-50/60 flex flex-col justify-between relative overflow-hidden">
-          <p class="text-[10px] font-bold text-slate-500 uppercase">Ketua Pertandingan (TD)</p>
-          <div class="h-12 flex items-center justify-center relative">
-            <!-- Simulated Official Red Stamp -->
-            <div class="border-2 border-red-600/60 text-red-600/60 font-black text-[9px] px-2 py-0.5 rounded-full uppercase tracking-tighter rotate-[-12deg] pointer-events-none select-none">
+        <!-- 4. Technical Delegate -->
+        <div class="border border-slate-200 rounded-xl p-2 bg-slate-50/70 flex flex-col justify-between relative overflow-hidden">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[9px] font-bold text-slate-500 uppercase">Ketua Pertandingan (TD)</span>
+            <button onclick="clearSig('sig-td')" class="no-print sig-clear-btn text-[9px] text-red-500 hover:text-red-700">✕ Hapus</button>
+          </div>
+          <div class="sig-canvas-container relative">
+            <canvas id="sig-td" width="180" height="60" class="sig-canvas w-full h-15 border border-slate-200"></canvas>
+            <div class="absolute right-1 bottom-1 border border-red-600/50 text-red-600/50 font-black text-[7px] px-1 py-0.2 rounded uppercase pointer-events-none rotate-[-10deg]">
               PBTI VERIFIED
             </div>
           </div>
-          <div class="border-t border-slate-400 pt-1">
-            <p class="font-bold text-[11px] text-slate-900">( Grandmaster Suryadi )</p>
-            <p class="text-[9px] font-mono text-slate-500">Technical Delegate PBTI</p>
+          <div class="border-t border-slate-300 pt-1 mt-1">
+            <input type="text" class="smart-input w-full text-center font-bold text-[11px]" value="GM Suryadi (TD)">
+            <p class="text-[8px] font-mono text-slate-400">Technical Delegate PBTI</p>
           </div>
         </div>
       </div>
@@ -579,20 +624,20 @@
   <!-- ========================================================================= -->
   <!-- 2. POOMSAE RECOGNISED PROTOCOL SHEET (WT-FR-02) -->
   <!-- ========================================================================= -->
-  <main id="sheet-poomsae-rec" class="page-container max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 sm:p-9 watermark-bg relative overflow-hidden hidden">
-    <!-- Top Aesthetic Ribbon (Taekwondo Blue) -->
+  <main id="sheet-poomsae-rec" class="page-sheet max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl border border-slate-200 p-5 sm:p-8 relative overflow-hidden hidden">
+    <!-- Top Accent Line -->
     <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-700 via-indigo-600 to-sky-500"></div>
 
     <!-- Header Block -->
-    <div class="border-b border-slate-300 pb-4 mb-4 flex items-center justify-between gap-4">
+    <div class="border-b border-slate-300 pb-3 mb-3 flex items-center justify-between gap-3">
       <div class="flex items-center space-x-3">
-        <div class="w-14 h-14 bg-gradient-to-br from-blue-900 to-indigo-900 text-white rounded-xl border-2 border-slate-900 flex flex-col items-center justify-center shadow-md p-1">
-          <span class="text-xs font-black tracking-widest text-amber-400">POOMSAE</span>
+        <div class="w-13 h-13 bg-gradient-to-br from-blue-900 to-indigo-900 text-white rounded-xl border border-slate-800 flex flex-col items-center justify-center p-1.5 shadow-md">
+          <span class="text-[9px] font-black tracking-widest text-amber-400">POOMSAE</span>
           <span class="text-base font-black tracking-tighter leading-none">WT</span>
-          <span class="text-[8px] font-bold text-slate-300">RECOGNISED</span>
+          <span class="text-[7px] font-bold text-slate-300">RECOGNISED</span>
         </div>
         <div>
-          <div class="text-[10px] font-black uppercase tracking-wider text-slate-500">PENGURUS BESAR TAEKWONDO INDONESIA</div>
+          <div class="text-[9px] font-black uppercase tracking-wider text-slate-500">PENGURUS BESAR TAEKWONDO INDONESIA</div>
           <h1 class="text-base sm:text-lg font-black text-slate-900 uppercase tracking-tight">
             BERITA ACARA & LEMBAR PENILAIAN POOMSAE RECOGNISED
           </h1>
@@ -603,119 +648,80 @@
       </div>
 
       <div class="text-right">
-        <span class="bg-blue-50 text-blue-800 border border-blue-200 font-mono text-[10px] font-bold px-2 py-0.5 rounded">FORM: WT-FR-02</span>
-        <div class="text-[10px] font-mono text-slate-500 mt-1">SCALE: 10.00 (ACC 4.0 + PRES 6.0)</div>
+        <span class="bg-blue-50 text-blue-800 border border-blue-200 font-mono text-[9px] font-bold px-2 py-0.5 rounded">FORM: WT-FR-02</span>
+        <div class="text-[9px] font-mono text-slate-500 mt-1">SCALE: 10.00 (ACC 4.0 + PRES 6.0)</div>
       </div>
     </div>
 
     <!-- Metadata Grid -->
-    <div class="grid grid-cols-12 gap-2 text-xs mb-4 bg-slate-50/90 border border-slate-200 p-2.5 rounded-xl shadow-xs">
+    <div class="grid grid-cols-12 gap-2 text-xs mb-3 bg-slate-50/90 border border-slate-200 p-2.5 rounded-xl shadow-xs">
       <div class="col-span-8 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-28">Nama Turnamen:</span>
-        <input type="text" class="field-input flex-1 font-bold text-slate-900" value="KEJUARAAN NASIONAL TAEKWONDO CHAMPIONSHIP 2026">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-28">Nama Turnamen:</span>
+        <input type="text" class="smart-input flex-1 font-bold text-slate-900" value="KEJUARAAN NASIONAL TAEKWONDO CHAMPIONSHIP 2026">
       </div>
       <div class="col-span-4 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-24">Gelanggang:</span>
-        <input type="text" class="field-input flex-1 font-mono font-black text-center text-indigo-700" value="COURT 2 (RING B)">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-24">Gelanggang:</span>
+        <input type="text" class="smart-input flex-1 font-mono font-black text-center text-indigo-700" value="COURT 2 (RING B)">
       </div>
 
       <div class="col-span-4 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-28">Nomor Partai:</span>
-        <input type="text" class="field-input flex-1 font-mono font-black text-red-600" value="POOMSAE #42">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-28">Nomor Partai:</span>
+        <input type="text" class="smart-input flex-1 font-mono font-black text-red-600" value="POOMSAE #42">
       </div>
       <div class="col-span-4 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-16">Tanggal:</span>
-        <input type="text" class="field-input flex-1 font-medium" value="17 November 2026">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-16">Tanggal:</span>
+        <input type="text" class="smart-input flex-1 font-medium" value="17 November 2026">
       </div>
       <div class="col-span-4 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-16">Kategori:</span>
-        <input type="text" class="field-input flex-1 font-semibold text-slate-800" value="Individu Putri (Female)">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-16">Kategori:</span>
+        <input type="text" class="smart-input flex-1 font-semibold text-slate-800" value="Individu Putri (Female)">
       </div>
 
       <div class="col-span-6 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-28">Nama Peserta:</span>
-        <input type="text" class="field-input flex-1 font-black uppercase text-blue-900" value="SITI NURHALIZA">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-28">Nama Peserta:</span>
+        <input type="text" id="p-athlete-name" class="smart-input flex-1 font-black uppercase text-blue-900" value="SITI NURHALIZA">
       </div>
       <div class="col-span-6 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-24">Kontingen:</span>
-        <input type="text" class="field-input flex-1 font-bold text-slate-800" value="JAWA TENGAH (KOTA SEMARANG)">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-24">Kontingen:</span>
+        <input type="text" id="p-athlete-team" class="smart-input flex-1 font-bold text-slate-800" value="JAWA TENGAH (KOTA SEMARANG)">
       </div>
 
       <div class="col-span-6 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-28">Jurus Wajib 1:</span>
-        <input type="text" class="field-input flex-1 font-bold text-indigo-900" value="TAEGEUK 8 JANG">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-28">Jurus Wajib 1:</span>
+        <input type="text" id="p-poomsae-name" class="smart-input flex-1 font-bold text-indigo-900" value="TAEGEUK 8 JANG">
       </div>
       <div class="col-span-6 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-24">Jurus Wajib 2:</span>
-        <input type="text" class="field-input flex-1 font-bold text-indigo-900" value="KORYO">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-24">Jurus Wajib 2:</span>
+        <input type="text" class="smart-input flex-1 font-bold text-indigo-900" value="KORYO">
       </div>
     </div>
 
-    <!-- 5-Judge Scoring Matrix (Truncated Mean Calculation) -->
-    <div class="mb-4">
+    <!-- Live Truncated Mean Calculator Table -->
+    <div class="mb-3">
       <div class="bg-slate-900 text-white px-3 py-1.5 rounded-t-xl flex items-center justify-between text-xs font-bold uppercase tracking-wider">
-        <span>PENILAIAN PANEL 5 JURI (TRUNCATED MEAN SYSTEM)</span>
-        <span class="text-[10px] text-slate-400 font-normal">Nilai tertinggi & terendah dibuang secara otomatis oleh sistem</span>
+        <span>PENILAIAN PANEL 5 JURI (TRUNCATED MEAN CALCULATOR)</span>
+        <span class="text-[10px] text-slate-400 font-normal">Ketik skor, sistem otomatis mencoret nilai Min & Max</span>
       </div>
 
       <table class="w-full text-xs border-x border-b border-slate-300 text-center border-collapse">
         <thead>
           <tr class="bg-slate-100 border-b border-slate-300 font-bold text-slate-700">
-            <th class="border-r border-slate-300 p-2 w-20">Panel Juri</th>
-            <th class="border-r border-slate-300 p-2">AKURASI (Max 4.00)<br><span class="font-normal text-[10px] text-slate-500">Ketepatan Kuda-kuda, Tangkisan, Tendangan</span></th>
-            <th class="border-r border-slate-300 p-2">PRESENTASI (Max 6.00)<br><span class="font-normal text-[10px] text-slate-500">Kekuatan, Kecepatan, Irama, Pernapasan</span></th>
-            <th class="border-r border-slate-300 p-2 w-28">Total Nilai</th>
-            <th class="p-2 w-36">Status Truncated</th>
+            <th class="border-r border-slate-300 p-1.5 w-20">Panel Juri</th>
+            <th class="border-r border-slate-300 p-1.5">AKURASI (Max 4.00)<br><span class="font-normal text-[9px] text-slate-500">Ketepatan Kuda-kuda, Tangkisan, Tendangan</span></th>
+            <th class="border-r border-slate-300 p-1.5">PRESENTASI (Max 6.00)<br><span class="font-normal text-[9px] text-slate-500">Kekuatan, Kecepatan, Irama, Pernapasan</span></th>
+            <th class="border-r border-slate-300 p-1.5 w-28">Total Nilai</th>
+            <th class="p-1.5 w-36">Status Truncated</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-200 font-mono">
-          <!-- Juri 1 -->
-          <tr class="bg-red-50/50 text-slate-400">
-            <td class="border-r border-slate-300 font-bold text-slate-900">Juri 1</td>
-            <td class="border-r border-slate-300 line-through font-semibold text-red-600">3.20 (Min)</td>
-            <td class="border-r border-slate-300">4.70</td>
-            <td class="border-r border-slate-300">7.90</td>
-            <td class="font-sans font-bold text-[10px] text-red-600 bg-red-100/50">DIBUANG (Acc Min)</td>
-          </tr>
-          <!-- Juri 2 -->
-          <tr>
-            <td class="border-r border-slate-300 font-bold text-slate-900">Juri 2</td>
-            <td class="border-r border-slate-300 font-semibold text-blue-700">3.40</td>
-            <td class="border-r border-slate-300 font-semibold text-blue-700">4.80</td>
-            <td class="border-r border-slate-300 font-bold text-slate-900">8.20</td>
-            <td class="font-sans font-bold text-[10px] text-emerald-700 bg-emerald-50">DIHITUNG</td>
-          </tr>
-          <!-- Juri 3 -->
-          <tr>
-            <td class="border-r border-slate-300 font-bold text-slate-900">Juri 3</td>
-            <td class="border-r border-slate-300 font-semibold text-blue-700">3.50</td>
-            <td class="border-r border-slate-300 font-semibold text-blue-700">4.90</td>
-            <td class="border-r border-slate-300 font-bold text-slate-900">8.40</td>
-            <td class="font-sans font-bold text-[10px] text-emerald-700 bg-emerald-50">DIHITUNG</td>
-          </tr>
-          <!-- Juri 4 -->
-          <tr class="bg-red-50/50 text-slate-400">
-            <td class="border-r border-slate-300 font-bold text-slate-900">Juri 4</td>
-            <td class="border-r border-slate-300 font-semibold">3.60</td>
-            <td class="border-r border-slate-300 line-through font-semibold text-red-600">5.20 (Max)</td>
-            <td class="border-r border-slate-300">8.80</td>
-            <td class="font-sans font-bold text-[10px] text-red-600 bg-red-100/50">DIBUANG (Pres Max)</td>
-          </tr>
-          <!-- Juri 5 -->
-          <tr>
-            <td class="border-r border-slate-300 font-bold text-slate-900">Juri 5</td>
-            <td class="border-r border-slate-300 font-semibold text-blue-700">3.50</td>
-            <td class="border-r border-slate-300 font-semibold text-blue-700">4.90</td>
-            <td class="border-r border-slate-300 font-bold text-slate-900">8.40</td>
-            <td class="font-sans font-bold text-[10px] text-emerald-700 bg-emerald-50">DIHITUNG</td>
-          </tr>
+        <tbody id="poomsae-judge-tbody" class="divide-y divide-slate-200 font-mono">
+          <!-- Rendered via JS -->
         </tbody>
         <tfoot>
           <tr class="bg-gradient-to-r from-slate-100 to-indigo-50 border-t-2 border-slate-900 font-black text-xs">
             <td class="border-r border-slate-300 p-2 uppercase text-slate-900">RATA-RATA RESMI</td>
-            <td class="border-r border-slate-300 p-2 text-blue-900 font-mono text-sm">3.467</td>
-            <td class="border-r border-slate-300 p-2 text-blue-900 font-mono text-sm">4.867</td>
-            <td colspan="2" class="p-2 text-emerald-800 font-mono text-base bg-emerald-100/60">
+            <td id="avg-acc-cell" class="border-r border-slate-300 p-2 text-blue-900 font-mono text-sm">3.467</td>
+            <td id="avg-pres-cell" class="border-r border-slate-300 p-2 text-blue-900 font-mono text-sm">4.867</td>
+            <td colspan="2" id="subtotal-cell" class="p-2 text-emerald-800 font-mono text-base bg-emerald-100/60">
               SUBTOTAL NILAI: 8.334
             </td>
           </tr>
@@ -723,61 +729,61 @@
       </table>
     </div>
 
-    <!-- Final Scores & Deductions -->
-    <div class="grid grid-cols-12 gap-3 mb-4">
-      <div class="col-span-7 border border-slate-300 rounded-xl p-3 bg-slate-50/70 text-xs">
-        <div class="font-bold uppercase text-slate-800 border-b border-slate-300 pb-1 mb-2">
+    <!-- Deductions & Final Score -->
+    <div class="grid grid-cols-12 gap-3 mb-3">
+      <div class="col-span-7 border border-slate-300 rounded-xl p-2.5 bg-slate-50/80 text-xs">
+        <div class="font-bold uppercase text-slate-800 border-b border-slate-300 pb-1 mb-1.5">
           PENGURANGAN NILAI / DEDUCTION (GAM-JEOM)
         </div>
-        <div class="space-y-1.5 text-[11px]">
+        <div class="space-y-1 text-[11px]">
           <div class="flex justify-between items-center">
-            <span>Melebihi Waktu Penampilan (30 detik - 90 detik):</span>
-            <span class="font-mono font-bold text-slate-800">- 0.0</span>
+            <span>Melebihi Waktu Penampilan (30s - 90s):</span>
+            <input type="number" id="ded-time" step="0.3" value="0.0" oninput="recalcPoomsaeTotal()" class="smart-input w-16 text-right font-mono font-bold text-red-600">
           </div>
           <div class="flex justify-between items-center">
             <span>Keluar Garis Batas Gelanggang:</span>
-            <span class="font-mono font-bold text-slate-800">- 0.0</span>
+            <input type="number" id="ded-line" step="0.3" value="0.0" oninput="recalcPoomsaeTotal()" class="smart-input w-16 text-right font-mono font-bold text-red-600">
           </div>
           <div class="flex justify-between items-center">
             <span>Permintaan Mulai Ulang (Restart):</span>
-            <span class="font-mono font-bold text-slate-800">- 0.0</span>
+            <input type="number" id="ded-restart" step="0.6" value="0.0" oninput="recalcPoomsaeTotal()" class="smart-input w-16 text-right font-mono font-bold text-red-600">
           </div>
           <div class="border-t border-slate-300 pt-1 flex justify-between items-center font-black">
             <span>TOTAL PENGURANGAN:</span>
-            <span class="font-mono text-red-600 font-black">- 0.00</span>
+            <span id="ded-total-text" class="font-mono text-red-600 font-black">- 0.00</span>
           </div>
         </div>
       </div>
 
-      <div class="col-span-5 border-2 border-emerald-600 rounded-xl p-3 bg-gradient-to-br from-emerald-50 via-white to-teal-50 text-center flex flex-col justify-center shadow-xs">
-        <div class="text-[10px] font-black uppercase tracking-wider text-slate-600">SKOR AKHIR RESMI (FINAL SCORE)</div>
-        <div class="text-3xl font-black font-mono text-emerald-800 my-1">8.334</div>
-        <div class="text-xs font-bold text-emerald-950">PERINGKAT SEMENTARA: <b>1 (GOLD CANDIDATE)</b></div>
+      <div class="col-span-5 border-2 border-emerald-600 rounded-xl p-2.5 bg-gradient-to-br from-emerald-50 via-white to-teal-50 text-center flex flex-col justify-center shadow-xs">
+        <div class="text-[9px] font-black uppercase tracking-wider text-slate-600">SKOR AKHIR RESMI (FINAL SCORE)</div>
+        <div id="p-final-score" class="text-3xl font-black font-mono text-emerald-800 my-0.5">8.334</div>
+        <div class="text-xs font-bold text-emerald-950">PERINGKAT: <b>1 (GOLD MEDALIST)</b></div>
       </div>
     </div>
 
-    <!-- Signatures -->
-    <div class="border-t-2 border-slate-900 pt-3 mt-4 sheet-card">
-      <div class="grid grid-cols-4 gap-3 text-center text-xs">
-        <div class="border border-slate-200 rounded-xl p-2.5 bg-slate-50/60">
-          <p class="text-[10px] font-bold text-slate-500 uppercase">Wasit Ketua</p>
-          <div class="h-10"></div>
-          <div class="border-t border-slate-400 pt-1 font-bold">( ................................ )</div>
+    <!-- Poomsae Signatures -->
+    <div class="border-t-2 border-slate-900 pt-2.5 mt-2">
+      <div class="grid grid-cols-4 gap-2 text-center text-xs">
+        <div class="border border-slate-200 rounded-xl p-2 bg-slate-50/70">
+          <p class="text-[9px] font-bold text-slate-500 uppercase mb-1">Wasit Ketua</p>
+          <div class="h-10 flex items-center justify-center font-serif italic text-slate-400">Ttd Wasit</div>
+          <div class="border-t border-slate-300 pt-1 font-bold text-[11px]">( ................................ )</div>
         </div>
-        <div class="border border-slate-200 rounded-xl p-2.5 bg-slate-50/60">
-          <p class="text-[10px] font-bold text-slate-500 uppercase">Dewan Juri (Judges)</p>
-          <div class="h-10"></div>
-          <div class="border-t border-slate-400 pt-1 font-bold">( ................................ )</div>
+        <div class="border border-slate-200 rounded-xl p-2 bg-slate-50/70">
+          <p class="text-[9px] font-bold text-slate-500 uppercase mb-1">Dewan Juri (Judges)</p>
+          <div class="h-10 flex items-center justify-center font-serif italic text-slate-400">Ttd Juri</div>
+          <div class="border-t border-slate-300 pt-1 font-bold text-[11px]">( ................................ )</div>
         </div>
-        <div class="border border-slate-200 rounded-xl p-2.5 bg-slate-50/60">
-          <p class="text-[10px] font-bold text-slate-500 uppercase">Operator Meja</p>
-          <div class="h-10"></div>
-          <div class="border-t border-slate-400 pt-1 font-bold">( ................................ )</div>
+        <div class="border border-slate-200 rounded-xl p-2 bg-slate-50/70">
+          <p class="text-[9px] font-bold text-slate-500 uppercase mb-1">Operator Meja</p>
+          <div class="h-10 flex items-center justify-center font-serif italic text-slate-400">Ttd Operator</div>
+          <div class="border-t border-slate-300 pt-1 font-bold text-[11px]">( ................................ )</div>
         </div>
-        <div class="border border-slate-200 rounded-xl p-2.5 bg-slate-50/60">
-          <p class="text-[10px] font-bold text-slate-500 uppercase">Ketua Pertandingan (TD)</p>
-          <div class="h-10"></div>
-          <div class="border-t border-slate-400 pt-1 font-bold">( ................................ )</div>
+        <div class="border border-slate-200 rounded-xl p-2 bg-slate-50/70">
+          <p class="text-[9px] font-bold text-slate-500 uppercase mb-1">Ketua Pertandingan (TD)</p>
+          <div class="h-10 flex items-center justify-center font-serif italic text-slate-400">Ttd TD PBTI</div>
+          <div class="border-t border-slate-300 pt-1 font-bold text-[11px]">( ................................ )</div>
         </div>
       </div>
     </div>
@@ -786,20 +792,20 @@
   <!-- ========================================================================= -->
   <!-- 3. POOMSAE FREESTYLE PROTOCOL SHEET (WT-FR-03) -->
   <!-- ========================================================================= -->
-  <main id="sheet-poomsae-free" class="page-container max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 sm:p-9 watermark-bg relative overflow-hidden hidden">
-    <!-- Top Aesthetic Ribbon (Freestyle Purple) -->
+  <main id="sheet-poomsae-free" class="page-sheet max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl border border-slate-200 p-5 sm:p-8 relative overflow-hidden hidden">
+    <!-- Top Accent Line -->
     <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-purple-700 via-fuchsia-600 to-pink-500"></div>
 
     <!-- Header Block -->
-    <div class="border-b border-slate-300 pb-4 mb-4 flex items-center justify-between gap-4">
+    <div class="border-b border-slate-300 pb-3 mb-3 flex items-center justify-between gap-3">
       <div class="flex items-center space-x-3">
-        <div class="w-14 h-14 bg-gradient-to-br from-purple-900 to-fuchsia-900 text-white rounded-xl border-2 border-slate-900 flex flex-col items-center justify-center shadow-md p-1">
-          <span class="text-xs font-black tracking-widest text-amber-400">FREESTYLE</span>
+        <div class="w-13 h-13 bg-gradient-to-br from-purple-900 to-fuchsia-900 text-white rounded-xl border border-slate-800 flex flex-col items-center justify-center p-1.5 shadow-md">
+          <span class="text-[9px] font-black tracking-widest text-amber-400">FREESTYLE</span>
           <span class="text-base font-black tracking-tighter leading-none">WT</span>
-          <span class="text-[8px] font-bold text-slate-300">ACROBATIC</span>
+          <span class="text-[7px] font-bold text-slate-300">ACROBATIC</span>
         </div>
         <div>
-          <div class="text-[10px] font-black uppercase tracking-wider text-slate-500">PENGURUS BESAR TAEKWONDO INDONESIA</div>
+          <div class="text-[9px] font-black uppercase tracking-wider text-slate-500">PENGURUS BESAR TAEKWONDO INDONESIA</div>
           <h1 class="text-base sm:text-lg font-black text-slate-900 uppercase tracking-tight">
             BERITA ACARA & LEMBAR PENILAIAN POOMSAE FREESTYLE
           </h1>
@@ -810,201 +816,589 @@
       </div>
 
       <div class="text-right">
-        <span class="bg-purple-50 text-purple-800 border border-purple-200 font-mono text-[10px] font-bold px-2 py-0.5 rounded">FORM: WT-FR-03</span>
-        <div class="text-[10px] font-mono text-slate-500 mt-1">DURASI MUSIK: 90s - 100s</div>
+        <span class="bg-purple-50 text-purple-800 border border-purple-200 font-mono text-[9px] font-bold px-2 py-0.5 rounded">FORM: WT-FR-03</span>
+        <div class="text-[9px] font-mono text-slate-500 mt-1">DURASI MUSIK: 90s - 100s</div>
       </div>
     </div>
 
     <!-- Metadata Grid -->
-    <div class="grid grid-cols-12 gap-2 text-xs mb-4 bg-slate-50/90 border border-slate-200 p-2.5 rounded-xl shadow-xs">
+    <div class="grid grid-cols-12 gap-2 text-xs mb-3 bg-slate-50/90 border border-slate-200 p-2.5 rounded-xl shadow-xs">
       <div class="col-span-8 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-28">Nama Turnamen:</span>
-        <input type="text" class="field-input flex-1 font-bold text-slate-900" value="KEJUARAAN NASIONAL TAEKWONDO CHAMPIONSHIP 2026">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-28">Nama Turnamen:</span>
+        <input type="text" class="smart-input flex-1 font-bold text-slate-900" value="KEJUARAAN NASIONAL TAEKWONDO CHAMPIONSHIP 2026">
       </div>
       <div class="col-span-4 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-24">Gelanggang:</span>
-        <input type="text" class="field-input flex-1 font-mono font-black text-center text-indigo-700" value="COURT 1 (RING A)">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-24">Gelanggang:</span>
+        <input type="text" class="smart-input flex-1 font-mono font-black text-center text-indigo-700" value="COURT 1 (RING A)">
       </div>
 
       <div class="col-span-4 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-28">Nomor Undian:</span>
-        <input type="text" class="field-input flex-1 font-mono font-black text-purple-600" value="FREE #07">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-28">Nomor Undian:</span>
+        <input type="text" class="smart-input flex-1 font-mono font-black text-purple-600" value="FREE #07">
       </div>
       <div class="col-span-4 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-16">Tanggal:</span>
-        <input type="text" class="field-input flex-1 font-medium" value="17 November 2026">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-16">Tanggal:</span>
+        <input type="text" class="smart-input flex-1 font-medium" value="17 November 2026">
       </div>
       <div class="col-span-4 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-16">Kategori:</span>
-        <input type="text" class="field-input flex-1 font-semibold text-slate-800" value="Individu Putra (Male)">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-16">Kategori:</span>
+        <input type="text" class="smart-input flex-1 font-semibold text-slate-800" value="Individu Putra (Male)">
       </div>
 
       <div class="col-span-6 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-28">Nama Peserta:</span>
-        <input type="text" class="field-input flex-1 font-black uppercase text-purple-900" value="REZA ADITYA PRATAMA">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-28">Nama Peserta:</span>
+        <input type="text" id="free-athlete-name" class="smart-input flex-1 font-black uppercase text-purple-900" value="REZA ADITYA PRATAMA">
       </div>
       <div class="col-span-6 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-24">Kontingen:</span>
-        <input type="text" class="field-input flex-1 font-bold text-slate-800" value="DI YOGYAKARTA">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-24">Kontingen:</span>
+        <input type="text" id="free-athlete-team" class="smart-input flex-1 font-bold text-slate-800" value="DI YOGYAKARTA">
       </div>
 
       <div class="col-span-12 flex items-center space-x-2">
-        <span class="font-bold text-slate-500 uppercase text-[11px] w-28">Judul Lagu/Tema:</span>
-        <input type="text" class="field-input flex-1 font-medium text-slate-800" value="Epic Taekwondo Beats - 128 BPM (Traditional Drum Fusion)">
+        <span class="font-bold text-slate-500 uppercase text-[10px] w-28">Judul Lagu/Tema:</span>
+        <input type="text" class="smart-input flex-1 font-medium text-slate-800" value="Epic Taekwondo Beats - 128 BPM (Traditional Drum Fusion)">
       </div>
     </div>
 
-    <!-- Freestyle Split Cards -->
-    <div class="grid grid-cols-2 gap-4 mb-4">
+    <!-- Freestyle Dynamic Calculation Split -->
+    <div class="grid grid-cols-2 gap-3 mb-3">
       <!-- 1. Technical Criteria (6.0) -->
-      <div class="border border-slate-300 rounded-xl p-3 bg-slate-50/70 text-xs">
-        <div class="bg-gradient-to-r from-purple-800 to-indigo-800 text-white px-2.5 py-1 rounded-lg font-bold text-[11px] mb-2.5 flex justify-between items-center shadow-xs">
+      <div class="border border-slate-300 rounded-xl p-2.5 bg-slate-50/80 text-xs">
+        <div class="bg-gradient-to-r from-purple-800 to-indigo-800 text-white px-2.5 py-1 rounded-lg font-bold text-[10px] mb-2 flex justify-between items-center shadow-xs">
           <span>1. TEKNIK WAJIB (TECHNICAL SKILL)</span>
           <span class="font-mono text-purple-200">MAKS 6.00</span>
         </div>
 
-        <table class="w-full text-[11px] space-y-1.5">
+        <table class="w-full text-[11px] space-y-1">
           <tr class="border-b border-slate-200">
-            <td class="py-1">1. Tinggi Tendangan Samping Melompat:</td>
-            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" class="field-input w-12 text-center" value="0.9"></td>
+            <td class="py-0.5">1. Tinggi Tendangan Samping Melompat:</td>
+            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" max="1" min="0" oninput="recalcFreestyle()" class="smart-input w-12 text-center free-tech-item" value="0.9"></td>
           </tr>
           <tr class="border-b border-slate-200">
-            <td class="py-1">2. Tendangan Beruntun di Udara (Multiple):</td>
-            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" class="field-input w-12 text-center" value="0.8"></td>
+            <td class="py-0.5">2. Tendangan Beruntun di Udara (Multiple):</td>
+            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" max="1" min="0" oninput="recalcFreestyle()" class="smart-input w-12 text-center free-tech-item" value="0.8"></td>
           </tr>
           <tr class="border-b border-slate-200">
-            <td class="py-1">3. Tendangan Berputar (540° / 720°):</td>
-            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" class="field-input w-12 text-center" value="0.9"></td>
+            <td class="py-0.5">3. Tendangan Berputar (540° / 720°):</td>
+            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" max="1" min="0" oninput="recalcFreestyle()" class="smart-input w-12 text-center free-tech-item" value="0.9"></td>
           </tr>
           <tr class="border-b border-slate-200">
-            <td class="py-1">4. Gerakan Akrobatik Kaki Tumbukan:</td>
-            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" class="field-input w-12 text-center" value="0.8"></td>
+            <td class="py-0.5">4. Gerakan Akrobatik Kaki Tumbukan:</td>
+            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" max="1" min="0" oninput="recalcFreestyle()" class="smart-input w-12 text-center free-tech-item" value="0.8"></td>
           </tr>
           <tr class="border-b border-slate-200">
-            <td class="py-1">5. Kerapian Kuda-kuda Dasar Taekwondo:</td>
-            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" class="field-input w-12 text-center" value="0.8"></td>
+            <td class="py-0.5">5. Kerapian Kuda-kuda Dasar Taekwondo:</td>
+            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" max="1" min="0" oninput="recalcFreestyle()" class="smart-input w-12 text-center free-tech-item" value="0.8"></td>
           </tr>
           <tr>
-            <td class="py-1">6. Tingkat Kesulitan Kombinasi:</td>
-            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" class="field-input w-12 text-center" value="0.9"></td>
+            <td class="py-0.5">6. Tingkat Kesulitan Kombinasi:</td>
+            <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" max="1" min="0" oninput="recalcFreestyle()" class="smart-input w-12 text-center free-tech-item" value="0.9"></td>
           </tr>
           <tr class="border-t-2 border-slate-900 font-black bg-purple-100/60 text-purple-950">
-            <td class="py-1.5 px-2">TOTAL TEKNIK (TECH SCORE):</td>
-            <td class="text-right pr-2 font-mono text-sm text-purple-900">5.10</td>
+            <td class="py-1 px-1.5">TOTAL TEKNIK (TECH SCORE):</td>
+            <td id="free-tech-total" class="text-right pr-2 font-mono text-sm text-purple-900">5.10</td>
           </tr>
         </table>
       </div>
 
       <!-- 2. Presentation Criteria (4.0) -->
-      <div class="border border-slate-300 rounded-xl p-3 bg-slate-50/70 text-xs flex flex-col justify-between">
+      <div class="border border-slate-300 rounded-xl p-2.5 bg-slate-50/80 text-xs flex flex-col justify-between">
         <div>
-          <div class="bg-gradient-to-r from-fuchsia-800 to-pink-800 text-white px-2.5 py-1 rounded-lg font-bold text-[11px] mb-2.5 flex justify-between items-center shadow-xs">
+          <div class="bg-gradient-to-r from-fuchsia-800 to-pink-800 text-white px-2.5 py-1 rounded-lg font-bold text-[10px] mb-2 flex justify-between items-center shadow-xs">
             <span>2. PRESENTASI (PRESENTATION)</span>
             <span class="font-mono text-pink-200">MAKS 4.00</span>
           </div>
 
-          <table class="w-full text-[11px] space-y-1.5">
+          <table class="w-full text-[11px] space-y-1">
             <tr class="border-b border-slate-200">
-              <td class="py-1">1. Kreativitas & Orisinalitas Koreografi:</td>
-              <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" class="field-input w-12 text-center" value="0.8"></td>
+              <td class="py-0.5">1. Kreativitas & Orisinalitas Koreografi:</td>
+              <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" max="1" min="0" oninput="recalcFreestyle()" class="smart-input w-12 text-center free-pres-item" value="0.8"></td>
             </tr>
             <tr class="border-b border-slate-200">
-              <td class="py-1">2. Harmonisasi Gerak dengan Musik:</td>
-              <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" class="field-input w-12 text-center" value="0.9"></td>
+              <td class="py-0.5">2. Harmonisasi Gerak dengan Musik:</td>
+              <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" max="1" min="0" oninput="recalcFreestyle()" class="smart-input w-12 text-center free-pres-item" value="0.9"></td>
             </tr>
             <tr class="border-b border-slate-200">
-              <td class="py-1">3. Ekspresi Energi, Kihap & Kharisma:</td>
-              <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" class="field-input w-12 text-center" value="0.9"></td>
+              <td class="py-0.5">3. Ekspresi Energi, Kihap & Kharisma:</td>
+              <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" max="1" min="0" oninput="recalcFreestyle()" class="smart-input w-12 text-center free-pres-item" value="0.9"></td>
             </tr>
             <tr>
-              <td class="py-1">4. Sinkronisasi & Keluwesan Gerak:</td>
-              <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" class="field-input w-12 text-center" value="0.8"></td>
+              <td class="py-0.5">4. Sinkronisasi & Keluwesan Gerak:</td>
+              <td class="w-16 text-right font-mono font-bold"><input type="number" step="0.1" max="1" min="0" oninput="recalcFreestyle()" class="smart-input w-12 text-center free-pres-item" value="0.8"></td>
             </tr>
             <tr class="border-t-2 border-slate-900 font-black bg-pink-100/60 text-pink-950">
-              <td class="py-1.5 px-2">TOTAL PRESENTASI (PRES SCORE):</td>
-              <td class="text-right pr-2 font-mono text-sm text-pink-900">3.40</td>
+              <td class="py-1 px-1.5">TOTAL PRESENTASI (PRES SCORE):</td>
+              <td id="free-pres-total" class="text-right pr-2 font-mono text-sm text-pink-900">3.40</td>
             </tr>
           </table>
         </div>
 
-        <!-- Result Box -->
-        <div class="mt-3 border-2 border-purple-600 rounded-xl p-2.5 bg-gradient-to-br from-purple-50 via-white to-pink-50 text-center shadow-xs">
-          <div class="text-[10px] font-black uppercase text-slate-600">SKOR AKHIR FREESTYLE</div>
-          <div class="text-3xl font-black font-mono text-purple-900 my-0.5">8.50</div>
-          <div class="text-[10px] text-slate-500 font-medium">(Teknik 5.10 + Presentasi 3.40 - Pinalti 0.0)</div>
+        <!-- Grand Score Box -->
+        <div class="mt-2 border-2 border-purple-600 rounded-xl p-2 bg-gradient-to-br from-purple-50 via-white to-pink-50 text-center shadow-xs">
+          <div class="text-[9px] font-black uppercase text-slate-600">SKOR AKHIR FREESTYLE</div>
+          <div id="free-grand-total" class="text-2xl font-black font-mono text-purple-900 my-0.5">8.50</div>
+          <div class="text-[9px] text-slate-500 font-medium">(Teknik + Presentasi - Pinalti 0.0)</div>
         </div>
       </div>
     </div>
 
     <!-- Signatures -->
-    <div class="border-t-2 border-slate-900 pt-3 mt-4 sheet-card">
-      <div class="grid grid-cols-4 gap-3 text-center text-xs">
-        <div class="border border-slate-200 rounded-xl p-2.5 bg-slate-50/60">
-          <p class="text-[10px] font-bold text-slate-500 uppercase">Wasit Ketua</p>
-          <div class="h-10"></div>
-          <div class="border-t border-slate-400 pt-1 font-bold">( ................................ )</div>
+    <div class="border-t-2 border-slate-900 pt-2.5 mt-2">
+      <div class="grid grid-cols-4 gap-2 text-center text-xs">
+        <div class="border border-slate-200 rounded-xl p-2 bg-slate-50/70">
+          <p class="text-[9px] font-bold text-slate-500 uppercase mb-1">Wasit Ketua</p>
+          <div class="h-10 flex items-center justify-center font-serif italic text-slate-400">Ttd Wasit</div>
+          <div class="border-t border-slate-300 pt-1 font-bold text-[11px]">( ................................ )</div>
         </div>
-        <div class="border border-slate-200 rounded-xl p-2.5 bg-slate-50/60">
-          <p class="text-[10px] font-bold text-slate-500 uppercase">Juri Freestyle</p>
-          <div class="h-10"></div>
-          <div class="border-t border-slate-400 pt-1 font-bold">( ................................ )</div>
+        <div class="border border-slate-200 rounded-xl p-2 bg-slate-50/70">
+          <p class="text-[9px] font-bold text-slate-500 uppercase mb-1">Juri Freestyle</p>
+          <div class="h-10 flex items-center justify-center font-serif italic text-slate-400">Ttd Juri</div>
+          <div class="border-t border-slate-300 pt-1 font-bold text-[11px]">( ................................ )</div>
         </div>
-        <div class="border border-slate-200 rounded-xl p-2.5 bg-slate-50/60">
-          <p class="text-[10px] font-bold text-slate-500 uppercase">Operator Musik / Meja</p>
-          <div class="h-10"></div>
-          <div class="border-t border-slate-400 pt-1 font-bold">( ................................ )</div>
+        <div class="border border-slate-200 rounded-xl p-2 bg-slate-50/70">
+          <p class="text-[9px] font-bold text-slate-500 uppercase mb-1">Operator Musik</p>
+          <div class="h-10 flex items-center justify-center font-serif italic text-slate-400">Ttd Musik</div>
+          <div class="border-t border-slate-300 pt-1 font-bold text-[11px]">( ................................ )</div>
         </div>
-        <div class="border border-slate-200 rounded-xl p-2.5 bg-slate-50/60">
-          <p class="text-[10px] font-bold text-slate-500 uppercase">Ketua Pertandingan (TD)</p>
-          <div class="h-10"></div>
-          <div class="border-t border-slate-400 pt-1 font-bold">( ................................ )</div>
+        <div class="border border-slate-200 rounded-xl p-2 bg-slate-50/70">
+          <p class="text-[9px] font-bold text-slate-500 uppercase mb-1">Ketua Pertandingan (TD)</p>
+          <div class="h-10 flex items-center justify-center font-serif italic text-slate-400">Ttd TD PBTI</div>
+          <div class="border-t border-slate-300 pt-1 font-bold text-[11px]">( ................................ )</div>
         </div>
       </div>
     </div>
   </main>
 
   <!-- ========================================================================= -->
-  <!-- JAVASCRIPT CONTROLLERS -->
+  <!-- JAVASCRIPT: LOGIKA KALKULATOR & TANDA TANGAN DIGITAL INTERAKTIF -->
   <!-- ========================================================================= -->
   <script>
+    // Tab Aktif
+    let currentCategory = 'kyorugi';
+
+    // Panel 5 Juri Poomsae Recognised State
+    let poomsaeJudges = [
+      { id: 'Juri 1', acc: 3.20, pres: 4.70 },
+      { id: 'Juri 2', acc: 3.40, pres: 4.80 },
+      { id: 'Juri 3', acc: 3.50, pres: 4.90 },
+      { id: 'Juri 4', acc: 3.60, pres: 5.20 },
+      { id: 'Juri 5', acc: 3.50, pres: 4.90 }
+    ];
+
+    // Inisialisasi Saat Dimuat
+    document.addEventListener('DOMContentLoaded', () => {
+      initSignaturePads();
+      renderPoomsaeTable();
+      recalcKyorugiRounds();
+      recalcFreestyle();
+    });
+
+    // --- TAB SWITCHER ---
     function switchTab(cat) {
+      currentCategory = cat;
       document.getElementById('sheet-kyorugi').classList.add('hidden');
       document.getElementById('sheet-poomsae-rec').classList.add('hidden');
       document.getElementById('sheet-poomsae-free').classList.add('hidden');
 
-      document.getElementById('btn-kyorugi').className = "px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-white transition-all";
-      document.getElementById('btn-poomsae-rec').className = "px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-white transition-all";
-      document.getElementById('btn-poomsae-free').className = "px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-white transition-all";
+      document.getElementById('btn-kyorugi').className = "px-3 py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-white transition-all flex items-center space-x-1.5";
+      document.getElementById('btn-poomsae-rec').className = "px-3 py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-white transition-all flex items-center space-x-1.5";
+      document.getElementById('btn-poomsae-free').className = "px-3 py-1.5 text-xs font-medium rounded-lg text-slate-400 hover:text-white transition-all flex items-center space-x-1.5";
 
       if (cat === 'kyorugi') {
         document.getElementById('sheet-kyorugi').classList.remove('hidden');
-        document.getElementById('btn-kyorugi').className = "px-3.5 py-1.5 text-xs font-bold rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md transition-all";
+        document.getElementById('btn-kyorugi').className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-md transition-all flex items-center space-x-1.5";
       } else if (cat === 'poomsae_rec') {
         document.getElementById('sheet-poomsae-rec').classList.remove('hidden');
-        document.getElementById('btn-poomsae-rec').className = "px-3.5 py-1.5 text-xs font-bold rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md transition-all";
+        document.getElementById('btn-poomsae-rec').className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-md transition-all flex items-center space-x-1.5";
       } else if (cat === 'poomsae_free') {
         document.getElementById('sheet-poomsae-free').classList.remove('hidden');
-        document.getElementById('btn-poomsae-free').className = "px-3.5 py-1.5 text-xs font-bold rounded-lg bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white shadow-md transition-all";
+        document.getElementById('btn-poomsae-free').className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-purple-600 text-white shadow-md transition-all flex items-center space-x-1.5";
       }
     }
 
+    // --- KALKULASI OTOMATIS KYORUGI (BEST OF 3) ---
+    function recalcKyorugiRounds() {
+      const rounds = [1, 2, 3];
+      let chungWins = 0;
+      let hongWins = 0;
+
+      rounds.forEach(r => {
+        const cPts = parseInt(document.getElementById(`r${r}-c-pts`).value) || 0;
+        const hPts = parseInt(document.getElementById(`r${r}-h-pts`).value) || 0;
+        const winnerEl = document.getElementById(`r${r}-winner`);
+        const reasonEl = document.getElementById(`r${r}-reason`);
+
+        const diff = Math.abs(cPts - hPts);
+        const isPtg = diff >= 12;
+
+        if (cPts > hPts) {
+          chungWins++;
+          winnerEl.textContent = '🏆 CHUNG (BIRU)';
+          winnerEl.className = 'border-r border-slate-300 font-black font-sans text-[11px] text-blue-700 bg-blue-50';
+          reasonEl.textContent = isPtg ? `PTG (Point Gap 12 Poin: ${cPts} - ${hPts})` : `Menang Skor Akhir Ronde (${cPts} - ${hPts})`;
+        } else if (hPts > cPts) {
+          hongWins++;
+          winnerEl.textContent = '🏆 HONG (MERAH)';
+          winnerEl.className = 'border-r border-slate-300 font-black font-sans text-[11px] text-red-700 bg-red-50';
+          reasonEl.textContent = isPtg ? `PTG (Point Gap 12 Poin: ${cPts} - ${hPts})` : `Menang Skor Akhir Ronde (${cPts} - ${hPts})`;
+        } else {
+          winnerEl.textContent = 'SERI (TIE)';
+          winnerEl.className = 'border-r border-slate-300 font-bold font-sans text-[11px] text-slate-500 bg-slate-100';
+          reasonEl.textContent = 'Evaluasi Kriteria Tie-Break WT';
+        }
+      });
+
+      document.getElementById('chung-won-rounds').textContent = `${chungWins} Ronde`;
+      document.getElementById('hong-won-rounds').textContent = `${hongWins} Ronde`;
+
+      const chungName = document.getElementById('k-chung-name').value || 'CHUNG';
+      const hongName = document.getElementById('k-hong-name').value || 'HONG';
+      const winnerChip = document.getElementById('kyorugi-winner-chip');
+      const winnerText = document.getElementById('winner-name-text');
+      const roundCountText = document.getElementById('winner-round-count');
+
+      if (chungWins >= 2) {
+        winnerText.textContent = `CHUNG (${chungName})`;
+        roundCountText.textContent = `SKOR ${chungWins} - ${hongWins}`;
+        winnerChip.className = "flex-1 bg-blue-600 text-white font-black text-xs px-2.5 py-1 rounded-lg shadow-sm flex items-center justify-between";
+      } else if (hongWins >= 2) {
+        winnerText.textContent = `HONG (${hongName})`;
+        roundCountText.textContent = `SKOR ${hongWins} - ${chungWins}`;
+        winnerChip.className = "flex-1 bg-red-600 text-white font-black text-xs px-2.5 py-1 rounded-lg shadow-sm flex items-center justify-between";
+      } else {
+        winnerText.textContent = 'SEDANG BERJALAN';
+        roundCountText.textContent = `${chungWins} - ${hongWins}`;
+        winnerChip.className = "flex-1 bg-slate-700 text-white font-black text-xs px-2.5 py-1 rounded-lg shadow-sm flex items-center justify-between";
+      }
+    }
+
+    // --- KALKULASI OTOMATIS POOMSAE RECOGNISED (TRUNCATED MEAN) ---
+    function renderPoomsaeTable() {
+      const tbody = document.getElementById('poomsae-judge-tbody');
+      if (!tbody) return;
+
+      const accScores = poomsaeJudges.map(j => j.acc);
+      const presScores = poomsaeJudges.map(j => j.pres);
+
+      const minAcc = Math.min(...accScores);
+      const maxAcc = Math.max(...accScores);
+      const minPres = Math.min(...presScores);
+      const maxPres = Math.max(...presScores);
+
+      let droppedAccMinIdx = accScores.indexOf(minAcc);
+      let droppedAccMaxIdx = accScores.lastIndexOf(maxAcc);
+      let droppedPresMinIdx = presScores.indexOf(minPres);
+      let droppedPresMaxIdx = presScores.lastIndexOf(maxPres);
+
+      tbody.innerHTML = poomsaeJudges.map((j, idx) => {
+        const isAccMin = idx === droppedAccMinIdx;
+        const isAccMax = idx === droppedAccMaxIdx;
+        const isPresMin = idx === droppedPresMinIdx;
+        const isPresMax = idx === droppedPresMaxIdx;
+        const isDropped = isAccMin || isAccMax || isPresMin || isPresMax;
+
+        return `
+          <tr class="${isDropped ? 'bg-red-50/40 text-slate-500' : 'hover:bg-slate-50'}">
+            <td class="border-r border-slate-300 font-bold text-slate-800">${j.id}</td>
+            <td class="border-r border-slate-300">
+              <input type="number" step="0.05" max="4" min="0" value="${j.acc.toFixed(2)}" oninput="updateJudgeScore(${idx}, 'acc', this.value)" class="smart-input w-16 text-center font-bold ${isAccMin || isAccMax ? 'line-through text-red-600' : 'text-blue-700'}">
+              ${isAccMin ? '<span class="text-[9px] text-red-600 font-bold ml-1">(Min)</span>' : ''}
+              ${isAccMax ? '<span class="text-[9px] text-red-600 font-bold ml-1">(Max)</span>' : ''}
+            </td>
+            <td class="border-r border-slate-300">
+              <input type="number" step="0.05" max="6" min="0" value="${j.pres.toFixed(2)}" oninput="updateJudgeScore(${idx}, 'pres', this.value)" class="smart-input w-16 text-center font-bold ${isPresMin || isPresMax ? 'line-through text-red-600' : 'text-blue-700'}">
+              ${isPresMin ? '<span class="text-[9px] text-red-600 font-bold ml-1">(Min)</span>' : ''}
+              ${isPresMax ? '<span class="text-[9px] text-red-600 font-bold ml-1">(Max)</span>' : ''}
+            </td>
+            <td class="border-r border-slate-300 font-bold text-slate-900">${(j.acc + j.pres).toFixed(2)}</td>
+            <td class="font-sans font-bold text-[10px] ${isDropped ? 'text-red-600 bg-red-100/40' : 'text-emerald-700 bg-emerald-50'}">
+              ${isDropped ? 'DIBUANG (Drop)' : 'DIHITUNG'}
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      // Hitung Rata-rata Truncated
+      const validAcc = accScores.filter((_, i) => i !== droppedAccMinIdx && i !== droppedAccMaxIdx);
+      const validPres = presScores.filter((_, i) => i !== droppedPresMinIdx && i !== droppedPresMaxIdx);
+
+      const avgAcc = validAcc.length ? (validAcc.reduce((a, b) => a + b, 0) / validAcc.length) : 0;
+      const avgPres = validPres.length ? (validPres.reduce((a, b) => a + b, 0) / validPres.length) : 0;
+      const subtotal = avgAcc + avgPres;
+
+      document.getElementById('avg-acc-cell').textContent = avgAcc.toFixed(3);
+      document.getElementById('avg-pres-cell').textContent = avgPres.toFixed(3);
+      document.getElementById('subtotal-cell').textContent = `SUBTOTAL NILAI: ${subtotal.toFixed(3)}`;
+
+      recalcPoomsaeTotal();
+    }
+
+    function updateJudgeScore(idx, type, val) {
+      const num = parseFloat(val) || 0;
+      poomsaeJudges[idx][type] = num;
+      renderPoomsaeTable();
+    }
+
+    function recalcPoomsaeTotal() {
+      const subtotalText = document.getElementById('subtotal-cell').textContent;
+      const subtotal = parseFloat(subtotalText.replace(/[^0-9.]/g, '')) || 0;
+
+      const dTime = parseFloat(document.getElementById('ded-time').value) || 0;
+      const dLine = parseFloat(document.getElementById('ded-line').value) || 0;
+      const dRest = parseFloat(document.getElementById('ded-restart').value) || 0;
+      const totalDed = dTime + dLine + dRest;
+
+      document.getElementById('ded-total-text').textContent = `- ${totalDed.toFixed(2)}`;
+      const grandTotal = Math.max(0, subtotal - totalDed);
+      document.getElementById('p-final-score').textContent = grandTotal.toFixed(3);
+    }
+
+    // --- KALKULASI OTOMATIS FREESTYLE ---
+    function recalcFreestyle() {
+      const techInputs = document.querySelectorAll('.free-tech-item');
+      let techSum = 0;
+      techInputs.forEach(inp => techSum += (parseFloat(inp.value) || 0));
+
+      const presInputs = document.querySelectorAll('.free-pres-item');
+      let presSum = 0;
+      presInputs.forEach(inp => presSum += (parseFloat(inp.value) || 0));
+
+      document.getElementById('free-tech-total').textContent = techSum.toFixed(2);
+      document.getElementById('free-pres-total').textContent = presSum.toFixed(2);
+      document.getElementById('free-grand-total').textContent = (techSum + presSum).toFixed(2);
+    }
+
+    // --- FITUR TARIK DATA DARI SCORING BOARD AKTIF (LOCALSTORAGE) ---
+    function syncFromScoringBoard() {
+      const saved = localStorage.getItem('tkd_saved_state');
+      if (!saved) {
+        showToast('⚠️ Tidak ada data pertandingan aktif di browser. Buka Scoring Board terlebih dahulu!');
+        return;
+      }
+
+      try {
+        const state = JSON.parse(saved);
+        if (state.category === 'kyorugi' && state.kyorugi) {
+          switchTab('kyorugi');
+          document.getElementById('k-tournament').value = state.settings.tournamentTitle || document.getElementById('k-tournament').value;
+          document.getElementById('k-court').value = state.court || 'COURT 1';
+          document.getElementById('k-match-no').value = state.matchNumber || 'MATCH #1';
+          document.getElementById('k-division').value = state.division || 'Senior';
+          
+          document.getElementById('k-chung-name').value = state.kyorugi.chung.name;
+          document.getElementById('k-chung-team').value = state.kyorugi.chung.team;
+          document.getElementById('k-hong-name').value = state.kyorugi.hong.name;
+          document.getElementById('k-hong-team').value = state.kyorugi.hong.team;
+
+          // Isi skor jika ada di history
+          if (state.kyorugi.roundHistory && state.kyorugi.roundHistory.length > 0) {
+            state.kyorugi.roundHistory.forEach(h => {
+              if (h.round <= 3) {
+                document.getElementById(`r${h.round}-c-pts`).value = h.chungScore;
+                document.getElementById(`r${h.round}-c-gj`).value = h.chungGamjeom;
+                document.getElementById(`r${h.round}-h-pts`).value = h.hongScore;
+                document.getElementById(`r${h.round}-h-gj`).value = h.hongGamjeom;
+              }
+            });
+          } else {
+            document.getElementById('r1-c-pts').value = state.kyorugi.chung.score;
+            document.getElementById('r1-c-gj').value = state.kyorugi.chung.gamjeom;
+            document.getElementById('r1-h-pts').value = state.kyorugi.hong.score;
+            document.getElementById('r1-h-gj').value = state.kyorugi.hong.gamjeom;
+          }
+
+          recalcKyorugiRounds();
+          showToast('📥 Berhasil menarik data Kyorugi dari Scoring Board!');
+        } else if (state.category === 'poomsae_rec' && state.poomsaeRec) {
+          switchTab('poomsae_rec');
+          document.getElementById('p-athlete-name').value = state.poomsaeRec.athleteName;
+          document.getElementById('p-athlete-team').value = state.poomsaeRec.team;
+          document.getElementById('p-poomsae-name').value = state.poomsaeRec.poomsaeName;
+
+          if (state.poomsaeRec.judges && state.poomsaeRec.judges.length === 5) {
+            poomsaeJudges = state.poomsaeRec.judges.map(j => ({ id: j.id, acc: j.accuracy, pres: j.presentation }));
+            renderPoomsaeTable();
+          }
+          showToast('📥 Berhasil menarik data Poomsae dari Scoring Board!');
+        } else if (state.category === 'poomsae_free' && state.poomsaeFree) {
+          switchTab('poomsae_free');
+          document.getElementById('free-athlete-name').value = state.poomsaeFree.athleteName;
+          document.getElementById('free-athlete-team').value = state.poomsaeFree.team;
+          showToast('📥 Berhasil menarik data Freestyle dari Scoring Board!');
+        }
+      } catch (err) {
+        showToast('❌ Gagal membaca format data penyimpanan.');
+      }
+    }
+
+    // --- SALIN REKAP TEKS WHATSAPP ---
+    function copyWhatsAppRecap() {
+      let msg = '';
+      if (currentCategory === 'kyorugi') {
+        const tournament = document.getElementById('k-tournament').value;
+        const court = document.getElementById('k-court').value;
+        const match = document.getElementById('k-match-no').value;
+        const division = document.getElementById('k-division').value;
+        const cName = document.getElementById('k-chung-name').value;
+        const cTeam = document.getElementById('k-chung-team').value;
+        const hName = document.getElementById('k-hong-name').value;
+        const hTeam = document.getElementById('k-hong-team').value;
+        const cWon = document.getElementById('chung-won-rounds').textContent;
+        const hWon = document.getElementById('hong-won-rounds').textContent;
+        const winner = document.getElementById('winner-name-text').textContent;
+
+        msg = `🥋 *HASIL RESMI PERTANDINGAN TAEKWONDO*\n` +
+              `🏆 *${tournament}*\n` +
+              `━━━━━━━━━━━━━━━━━━━━\n` +
+              `📍 *Gelanggang:* ${court} | *Partai:* ${match}\n` +
+              `🥋 *Kelas/Divisi:* ${division}\n\n` +
+              `🔵 *CHUNG:* ${cName} (${cTeam})\n` +
+              `🔴 *HONG:* ${hName} (${hTeam})\n\n` +
+              `📊 *Rincian Ronde (Best of 3):*\n` +
+              `• R1: ${document.getElementById('r1-c-pts').value} vs ${document.getElementById('r1-h-pts').value}\n` +
+              `• R2: ${document.getElementById('r2-c-pts').value} vs ${document.getElementById('r2-h-pts').value}\n` +
+              `• R3: ${document.getElementById('r3-c-pts').value} vs ${document.getElementById('r3-h-pts').value}\n\n` +
+              `🏅 *Pemenang:* ${winner}\n` +
+              `⭐ *Skor Ronde:* Chung ${cWon} - ${hWon} Hong\n` +
+              `━━━━━━━━━━━━━━━━━━━━\n` +
+              `_Official Match Protocol WT-FR-01 Verified_`;
+      } else if (currentCategory === 'poomsae_rec') {
+        const athlete = document.getElementById('p-athlete-name').value;
+        const team = document.getElementById('p-athlete-team').value;
+        const poomsae = document.getElementById('p-poomsae-name').value;
+        const score = document.getElementById('p-final-score').textContent;
+
+        msg = `🏅 *HASIL RESMI POOMSAE RECOGNISED*\n` +
+              `━━━━━━━━━━━━━━━━━━━━\n` +
+              `🥋 *Peserta:* ${athlete} (${team})\n` +
+              `📜 *Jurus:* ${poomsae}\n` +
+              `⭐ *Skor Akhir:* ${score} / 10.00\n` +
+              `━━━━━━━━━━━━━━━━━━━━\n` +
+              `_Sistem Truncated Mean Panel 5 Juri WT_`;
+      } else {
+        const athlete = document.getElementById('free-athlete-name').value;
+        const team = document.getElementById('free-athlete-team').value;
+        const score = document.getElementById('free-grand-total').textContent;
+
+        msg = `⚡ *HASIL RESMI POOMSAE FREESTYLE*\n` +
+              `━━━━━━━━━━━━━━━━━━━━\n` +
+              `🥋 *Peserta:* ${athlete} (${team})\n` +
+              `⭐ *Skor Akhir:* ${score} / 10.00\n` +
+              `━━━━━━━━━━━━━━━━━━━━\n` +
+              `_Teknik 6.00 + Presentasi 4.00_`;
+      }
+
+      navigator.clipboard.writeText(msg).then(() => {
+        showToast('📋 Rekap berhasil disalin! Tinggal Paste di grup WhatsApp.');
+      });
+    }
+
+    // --- FITUR CONTOH & KOSONGKAN BLANKO ---
     function fillSampleData() {
       document.getElementById('k-chung-name').value = "BAMBANG WIJAYA";
       document.getElementById('k-chung-team').value = "JAWA BARAT (KAB. BOGOR)";
       document.getElementById('k-hong-name').value = "DIMAS PRASETYO";
       document.getElementById('k-hong-team').value = "DKI JAKARTA (JAKSEL)";
-      alert('Data resmi pertandingan telah dimuat ke form.');
+      document.getElementById('r1-c-pts').value = "12";
+      document.getElementById('r1-h-pts').value = "8";
+      document.getElementById('r2-c-pts').value = "6";
+      document.getElementById('r2-h-pts').value = "7";
+      document.getElementById('r3-c-pts').value = "15";
+      document.getElementById('r3-h-pts').value = "3";
+      recalcKyorugiRounds();
+      showToast('✨ Contoh data kejuaraan resmi telah dimuat.');
     }
 
     function clearFormData() {
-      const inputs = document.querySelectorAll('.field-input');
+      const inputs = document.querySelectorAll('.smart-input');
       inputs.forEach(input => {
         if (input.type === 'number') input.value = '';
         else if (input.id && (input.id.includes('name') || input.id.includes('team') || input.id.includes('gal') || input.id.includes('coach'))) {
           input.value = '';
         }
       });
-      alert('Form berhasil dikosongkan. Siap dicetak sebagai blanko lembar kerja wasit.');
+      clearSig('sig-ref');
+      clearSig('sig-judge');
+      clearSig('sig-ivr');
+      clearSig('sig-td');
+      showToast('🧹 Formulir dikosongkan. Siap dicetak sebagai blanko.');
+    }
+
+    // --- HTML5 CANVAS DIGITAL SIGNATURE ENGINE ---
+    const sigCanvases = {};
+
+    function initSignaturePads() {
+      ['sig-ref', 'sig-judge', 'sig-ivr', 'sig-td'].forEach(id => {
+        const canvas = document.getElementById(id);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        let drawing = false;
+
+        function getPos(e) {
+          const rect = canvas.getBoundingClientRect();
+          const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+          const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+          return {
+            x: (clientX - rect.left) * (canvas.width / rect.width),
+            y: (clientY - rect.top) * (canvas.height / rect.height)
+          };
+        }
+
+        function start(e) {
+          drawing = true;
+          const pos = getPos(e);
+          ctx.beginPath();
+          ctx.moveTo(pos.x, pos.y);
+          if (e.type === 'touchstart') e.preventDefault();
+        }
+
+        function move(e) {
+          if (!drawing) return;
+          const pos = getPos(e);
+          ctx.lineTo(pos.x, pos.y);
+          ctx.stroke();
+          if (e.type === 'touchmove') e.preventDefault();
+        }
+
+        function stop() {
+          drawing = false;
+        }
+
+        canvas.addEventListener('mousedown', start);
+        canvas.addEventListener('mousemove', move);
+        window.addEventListener('mouseup', stop);
+
+        canvas.addEventListener('touchstart', start, { passive: false });
+        canvas.addEventListener('touchmove', move, { passive: false });
+        window.addEventListener('touchend', stop);
+
+        sigCanvases[id] = { canvas, ctx };
+      });
+    }
+
+    function clearSig(id) {
+      if (sigCanvases[id]) {
+        sigCanvases[id].ctx.clearRect(0, 0, sigCanvases[id].canvas.width, sigCanvases[id].canvas.height);
+      }
+    }
+
+    // --- TOAST HELPER ---
+    function showToast(text) {
+      const toast = document.getElementById('toast-msg');
+      const textEl = document.getElementById('toast-text');
+      textEl.textContent = text;
+      toast.classList.remove('opacity-0', 'translate-y-20', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-20', 'pointer-events-none');
+      }, 3000);
     }
   </script>
 </body>
