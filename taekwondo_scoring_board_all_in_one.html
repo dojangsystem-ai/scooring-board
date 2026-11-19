@@ -395,6 +395,7 @@
       division: 'SENIOR PUTRA UNDER 68 KG',
       matchNumber: 'PARTAI #04',
       selectedJudgeId: 'J1', // Untuk Mode Pad Juri (J1 s/d J5)
+      judgePadMode: 'pss', // 'pss' (Daedo/KPNP PSS Sensor) | 'dss' (Digital Scoring System Manual)
       settingsModalOpen: false,
 
       // Konfigurasi Turnamen
@@ -965,6 +966,11 @@
       // --- JURUS / JUDGE PAD LOGIC ---
       setJudgeId(judgeId) {
         this.data.selectedJudgeId = judgeId;
+        this.notifyChange();
+      }
+
+      setJudgePadMode(mode) {
+        this.data.judgePadMode = mode;
         this.notifyChange();
       }
 
@@ -2182,7 +2188,7 @@
     // 3. RENDER PAD JURI (KPNP & DAEDO WT STANDARD JSD)
     // ==========================================
     function renderJudgePad(appState) {
-      const { category, selectedJudgeId, poomsaeRec, kyorugi, court, division } = appState.data;
+      const { category, selectedJudgeId, judgePadMode = 'pss', poomsaeRec, kyorugi, court, division } = appState.data;
       const currentJudge = poomsaeRec.judges.find(j => j.id === selectedJudgeId) || poomsaeRec.judges[0];
 
       return `
@@ -2193,11 +2199,11 @@
         <div class="border-4 sm:border-8 border-neutral-800 rounded-3xl sm:rounded-[2.5rem] bg-gradient-to-b from-neutral-900 via-neutral-950 to-neutral-900 p-3 sm:p-5 shadow-[0_20px_50px_rgba(0,0,0,0.9)] relative">
           
           <!-- TOP HARDWARE STATUS TELEMETRY BAR (KPNP / DAEDO STANDARD) -->
-          <div class="bg-black border border-neutral-800 rounded-xl px-4 py-2 mb-4 flex flex-wrap items-center justify-between text-xs text-neutral-400 font-mono">
+          <div class="bg-black border border-neutral-800 rounded-xl px-4 py-2 mb-3 flex flex-wrap items-center justify-between text-xs text-neutral-400 font-mono gap-2">
             <div class="flex items-center space-x-3">
               <span class="flex items-center space-x-1.5 text-emerald-400 font-bold">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span class="tracking-wider">DAEDO Gen2 / KPNP PSS</span>
+                <span class="tracking-wider">${judgePadMode === 'dss' ? 'WT DSS CONTROLLER' : 'DAEDO Gen2 / KPNP PSS'}</span>
               </span>
               <span class="text-neutral-600">|</span>
               <span class="text-amber-400 font-bold">${court}</span>
@@ -2212,23 +2218,215 @@
               <span class="text-emerald-400 font-bold font-digital text-sm dynamic-timer-text">
                 ${appState.formatTime(kyorugi.timerSeconds)}
               </span>
-              <span class="text-cyan-400 font-bold">ðŸ“¶ 2.4GHz RF</span>
-              <span class="text-emerald-400 font-bold">ðŸ”‹ 98%</span>
+              <span class="text-cyan-400 font-bold">📶 2.4GHz RF</span>
+              <span class="text-emerald-400 font-bold">🔋 98%</span>
             </div>
 
             <!-- Selector ID Juri (J1 s/d J5) -->
             <div class="flex items-center space-x-1 bg-neutral-900 p-1 rounded-lg border border-neutral-800">
               <span class="text-[10px] text-neutral-500 px-1 font-sans">JURI:</span>
               ${['J1', 'J2', 'J3', 'J4', 'J5'].map(id => `
-                <button onclick="app.setJudgeId('${id}')" class="px-2 py-0.5 rounded text-xs font-bold transition-all ${id === selectedJudgeId ? 'bg-amber-500 text-black shadow' : 'text-neutral-400 hover:text-white'}">
+                <button onclick="app.setJudgeId('${id}')" class="px-2 py-0.5 rounded text-xs font-bold transition-all ${id === selectedJudgeId ? 'bg-amber-500 text-black shadow font-black' : 'text-neutral-400 hover:text-white'}">
                   ${id}
                 </button>
               `).join('')}
             </div>
           </div>
 
-          <!-- KONTEN PAD SESUAI KATEGORI -->
+          <!-- SELECTOR MODEL APPARATUS: PSS (SENSOR) vs DSS (MANUAL DIGITAL SCORING SYSTEM) -->
           ${category === 'kyorugi' ? `
+            <div class="flex flex-wrap items-center justify-between bg-neutral-900/90 border border-neutral-800 rounded-xl px-3 py-1.5 mb-3 text-xs gap-2">
+              <div class="flex items-center space-x-2">
+                <span class="text-neutral-400 font-bold uppercase text-[10px]">MODEL PERANGKAT:</span>
+                <div class="flex items-center space-x-1 bg-black p-0.5 rounded-lg border border-neutral-800">
+                  <button onclick="app.setJudgePadMode('pss')" class="px-3 py-1 rounded text-xs font-bold transition-all ${judgePadMode === 'pss' ? 'bg-blue-600 text-white shadow' : 'text-neutral-400 hover:text-white'}">
+                    🛡️ Model PSS (Sensor Elektronik)
+                  </button>
+                  <button onclick="app.setJudgePadMode('dss')" class="px-3 py-1 rounded text-xs font-bold transition-all ${judgePadMode === 'dss' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-black shadow font-black ring-1 ring-amber-300' : 'text-neutral-400 hover:text-white'}">
+                    🎛️ Model DSS (Digital Scoring System)
+                  </button>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2 text-[11px] font-mono">
+                <a href="judge_pad_tablet.html" target="_blank" class="px-2.5 py-1 bg-gradient-to-r from-amber-500 to-emerald-500 text-black font-extrabold rounded-lg shadow hover:opacity-90 flex items-center space-x-1">
+                  <span>📱</span><span>Buka Mode Tablet Khusus ↗</span>
+                </a>
+                ${judgePadMode === 'dss' 
+                  ? '<span class="text-amber-400 font-bold flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span><span>MODE DSS AKTIF (6 TOMBOL)</span></span>' 
+                  : '<span class="text-emerald-400 font-bold">● MODE PSS AKTIF</span>'}
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- KONTEN PAD SESUAI KATEGORI -->
+          ${category === 'kyorugi' ? (
+            judgePadMode === 'dss' ? `
+            <!-- ============================================== -->
+            <!-- KYORUGI MODEL DSS (DIGITAL SCORING SYSTEM)     -->
+            <!-- ============================================== -->
+            <div class="space-y-3 my-1">
+              
+              <!-- DSS Status & Consensus Monitor Bar -->
+              <div class="bg-gradient-to-r from-neutral-900 via-neutral-950 to-neutral-900 border border-neutral-800 rounded-2xl p-2.5 sm:p-3 flex flex-wrap items-center justify-between text-xs font-mono shadow-inner gap-2">
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                  <span class="bg-amber-500/20 text-amber-300 font-black px-2.5 py-1 rounded-lg border border-amber-500/30 text-[11px]">
+                    🎛️ WT DSS TACTILE CONTROLLER
+                  </span>
+                  <span class="text-neutral-400 text-[11px]">Toleransi: <b class="text-white">1.0 Detik</b></span>
+                  <span class="text-neutral-400 text-[11px]">Sah: <b class="text-emerald-400">Min. 2 Juri</b></span>
+                </div>
+
+                <!-- Consensus Lights for J1, J2, J3 -->
+                <div class="flex items-center space-x-2">
+                  <span class="text-neutral-500 text-[10px]">LAMPU KONSENSUS:</span>
+                  <span class="flex items-center space-x-1 bg-black px-2 py-0.5 rounded border border-neutral-800 text-[10px]">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span class="text-neutral-300 font-bold">J1</span>
+                  </span>
+                  <span class="flex items-center space-x-1 bg-black px-2 py-0.5 rounded border border-neutral-800 text-[10px]">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span class="text-neutral-300 font-bold">J2</span>
+                  </span>
+                  <span class="flex items-center space-x-1 bg-black px-2 py-0.5 rounded border border-neutral-800 text-[10px]">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span class="text-neutral-300 font-bold">J3</span>
+                  </span>
+                  <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-bold">
+                    SYNCED
+                  </span>
+                </div>
+              </div>
+
+              <!-- Dual Split Tactile Buttons Grid -->
+              <div class="grid grid-cols-2 gap-3 sm:gap-5">
+                
+                <!-- SISI KIRI: CHUNG (BIRU) DSS CONTROLLER -->
+                <div class="bg-gradient-to-b from-[#002b5c] via-[#003d7e] to-[#001f42] rounded-2xl sm:rounded-3xl p-3 sm:p-4 border-4 border-blue-500 shadow-2xl flex flex-col justify-between relative overflow-hidden">
+                  <div class="flex items-center justify-between border-b border-blue-400/40 pb-2 mb-2">
+                    <div class="flex items-center space-x-2">
+                      <span class="w-3 h-3 rounded-full bg-blue-400 animate-ping"></span>
+                      <span class="text-blue-100 font-black tracking-widest text-sm sm:text-base font-display">CHUNG (청) • BIRU</span>
+                    </div>
+                    <span class="text-xs bg-blue-950 text-blue-200 border border-blue-400/40 px-2.5 py-0.5 rounded-md font-mono font-bold">SKOR: ${kyorugi.chung.score}</span>
+                  </div>
+
+                  <!-- 6 DSS Tactile Buttons for Chung -->
+                  <div class="grid grid-cols-2 gap-2 my-1">
+                    <!-- 1. PUKULAN (1 PT) -->
+                    <button onclick="app.addKyorugiPoint('chung', 1); triggerJudgeFeedback(this);" class="py-3 sm:py-3.5 bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 active:scale-95 text-white font-black rounded-xl border border-blue-300/60 shadow-lg flex flex-col items-center justify-center space-y-0.5 transition-all">
+                      <span class="text-xl sm:text-2xl">🥊</span>
+                      <span class="text-xs font-bold">PUKULAN</span>
+                      <span class="text-[9px] bg-blue-950/80 text-blue-200 px-2 py-0.2 rounded-full font-mono">1 POIN</span>
+                    </button>
+
+                    <!-- 2. TENDANGAN BADAN (2 PTS) -->
+                    <button onclick="app.addKyorugiPoint('chung', 2); triggerJudgeFeedback(this);" class="py-3 sm:py-3.5 bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 active:scale-95 text-white font-black rounded-xl border border-blue-300/80 shadow-lg flex flex-col items-center justify-center space-y-0.5 transition-all">
+                      <span class="text-xl sm:text-2xl">🥋</span>
+                      <span class="text-xs font-bold">BADAN (TRUNK)</span>
+                      <span class="text-[9px] bg-blue-950/80 text-blue-100 px-2 py-0.2 rounded-full font-mono font-bold">2 POIN</span>
+                    </button>
+
+                    <!-- 3. TENDANGAN KEPALA (3 PTS) -->
+                    <button onclick="app.addKyorugiPoint('chung', 3); triggerJudgeFeedback(this);" class="py-3 sm:py-3.5 bg-gradient-to-b from-indigo-600 to-blue-700 hover:from-indigo-500 hover:to-blue-600 active:scale-95 text-white font-black rounded-xl border border-indigo-300 shadow-lg flex flex-col items-center justify-center space-y-0.5 transition-all">
+                      <span class="text-xl sm:text-2xl">🎯</span>
+                      <span class="text-xs font-bold">KEPALA (HEAD)</span>
+                      <span class="text-[9px] bg-indigo-950/80 text-indigo-100 px-2 py-0.2 rounded-full font-mono font-bold">3 POIN</span>
+                    </button>
+
+                    <!-- 4. PUTAR BADAN (4 PTS) -->
+                    <button onclick="app.addKyorugiPoint('chung', 4); triggerJudgeFeedback(this);" class="py-3 sm:py-3.5 bg-gradient-to-b from-cyan-600 to-blue-800 hover:from-cyan-500 hover:to-blue-700 active:scale-95 text-white font-black rounded-xl border border-cyan-300 shadow-lg flex flex-col items-center justify-center space-y-0.5 transition-all">
+                      <span class="text-xl sm:text-2xl">🌪️</span>
+                      <span class="text-xs font-bold">PUTAR BADAN</span>
+                      <span class="text-[9px] bg-cyan-950/80 text-cyan-200 px-2 py-0.2 rounded-full font-mono font-bold">4 POIN (2+2)</span>
+                    </button>
+
+                    <!-- 5. PUTAR KEPALA (5 PTS) -->
+                    <button onclick="app.addKyorugiPoint('chung', 5); triggerJudgeFeedback(this);" class="col-span-2 py-2.5 sm:py-3 bg-gradient-to-r from-amber-500 via-blue-600 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 active:scale-95 text-white font-black rounded-xl border-2 border-amber-300 shadow-lg flex items-center justify-center space-x-2 transition-all">
+                      <span class="text-lg">⚡</span>
+                      <span class="text-xs sm:text-sm font-black">PUTAR KEPALA (SPIN HEAD)</span>
+                      <span class="text-[10px] bg-black/60 text-amber-300 px-2 py-0.5 rounded-full font-mono font-bold">5 POIN (3+2)</span>
+                    </button>
+                  </div>
+
+                  <!-- Tombol Batal Chung -->
+                  <div class="mt-2 pt-2 border-t border-blue-400/30">
+                    <button onclick="app.addKyorugiPoint('chung', -1); triggerJudgeFeedback(this);" class="w-full py-1.5 bg-neutral-900/90 hover:bg-neutral-800 active:scale-95 text-red-400 hover:text-red-300 font-bold text-xs rounded-lg border border-neutral-700 flex items-center justify-center space-x-1.5 transition">
+                      <span>↩️</span> <span>BATAL / KOREKSI (-1 POIN)</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- SISI KANAN: HONG (MERAH) DSS CONTROLLER -->
+                <div class="bg-gradient-to-b from-[#660012] via-[#8c0018] to-[#4a000d] rounded-2xl sm:rounded-3xl p-3 sm:p-4 border-4 border-red-500 shadow-2xl flex flex-col justify-between relative overflow-hidden">
+                  <div class="flex items-center justify-between border-b border-red-400/40 pb-2 mb-2">
+                    <div class="flex items-center space-x-2">
+                      <span class="w-3 h-3 rounded-full bg-red-400 animate-ping"></span>
+                      <span class="text-red-100 font-black tracking-widest text-sm sm:text-base font-display">HONG (홍) • MERAH</span>
+                    </div>
+                    <span class="text-xs bg-red-950 text-red-200 border border-red-400/40 px-2.5 py-0.5 rounded-md font-mono font-bold">SKOR: ${kyorugi.hong.score}</span>
+                  </div>
+
+                  <!-- 6 DSS Tactile Buttons for Hong -->
+                  <div class="grid grid-cols-2 gap-2 my-1">
+                    <!-- 1. PUKULAN (1 PT) -->
+                    <button onclick="app.addKyorugiPoint('hong', 1); triggerJudgeFeedback(this);" class="py-3 sm:py-3.5 bg-gradient-to-b from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 active:scale-95 text-white font-black rounded-xl border border-red-300/60 shadow-lg flex flex-col items-center justify-center space-y-0.5 transition-all">
+                      <span class="text-xl sm:text-2xl">🥊</span>
+                      <span class="text-xs font-bold">PUKULAN</span>
+                      <span class="text-[9px] bg-red-950/80 text-red-200 px-2 py-0.2 rounded-full font-mono">1 POIN</span>
+                    </button>
+
+                    <!-- 2. TENDANGAN BADAN (2 PTS) -->
+                    <button onclick="app.addKyorugiPoint('hong', 2); triggerJudgeFeedback(this);" class="py-3 sm:py-3.5 bg-gradient-to-b from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 active:scale-95 text-white font-black rounded-xl border border-red-300/80 shadow-lg flex flex-col items-center justify-center space-y-0.5 transition-all">
+                      <span class="text-xl sm:text-2xl">🥋</span>
+                      <span class="text-xs font-bold">BADAN (TRUNK)</span>
+                      <span class="text-[9px] bg-red-950/80 text-red-100 px-2 py-0.2 rounded-full font-mono font-bold">2 POIN</span>
+                    </button>
+
+                    <!-- 3. TENDANGAN KEPALA (3 PTS) -->
+                    <button onclick="app.addKyorugiPoint('hong', 3); triggerJudgeFeedback(this);" class="py-3 sm:py-3.5 bg-gradient-to-b from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 active:scale-95 text-white font-black rounded-xl border border-rose-300 shadow-lg flex flex-col items-center justify-center space-y-0.5 transition-all">
+                      <span class="text-xl sm:text-2xl">🎯</span>
+                      <span class="text-xs font-bold">KEPALA (HEAD)</span>
+                      <span class="text-[9px] bg-rose-950/80 text-rose-100 px-2 py-0.2 rounded-full font-mono font-bold">3 POIN</span>
+                    </button>
+
+                    <!-- 4. PUTAR BADAN (4 PTS) -->
+                    <button onclick="app.addKyorugiPoint('hong', 4); triggerJudgeFeedback(this);" class="py-3 sm:py-3.5 bg-gradient-to-b from-orange-600 to-red-800 hover:from-orange-500 hover:to-red-700 active:scale-95 text-white font-black rounded-xl border border-orange-300 shadow-lg flex flex-col items-center justify-center space-y-0.5 transition-all">
+                      <span class="text-xl sm:text-2xl">🌪️</span>
+                      <span class="text-xs font-bold">PUTAR BADAN</span>
+                      <span class="text-[9px] bg-orange-950/80 text-orange-200 px-2 py-0.2 rounded-full font-mono font-bold">4 POIN (2+2)</span>
+                    </button>
+
+                    <!-- 5. PUTAR KEPALA (5 PTS) -->
+                    <button onclick="app.addKyorugiPoint('hong', 5); triggerJudgeFeedback(this);" class="col-span-2 py-2.5 sm:py-3 bg-gradient-to-r from-amber-500 via-red-600 to-rose-600 hover:from-amber-400 hover:to-rose-500 active:scale-95 text-white font-black rounded-xl border-2 border-amber-300 shadow-lg flex items-center justify-center space-x-2 transition-all">
+                      <span class="text-lg">⚡</span>
+                      <span class="text-xs sm:text-sm font-black">PUTAR KEPALA (SPIN HEAD)</span>
+                      <span class="text-[10px] bg-black/60 text-amber-300 px-2 py-0.5 rounded-full font-mono font-bold">5 POIN (3+2)</span>
+                    </button>
+                  </div>
+
+                  <!-- Tombol Batal Hong -->
+                  <div class="mt-2 pt-2 border-t border-red-400/30">
+                    <button onclick="app.addKyorugiPoint('hong', -1); triggerJudgeFeedback(this);" class="w-full py-1.5 bg-neutral-900/90 hover:bg-neutral-800 active:scale-95 text-red-400 hover:text-red-300 font-bold text-xs rounded-lg border border-neutral-700 flex items-center justify-center space-x-1.5 transition">
+                      <span>↩️</span> <span>BATAL / KOREKSI (-1 POIN)</span>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Footer DSS -->
+              <div class="bg-black border border-neutral-800 rounded-xl p-2.5 px-4 flex flex-wrap items-center justify-between text-xs text-neutral-400 font-mono">
+                <div class="flex items-center space-x-2 text-emerald-400">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span>STATUS DSS: Siap Menerima Input Tombol Juri (RF Wireless Latensi &lt; 5ms)</span>
+                </div>
+                <div class="text-amber-400 font-bold">
+                  ATURAN WT: 2+ JURI SEPAKAT DALAM 1.0s = POIN SAH
+                </div>
+              </div>
+
+            </div>
+          ` : `
             <!-- ============================================== -->
             <!-- KYORUGI CONTROLLER (KPNP & DAEDO PSS JOYSTICK) -->
             <!-- ============================================== -->
@@ -2304,7 +2502,7 @@
               </span>
               <span class="text-amber-400 font-mono font-bold">READY 1.0s</span>
             </div>
-          ` : category === 'poomsae_rec' ? `
+          ) : category === 'poomsae_rec' ? `
             <!-- ============================================== -->
             <!-- POOMSAE RECOGNISED TERMINAL (KPNP & DAEDO)     -->
             <!-- ============================================== -->

@@ -11,6 +11,7 @@ const DEFAULT_STATE = {
   division: 'SENIOR PUTRA UNDER 68 KG',
   matchNumber: 'PARTAI #04',
   selectedJudgeId: 'J1', // Untuk Mode Pad Juri (J1 s/d J5)
+  judgePadMode: 'pss', // 'pss' (Daedo/KPNP PSS Sensor) | 'dss' (Digital Scoring System Manual)
   settingsModalOpen: false,
 
   // Konfigurasi Turnamen
@@ -581,6 +582,11 @@ class AppState {
   // --- JURUS / JUDGE PAD LOGIC ---
   setJudgeId(judgeId) {
     this.data.selectedJudgeId = judgeId;
+    this.notifyChange();
+  }
+
+  setJudgePadMode(mode) {
+    this.data.judgePadMode = mode;
     this.notifyChange();
   }
 

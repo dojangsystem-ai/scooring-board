@@ -51,6 +51,52 @@ Sistem Kyorugi mengadopsi aturan terbaru World Taekwondo yaitu **Sistem "Best of
    3. Jika masih sama: Jumlah pukulan/tendangan sah terdaftar di sensor PSS (*hit count*).
    4. Jika masih sama: Keputusan keunggulan juri (*Superiority / Referee & Judges Decision*).
 
+### C. Model Perangkat Pad Juri: PSS vs DSS (Digital Scoring System)
+
+Pada regulasi World Taekwondo, perangkat penilai hakim sudut (*Corner Judge Pad*) dioperasikan dalam dua mode arsitektur:
+
+1. **Model PSS (Protector & Scoring System - Daedo Gen2 / KPNP):**
+   - **Metode Penilaian:** Semi-otomatis berbasis sensor benturan elektronik (*impact & proximity sensors*) yang terpasang pada rompi pelindung badan (*hogu*) dan pelindung kepala (*headgear*).
+   - **Tugas Juri Sudut:** Hanya mencatat teknik manual yang tidak dapat dideteksi sensor otomatis:
+     - Pukulan sah (*Punch* 1 pt).
+     - Validasi teknik putar (*Turning Kick* +2 bonus pts).
+     - Tombol kepala darurat (*Manual Head* 3 pts) jika terjadi malfungsi sensor helm.
+   - **Validasi Konsensus:** Minimal 2 dari 3 juri sudut harus menekan tombol dalam jendela waktu 1.0 detik untuk mengesahkan poin pukulan.
+
+2. **Model DSS (Digital Scoring System - Manual Wireless Controller):**
+   - **Metode Penilaian:** Full manual digital controller untuk kejuaraan yang menggunakan pelindung badan konvensional (non-sensor PSS), seperti kategori Pra-Cadet, Pemula, Festival, atau Kejurda.
+   - **Tugas Juri Sudut:** Menilai seluruh variasi teknik serangan yang mengenai area sah secara langsung dengan 6 tombol ergonomis untuk tiap sudut (Chung & Hong):
+     - 🥊 **Pukulan (Punch):** 1 Poin
+     - 🥋 **Tendangan Badan (Trunk Kick):** 2 Poin
+     - 🎯 **Tendangan Kepala (Head Kick):** 3 Poin
+     - 🌪️ **Tendangan Putar Badan (Spinning Trunk Kick):** 4 Poin (2 Poin Badan + 2 Bonus Putar)
+     - ⚡ **Tendangan Putar Kepala (Spinning Head Kick):** 5 Poin (3 Poin Kepala + 2 Bonus Putar)
+     - ↩️ **Batal / Koreksi (Cancel):** -1 Poin
+   - **Aturan Konsensus Toleransi Waktu WT (1.0 Second Window):**
+     - Setiap penekanan tombol oleh juri membuka jendela toleransi konsensus selama **1.0 detik**.
+     - Pada sistem 3 juri: Poin sah dan otomatis masuk ke papan skor apabila minimal **2 dari 3 juri** menekan tombol teknik yang sama dalam rentang 1.0 detik.
+     - Pada sistem 4 juri: Poin sah apabila minimal **3 dari 4 juri** sepakat.
+     - Indikator telemetri menampilkan lampu konsensus J1, J2, J3 secara real-time.
+
+### D. Desain Antarmuka Pad Juri Khusus Tablet (Tablet Touch Edition)
+
+Untuk meningkatkan efisiensi dan kenyamanan wasit sudut di pinggir arena matras (*Do-yang*), sistem menyediakan antarmuka khusus tablet (**`judge_pad_tablet.html`**) dengan spesifikasi ergonomi profesional:
+
+1. **Ergonomi Dua Ibu Jari (*Dual-Thumb Reach Zones*):**
+   - Layar didesain khusus rasio 16:10 / 16:9 mendatar (*Landscape*).
+   - Zona tombol **CHUNG (Biru)** diletakkan tepat pada jangkauan ibu jari kiri.
+   - Zona tombol **HONG (Merah)** diletakkan simetris pada jangkauan ibu jari kanan.
+   - Tombol utama (*Pukulan 1pt & Badan 2pt*) memiliki area sentuh ekstra besar sehingga wasit tidak perlu mengalihkan pandangan dari arena pertandingan (*blind-touch friendly*).
+2. **Screen WakeLock API:**
+   - Tablet secara otomatis mencegah layar mati (*sleep / dim*) selama pertandingan berlangsung tanpa perlu mengubah setelan sistem operasi tablet.
+3. **Audio Synthesizer & Haptic Vibration:**
+   - Setiap sentuhan menghasilkan umpan balik suara klik mekanis frekuensi tinggi serta getaran haptik (*haptic feedback 25-30ms*) untuk memastikan tombol benar-benar tertekan.
+4. **Pencegahan Sentuhan Tak Sengaja:**
+   - Fitur *context menu*, *text selection*, dan *double-tap zoom* dinonaktifkan sepenuhnya (`touch-action: manipulation; user-select: none`).
+5. **Sinkronisasi Otomatis:**
+   - Terhubung langsung dengan Layar TV dan Konsol Operator Meja melalui `BroadcastChannel` dan `localStorage` (latensi < 5ms).
+   - Dilengkapi pendeteksi orientasi layar (peringatan otomatis jika tablet dipegang secara vertikal/portrait).
+
 ---
 
 ## 3. Kategori 2: Poomsae Recognised (Jurus Standar)

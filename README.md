@@ -19,16 +19,39 @@ Aplikasi ini dilengkapi 4 mode tampilan interaktif yang dapat dipilih langsung m
 | :--- | :--- | :--- |
 | **📺 1. Layar TV (Display)** | TV LED / Proyektor / OBS | Tampilan layar besar resolusi tinggi untuk atlet, pelatih, dan penonton. Menampilkan skor digital besar bercahaya (*glow*), timer pusat, ronde, Gam-jeom counter, banner Video Replay (IVR), dan Kesiapan Medis. |
 | **🎛️ 2. Operator Meja** | Laptop Meja Pertandingan | Konsol kendali lengkap: tombol tambah poin cepat (+1, +2, +3, +4, +5, -1), Start/Pause timer (*Kye-sok / Kal-yeo*), tombol Gam-jeom (+/-), pemicu kartu banding Video Replay, dan Medical Timeout 60s. |
-| **📱 3. Pad Juri (Touch Pad)** | Tablet / Smartphone Juri | Antarmuka ramah sentuhan (*touch-friendly*) untuk hakim sudut. Pada Kyorugi terdapat tombol sentuh besar Pukulan Biru/Merah (1 poin). Pada Poomsae terdapat tombol pengurangan cepat Akurasi (-0.1, -0.3) dan slider Presentasi. |
+| **📱 3. Pad Juri (Touch Pad)** | Tablet / Smartphone Juri | Antarmuka ramah sentuhan (*touch-friendly*) untuk hakim sudut dengan 2 pilihan mode:<br>• **Model PSS (Sensor Elektronik KPNP / Daedo):** Tombol Pukulan (1 pt) & Teknik Putar (+2 pts).<br>• **Model DSS (Digital Scoring System):** 6 Tombol Taktil manual lengkap (Pukulan 1pt, Badan 2pt, Kepala 3pt, Putar Badan 4pt, Putar Kepala 5pt, Batal/Koreksi -1pt) dengan indikator konsensus WT 1.0 detik.<br>• **Poomsae:** Pengurangan akurasi (-0.1, -0.3) & slider presentasi.<br>• **Aplikasi Khusus Tablet:** Tersedia antarmuka layar sentuh mandiri khusus tablet pada **[judge_pad_tablet.html](file:///c:/Users/susen/OneDrive/Documents/githublab/scooring%20board/judge_pad_tablet.html)**. |
 | **📋 4. Jadwal Partai** | Laptop Panitia / Admin | Daftar bagan pertandingan (*match queue*). Operator cukup mengklik **"Muat Partai ↗"** untuk langsung memuat nama atlet, kontingen, dan kelas ke Layar TV. |
 
-### Visual Perangkat Pad Juri Standar KPNP & DAEDO (World Taekwondo)
+### 📱 Visual Display Judge Pad Khusus Tablet (Tablet Edition in Action)
+
+Perangkat tablet 10.5 inci dalam genggaman wasit/juri sudut di sudut matras (*Do-yang*) dengan antarmuka ergonomis dua ibu jari (*dual-thumb touch interface*):
+
+![Tablet Judge Pad in Action Tournament](assets/taekwondo_tablet_judge_pad.jpg)
+
+### Visual Perangkat Pad Juri Standar Model DSS (Digital Scoring System)
+
+Perangkat kendali nirkabel manual DSS resmi World Taekwondo untuk kejuaraan non-sensor (Pra-Cadet, Pemula, Festival, & Kejurda):
+
+![Perangkat Wireless DSS Judge Pad Controller](assets/taekwondo_dss_judge_pad.jpg)
+
+### Visual Perangkat Pad Juri Standar KPNP & DAEDO (Model PSS Sensor)
 
 ![Perangkat Pad Juri Standar KPNP dan Daedo](assets/kpnp_daedo_corner_judge_pad.jpg)
 
 ### Tampilan Layar Penuh Pad Juri (3 Kategori Pertandingan)
 
 ![3 Layar Fullscreen Pad Juri Kyorugi, Poomsae Recognised, dan Freestyle](assets/taekwondo_judge_tablets_mockup.jpg)
+
+#### 🎛️ Perbandingan Model PSS vs DSS pada Pad Juri Kyorugi
+- **Model PSS (Protector & Scoring System):** Digunakan saat atlet menggunakan rompi/helm sensor elektronik Daedo TK-Strike Gen2 atau KPNP. Tendangan ke badan dan kepala dideteksi otomatis oleh sensor magnetik & impact switch. Juri sudut hanya menilai pukulan manual (*Punch* 1 pt) dan memvalidasi teknik putar (*Turning kick bonus* +2 pts).
+- **Model DSS (Digital Scoring System):** Digunakan pada kejuaraan dengan pelindung badan konvensional (tanpa sensor PSS). Juri sudut memegang kendali penuh dengan 6 tombol taktil ergonomis untuk tiap sudut (Chung & Hong):
+  1. 🥊 **Pukulan (Punch):** 1 Poin
+  2. 🥋 **Tendangan Badan (Trunk Kick):** 2 Poin
+  3. 🎯 **Tendangan Kepala (Head Kick):** 3 Poin
+  4. 🌪️ **Tendangan Putar Badan (Turning Trunk Kick):** 4 Poin (2 + 2)
+  5. ⚡ **Tendangan Putar Kepala (Turning Head Kick):** 5 Poin (3 + 2)
+  6. ↩️ **Batal / Koreksi:** -1 Poin
+- **Aturan Konsensus WT (Tolerance Window):** Pada sistem 3 juri, poin DSS dinyatakan sah jika minimal **2 dari 3 juri** menekan tombol teknik yang sama dalam rentang jendela waktu toleransi **1.0 detik** (indikator lampu konsensus hijau J1-J2-J3 menyala serentak).
 
 ---
 

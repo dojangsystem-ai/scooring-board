@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>WT Corner Judge Tablet - Professional Digital Scoring Pad</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            chung: {
+              DEFAULT: '#0055ff',
+              dark: '#002f99',
+              light: '#3377ff',
+              surface: '#071838'
+            },
+            hong: {
+              DEFAULT: '#e60026',
+              dark: '#8a0017',
+              light: '#ff2647',
+              surface: '#33050c'
+            }
+          },
+          fontFamily: {
+            digital: ['Courier New', 'Consolas', 'monospace'],
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Optimasi Layar Sentuh Tablet */
+    * {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+    
+    /* Active tactile push effect */
+    .tactile-btn {
+      transition: all 0.08s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .tactile-btn:active {
+      transform: scale(0.96) translateY(2px);
+      filter: brightness(1.2);
+    }
+    .tactile-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .tactile-btn:active::after {
+      opacity: 1;
+    }
+
+    /* Glow highlights */
+    .glow-chung {
+      box-shadow: 0 0 25px rgba(0, 85, 255, 0.45);
+    }
+    .glow-hong {
+      box-shadow: 0 0 25px rgba(230, 0, 38, 0.45);
+    }
+    .glow-gold {
+      box-shadow: 0 0 25px rgba(234, 179, 8, 0.5);
+    }
+
+    /* Orientasi landscape reminder banner */
+    @media (orientation: portrait) {
+      #rotate-notice {
+        display: flex !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-neutral-950 text-slate-100 h-full w-full overflow-hidden select-none flex flex-col font-sans">
+
+  <!-- ============================================================ -->
+  <!-- 0. ROTATE TABLET NOTICE (Muncul otomatis jika tablet portrait) -->
+  <!-- ============================================================ -->
+  <div id="rotate-notice" class="hidden fixed inset-0 z-50 bg-black/95 flex-col items-center justify-center p-6 text-center backdrop-blur-md">
+    <div class="w-20 h-20 rounded-2xl border-4 border-amber-400 border-dashed animate-spin mb-4 flex items-center justify-center">
+      <span class="text-3xl">🔄</span>
+    </div>
+    <h2 class="text-2xl font-black text-white mb-2">POSISIKAN TABLET SECARA LANDSCAPE</h2>
+    <p class="text-sm text-neutral-400 max-w-md">
+      Untuk ergonomi dua ibu jari (*dual-thumb ergonomics*) terbaik juri standar World Taekwondo, mohon putar tablet Anda ke posisi mendatar (*Landscape*).
+    </p>
+    <button onclick="document.getElementById('rotate-notice').style.display='none'" class="mt-6 px-6 py-2 bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold rounded-lg border border-neutral-700">
+      Tetap Lanjutkan dalam Mode Portrait
+    </button>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 1. TOP HARDWARE TELEMETRY & TOURNAMENT STATUS BAR (WT STANDARD) -->
+  <!-- ============================================================ -->
+  <header class="bg-neutral-900 border-b border-neutral-800 px-3 py-2 flex items-center justify-between shrink-0 text-xs">
+    
+    <!-- Bagian Kiri: Identitas Wasit & Lapangan -->
+    <div class="flex items-center space-x-2 sm:space-x-3">
+      <!-- Badge Logo & Model Pad -->
+      <div class="flex items-center space-x-1.5 bg-black px-2.5 py-1 rounded-lg border border-neutral-800">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="badge-mode-text" class="font-extrabold text-[11px] tracking-wider text-emerald-300">WT DSS CONTROLLER</span>
+      </div>
+
+      <!-- Court & Division -->
+      <div class="hidden sm:flex items-center space-x-1.5 text-neutral-400 font-mono text-[11px]">
+        <span id="disp-court" class="text-amber-400 font-bold">COURT 1</span>
+        <span>•</span>
+        <span id="disp-division" class="text-slate-300 truncate max-w-[140px] md:max-w-xs">SENIOR PUTRA -68 KG</span>
+      </div>
+
+      <!-- Judge ID Selector (J1 s/d J5) -->
+      <div class="flex items-center space-x-1 bg-black p-0.5 rounded-lg border border-neutral-800">
+        <span class="text-[10px] text-neutral-500 px-1 font-bold">JURI:</span>
+        <button onclick="setJudge('J1')" id="btn-j1" class="judge-pill px-2 py-0.5 rounded text-xs font-black transition-all bg-amber-500 text-black">J1</button>
+        <button onclick="setJudge('J2')" id="btn-j2" class="judge-pill px-2 py-0.5 rounded text-xs font-black transition-all text-neutral-400 hover:text-white">J2</button>
+        <button onclick="setJudge('J3')" id="btn-j3" class="judge-pill px-2 py-0.5 rounded text-xs font-black transition-all text-neutral-400 hover:text-white">J3</button>
+        <button onclick="setJudge('J4')" id="btn-j4" class="judge-pill px-2 py-0.5 rounded text-xs font-black transition-all text-neutral-400 hover:text-white">J4</button>
+        <button onclick="setJudge('J5')" id="btn-j5" class="judge-pill px-2 py-0.5 rounded text-xs font-black transition-all text-neutral-400 hover:text-white">J5</button>
+      </div>
+    </div>
+
+    <!-- Bagian Tengah: Live Round & Timer Scoreboard Sync -->
+    <div class="flex items-center space-x-2 bg-black/80 px-3 py-1 rounded-xl border border-neutral-800">
+      <span id="disp-round" class="text-amber-400 font-black text-xs font-mono">R1 [BEST OF 3]</span>
+      <span class="text-neutral-600">|</span>
+      <span id="disp-timer" class="font-digital text-emerald-400 font-black text-base tracking-wider">02:00</span>
+      <span id="timer-status-dot" class="w-2 h-2 rounded-full bg-neutral-600"></span>
+    </div>
+
+    <!-- Bagian Kanan: Telemetri Tablet & Hardware Toggles -->
+    <div class="flex items-center space-x-2 text-[11px] font-mono">
+      <!-- Mode Pad Switcher (DSS vs PSS vs Poomsae) -->
+      <div class="hidden md:flex items-center bg-black p-0.5 rounded-lg border border-neutral-800 text-[10px]">
+        <button onclick="setMode('dss')" id="mode-btn-dss" class="px-2 py-0.5 rounded font-bold bg-amber-500 text-black">🎛️ DSS</button>
+        <button onclick="setMode('pss')" id="mode-btn-pss" class="px-2 py-0.5 rounded font-bold text-neutral-400 hover:text-white">🛡️ PSS</button>
+        <button onclick="setMode('poomsae')" id="mode-btn-poomsae" class="px-2 py-0.5 rounded font-bold text-neutral-400 hover:text-white">🥋 POOMSAE</button>
+      </div>
+
+      <!-- WakeLock Active Indicator -->
+      <span id="wakelock-badge" class="hidden sm:inline-flex items-center space-x-1 text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px]">
+        <span>⚡</span><span>AWAKE</span>
+      </span>
+
+      <!-- RF Telemetry & Battery -->
+      <span class="text-cyan-400 font-bold hidden sm:inline">📶 2.4GHz</span>
+      <span class="text-emerald-400 font-bold">🔋 98%</span>
+
+      <!-- Fullscreen Button -->
+      <button onclick="toggleFullscreen()" title="Layar Penuh Tablet" class="p-1 px-2 bg-neutral-800 hover:bg-neutral-700 active:scale-95 text-white rounded border border-neutral-700">
+        ⛶
+      </button>
+
+      <!-- Suara Haptic Toggle -->
+      <button onclick="toggleSound()" id="sound-btn" title="Suara Sentuhan" class="p-1 px-2 bg-neutral-800 hover:bg-neutral-700 active:scale-95 text-emerald-400 rounded border border-neutral-700">
+        🔊
+      </button>
+    </div>
+
+  </header>
+
+  <!-- ============================================================ -->
+  <!-- 2. CONSENSUS & MATCH TELEMETRY BANNER (WT 1.0s WINDOW)         -->
+  <!-- ============================================================ -->
+  <div id="consensus-bar" class="bg-gradient-to-r from-neutral-900 via-black to-neutral-900 border-b border-neutral-800 px-4 py-1.5 flex items-center justify-between text-xs font-mono shrink-0">
+    <div class="flex items-center space-x-3">
+      <span class="text-amber-400 font-bold flex items-center space-x-1">
+        <span>⏱️</span><span>Jendela Konsensus WT: <b>1.0 Detik</b></span>
+      </span>
+      <span class="text-neutral-500 hidden sm:inline">|</span>
+      <span class="text-neutral-400 hidden sm:inline">Aturan Sah: <b class="text-emerald-400">Min. 2 Juri Menekan</b></span>
+    </div>
+
+    <!-- Lampu Konsensus Juri Real-time -->
+    <div class="flex items-center space-x-2">
+      <span class="text-neutral-500 text-[10px]">STATUS JURI:</span>
+      <div class="flex items-center space-x-1 bg-black px-2 py-0.5 rounded border border-neutral-800">
+        <span id="lamp-j1" class="w-2.5 h-2.5 rounded-full bg-neutral-700 transition-colors duration-200"></span>
+        <span class="text-[10px] font-bold text-neutral-300">J1</span>
+      </div>
+      <div class="flex items-center space-x-1 bg-black px-2 py-0.5 rounded border border-neutral-800">
+        <span id="lamp-j2" class="w-2.5 h-2.5 rounded-full bg-neutral-700 transition-colors duration-200"></span>
+        <span class="text-[10px] font-bold text-neutral-300">J2</span>
+      </div>
+      <div class="flex items-center space-x-1 bg-black px-2 py-0.5 rounded border border-neutral-800">
+        <span id="lamp-j3" class="w-2.5 h-2.5 rounded-full bg-neutral-700 transition-colors duration-200"></span>
+        <span class="text-[10px] font-bold text-neutral-300">J3</span>
+      </div>
+      <span id="consensus-result-badge" class="bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider">
+        READY
+      </span>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 3. MAIN INTERACTIVE JUDGE TOUCH ARENA (TABLET TWO-THUMB LAYOUT)-->
+  <!-- ============================================================ -->
+  <main class="flex-1 w-full p-2 sm:p-3 overflow-hidden flex flex-col justify-between">
+    
+    <!-- ========================================== -->
+    <!-- VIEW A: KYORUGI MODEL DSS (6 TACTILE BUTTONS) -->
+    <!-- ========================================== -->
+    <div id="view-dss" class="grid grid-cols-2 gap-2 sm:gap-4 h-full w-full">
+      
+      <!-- SISI KIRI: CHUNG (BIRU) -->
+      <div class="bg-gradient-to-b from-[#002244] via-[#003366] to-[#001733] border-2 sm:border-4 border-blue-500/80 rounded-2xl sm:rounded-3xl p-2 sm:p-3 flex flex-col justify-between glow-chung relative overflow-hidden">
+        
+        <!-- Header Chung -->
+        <div class="flex items-center justify-between border-b border-blue-400/30 pb-1.5 shrink-0">
+          <div class="flex items-center space-x-2">
+            <span class="w-3 h-3 rounded-full bg-blue-400 animate-ping"></span>
+            <span class="text-blue-100 font-black text-sm sm:text-base tracking-wider">CHUNG (청) • BIRU</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span id="chung-name-sub" class="text-blue-300 text-xs hidden md:inline truncate max-w-[120px]">Ahmad Rizky</span>
+            <span id="chung-score-disp" class="bg-blue-950 text-blue-100 border border-blue-400/40 px-2.5 py-0.5 rounded-lg font-mono font-black text-sm sm:text-base">0</span>
+          </div>
+        </div>
+
+        <!-- 6 Ergonomic Tactile Buttons Grid (Left Thumb Reach) -->
+        <div class="grid grid-cols-2 gap-2 sm:gap-2.5 my-auto flex-1 py-1 sm:py-2">
+          
+          <!-- 1. PUKULAN (1 PT) - Tombol Utama Ibu Jari -->
+          <button onclick="handlePoint('chung', 1, 'Pukulan')" class="tactile-btn bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600 border border-blue-300/60 rounded-xl sm:rounded-2xl p-2 sm:p-3 flex flex-col items-center justify-center space-y-1 text-white shadow-lg">
+            <span class="text-2xl sm:text-3xl">🥊</span>
+            <span class="text-xs sm:text-sm font-black tracking-wide">PUKULAN</span>
+            <span class="text-[10px] bg-blue-950/90 text-blue-200 px-2.5 py-0.5 rounded-full font-mono font-bold">1 POIN</span>
+          </button>
+
+          <!-- 2. BADAN / TRUNK (2 PTS) -->
+          <button onclick="handlePoint('chung', 2, 'Tendangan Badan')" class="tactile-btn bg-gradient-to-b from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 border border-blue-300/80 rounded-xl sm:rounded-2xl p-2 sm:p-3 flex flex-col items-center justify-center space-y-1 text-white shadow-lg">
+            <span class="text-2xl sm:text-3xl">🥋</span>
+            <span class="text-xs sm:text-sm font-black tracking-wide">BADAN (TRUNK)</span>
+            <span class="text-[10px] bg-blue-950/90 text-blue-100 px-2.5 py-0.5 rounded-full font-mono font-bold">2 POIN</span>
+          </button>
+
+          <!-- 3. KEPALA / HEAD (3 PTS) -->
+          <button onclick="handlePoint('chung', 3, 'Tendangan Kepala')" class="tactile-btn bg-gradient-to-b from-indigo-600 to-blue-900 hover:from-indigo-500 hover:to-blue-800 border border-indigo-300 rounded-xl sm:rounded-2xl p-2 sm:p-3 flex flex-col items-center justify-center space-y-1 text-white shadow-lg">
+            <span class="text-2xl sm:text-3xl">🎯</span>
+            <span class="text-xs sm:text-sm font-black tracking-wide">KEPALA (HEAD)</span>
+            <span class="text-[10px] bg-indigo-950/90 text-indigo-100 px-2.5 py-0.5 rounded-full font-mono font-bold">3 POIN</span>
+          </button>
+
+          <!-- 4. PUTAR BADAN (4 PTS) -->
+          <button onclick="handlePoint('chung', 4, 'Putar Badan')" class="tactile-btn bg-gradient-to-b from-cyan-600 to-blue-900 hover:from-cyan-500 hover:to-blue-800 border border-cyan-300 rounded-xl sm:rounded-2xl p-2 sm:p-3 flex flex-col items-center justify-center space-y-1 text-white shadow-lg">
+            <span class="text-2xl sm:text-3xl">🌪️</span>
+            <span class="text-xs sm:text-sm font-black tracking-wide">PUTAR BADAN</span>
+            <span class="text-[10px] bg-cyan-950/90 text-cyan-200 px-2.5 py-0.5 rounded-full font-mono font-bold">4 POIN (2+2)</span>
+          </button>
+
+          <!-- 5. PUTAR KEPALA (5 PTS) - Big Full Width Accent -->
+          <button onclick="handlePoint('chung', 5, 'Putar Kepala')" class="tactile-btn col-span-2 bg-gradient-to-r from-amber-500 via-blue-600 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 border-2 border-amber-300 rounded-xl sm:rounded-2xl py-2 sm:py-3 flex items-center justify-center space-x-2 text-white shadow-lg glow-gold">
+            <span class="text-xl sm:text-2xl">⚡</span>
+            <span class="text-xs sm:text-sm font-black tracking-wide">PUTAR KEPALA (SPIN HEAD)</span>
+            <span class="text-[11px] bg-black/70 text-amber-300 px-3 py-0.5 rounded-full font-mono font-bold">5 POIN (3+2)</span>
+          </button>
+        </div>
+
+        <!-- Tombol Batal / Koreksi Chung -->
+        <button onclick="handlePoint('chung', -1, 'Koreksi Batal')" class="tactile-btn w-full py-1.5 sm:py-2 bg-black/60 hover:bg-neutral-900 border border-blue-400/30 rounded-xl text-red-400 hover:text-red-300 font-bold text-xs flex items-center justify-center space-x-1.5 shrink-0">
+          <span>↩️</span><span>BATAL / KOREKSI (-1 POIN)</span>
+        </button>
+
+      </div>
+
+      <!-- SISI KANAN: HONG (MERAH) -->
+      <div class="bg-gradient-to-b from-[#40000a] via-[#59000e] to-[#260006] border-2 sm:border-4 border-red-500/80 rounded-2xl sm:rounded-3xl p-2 sm:p-3 flex flex-col justify-between glow-hong relative overflow-hidden">
+        
+        <!-- Header Hong -->
+        <div class="flex items-center justify-between border-b border-red-400/30 pb-1.5 shrink-0">
+          <div class="flex items-center space-x-2">
+            <span class="w-3 h-3 rounded-full bg-red-400 animate-ping"></span>
+            <span class="text-red-100 font-black text-sm sm:text-base tracking-wider">HONG (홍) • MERAH</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span id="hong-name-sub" class="text-red-300 text-xs hidden md:inline truncate max-w-[120px]">Budi Santoso</span>
+            <span id="hong-score-disp" class="bg-red-950 text-red-100 border border-red-400/40 px-2.5 py-0.5 rounded-lg font-mono font-black text-sm sm:text-base">0</span>
+          </div>
+        </div>
+
+        <!-- 6 Ergonomic Tactile Buttons Grid (Right Thumb Reach) -->
+        <div class="grid grid-cols-2 gap-2 sm:gap-2.5 my-auto flex-1 py-1 sm:py-2">
+          
+          <!-- 1. PUKULAN (1 PT) - Tombol Utama Ibu Jari -->
+          <button onclick="handlePoint('hong', 1, 'Pukulan')" class="tactile-btn bg-gradient-to-b from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 border border-red-300/60 rounded-xl sm:rounded-2xl p-2 sm:p-3 flex flex-col items-center justify-center space-y-1 text-white shadow-lg">
+            <span class="text-2xl sm:text-3xl">🥊</span>
+            <span class="text-xs sm:text-sm font-black tracking-wide">PUKULAN</span>
+            <span class="text-[10px] bg-red-950/90 text-red-200 px-2.5 py-0.5 rounded-full font-mono font-bold">1 POIN</span>
+          </button>
+
+          <!-- 2. BADAN / TRUNK (2 PTS) -->
+          <button onclick="handlePoint('hong', 2, 'Tendangan Badan')" class="tactile-btn bg-gradient-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 border border-red-300/80 rounded-xl sm:rounded-2xl p-2 sm:p-3 flex flex-col items-center justify-center space-y-1 text-white shadow-lg">
+            <span class="text-2xl sm:text-3xl">🥋</span>
+            <span class="text-xs sm:text-sm font-black tracking-wide">BADAN (TRUNK)</span>
+            <span class="text-[10px] bg-red-950/90 text-red-100 px-2.5 py-0.5 rounded-full font-mono font-bold">2 POIN</span>
+          </button>
+
+          <!-- 3. KEPALA / HEAD (3 PTS) -->
+          <button onclick="handlePoint('hong', 3, 'Tendangan Kepala')" class="tactile-btn bg-gradient-to-b from-rose-600 to-red-900 hover:from-rose-500 hover:to-red-800 border border-rose-300 rounded-xl sm:rounded-2xl p-2 sm:p-3 flex flex-col items-center justify-center space-y-1 text-white shadow-lg">
+            <span class="text-2xl sm:text-3xl">🎯</span>
+            <span class="text-xs sm:text-sm font-black tracking-wide">KEPALA (HEAD)</span>
+            <span class="text-[10px] bg-rose-950/90 text-rose-100 px-2.5 py-0.5 rounded-full font-mono font-bold">3 POIN</span>
+          </button>
+
+          <!-- 4. PUTAR BADAN (4 PTS) -->
+          <button onclick="handlePoint('hong', 4, 'Putar Badan')" class="tactile-btn bg-gradient-to-b from-orange-600 to-red-900 hover:from-orange-500 hover:to-red-800 border border-orange-300 rounded-xl sm:rounded-2xl p-2 sm:p-3 flex flex-col items-center justify-center space-y-1 text-white shadow-lg">
+            <span class="text-2xl sm:text-3xl">🌪️</span>
+            <span class="text-xs sm:text-sm font-black tracking-wide">PUTAR BADAN</span>
+            <span class="text-[10px] bg-orange-950/90 text-orange-200 px-2.5 py-0.5 rounded-full font-mono font-bold">4 POIN (2+2)</span>
+          </button>
+
+          <!-- 5. PUTAR KEPALA (5 PTS) - Big Full Width Accent -->
+          <button onclick="handlePoint('hong', 5, 'Putar Kepala')" class="tactile-btn col-span-2 bg-gradient-to-r from-amber-500 via-red-600 to-rose-600 hover:from-amber-400 hover:to-rose-500 border-2 border-amber-300 rounded-xl sm:rounded-2xl py-2 sm:py-3 flex items-center justify-center space-x-2 text-white shadow-lg glow-gold">
+            <span class="text-xl sm:text-2xl">⚡</span>
+            <span class="text-xs sm:text-sm font-black tracking-wide">PUTAR KEPALA (SPIN HEAD)</span>
+            <span class="text-[11px] bg-black/70 text-amber-300 px-3 py-0.5 rounded-full font-mono font-bold">5 POIN (3+2)</span>
+          </button>
+        </div>
+
+        <!-- Tombol Batal / Koreksi Hong -->
+        <button onclick="handlePoint('hong', -1, 'Koreksi Batal')" class="tactile-btn w-full py-1.5 sm:py-2 bg-black/60 hover:bg-neutral-900 border border-red-400/30 rounded-xl text-red-400 hover:text-red-300 font-bold text-xs flex items-center justify-center space-x-1.5 shrink-0">
+          <span>↩️</span><span>BATAL / KOREKSI (-1 POIN)</span>
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- VIEW B: KYORUGI MODEL PSS (DAEDO & KPNP SENSOR) -->
+    <!-- ========================================== -->
+    <div id="view-pss" class="hidden grid-cols-2 gap-3 sm:gap-6 h-full w-full">
+      
+      <!-- SISI KIRI CHUNG PSS -->
+      <div class="bg-gradient-to-b from-[#002855] to-[#001733] border-4 border-blue-500 rounded-3xl p-4 flex flex-col justify-between glow-chung">
+        <div class="flex items-center justify-between border-b border-blue-400/40 pb-2">
+          <span class="text-blue-100 font-black text-lg">CHUNG (청) • SENSOR PSS</span>
+          <span id="chung-score-pss" class="text-xs bg-blue-950 text-blue-200 border border-blue-400/40 px-2.5 py-0.5 rounded font-mono font-bold">SKOR: 0</span>
+        </div>
+
+        <!-- Tombol Pukulan Raksasa (Daedo Joystick Style) -->
+        <button onclick="handlePoint('chung', 1, 'Pukulan PSS')" class="tactile-btn my-auto w-full py-12 sm:py-16 bg-gradient-to-b from-blue-500 to-blue-700 hover:from-blue-400 active:scale-95 text-white rounded-3xl border-4 border-blue-300 shadow-2xl flex flex-col items-center justify-center space-y-2">
+          <span class="text-5xl sm:text-6xl">🥊</span>
+          <span class="text-2xl sm:text-3xl font-black">PUKULAN (PUNCH)</span>
+          <span class="text-xs font-bold bg-blue-950/80 px-4 py-1 rounded-full border border-blue-300/40">1 POIN RESMI WT</span>
+        </button>
+
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="handlePoint('chung', 2, 'Bonus Putar PSS')" class="tactile-btn py-3 bg-indigo-900 hover:bg-indigo-800 text-blue-100 font-extrabold text-xs sm:text-sm rounded-xl border border-blue-400/50 flex items-center justify-center space-x-1">
+            <span>⚡</span><span>TEKNIK PUTAR (+2)</span>
+          </button>
+          <button onclick="handlePoint('chung', 3, 'Kepala Manual PSS')" class="tactile-btn py-3 bg-neutral-900 hover:bg-neutral-800 text-blue-200 font-bold text-xs rounded-xl border border-neutral-700 flex items-center justify-center space-x-1">
+            <span>🎯</span><span>KEPALA MANUAL (+3)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- SISI KANAN HONG PSS -->
+      <div class="bg-gradient-to-b from-[#660012] to-[#260006] border-4 border-red-500 rounded-3xl p-4 flex flex-col justify-between glow-hong">
+        <div class="flex items-center justify-between border-b border-red-400/40 pb-2">
+          <span class="text-red-100 font-black text-lg">HONG (홍) • SENSOR PSS</span>
+          <span id="hong-score-pss" class="text-xs bg-red-950 text-red-200 border border-red-400/40 px-2.5 py-0.5 rounded font-mono font-bold">SKOR: 0</span>
+        </div>
+
+        <!-- Tombol Pukulan Raksasa (Daedo Joystick Style) -->
+        <button onclick="handlePoint('hong', 1, 'Pukulan PSS')" class="tactile-btn my-auto w-full py-12 sm:py-16 bg-gradient-to-b from-red-500 to-red-700 hover:from-red-400 active:scale-95 text-white rounded-3xl border-4 border-red-300 shadow-2xl flex flex-col items-center justify-center space-y-2">
+          <span class="text-5xl sm:text-6xl">🥊</span>
+          <span class="text-2xl sm:text-3xl font-black">PUKULAN (PUNCH)</span>
+          <span class="text-xs font-bold bg-red-950/80 px-4 py-1 rounded-full border border-red-300/40">1 POIN RESMI WT</span>
+        </button>
+
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="handlePoint('hong', 2, 'Bonus Putar PSS')" class="tactile-btn py-3 bg-rose-950 hover:bg-rose-900 text-red-100 font-extrabold text-xs sm:text-sm rounded-xl border border-red-400/50 flex items-center justify-center space-x-1">
+            <span>⚡</span><span>TEKNIK PUTAR (+2)</span>
+          </button>
+          <button onclick="handlePoint('hong', 3, 'Kepala Manual PSS')" class="tactile-btn py-3 bg-neutral-900 hover:bg-neutral-800 text-red-200 font-bold text-xs rounded-xl border border-neutral-700 flex items-center justify-center space-x-1">
+            <span>🎯</span><span>KEPALA MANUAL (+3)</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- VIEW C: POOMSAE RECOGNISED DEDUCTION TERMINAL -->
+    <!-- ========================================== -->
+    <div id="view-poomsae" class="hidden grid-cols-12 gap-3 h-full w-full">
+      
+      <!-- Panel Kiri: Akurasi (Accuracy 4.00) -->
+      <div class="col-span-6 bg-gradient-to-b from-blue-950/40 via-neutral-900 to-black border-2 border-blue-500/50 rounded-2xl p-3 flex flex-col justify-between">
+        <div class="flex items-center justify-between border-b border-blue-500/30 pb-2">
+          <div>
+            <span class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">ACCURACY (DEDUCTION)</span>
+            <h3 class="text-sm font-black text-white">NILAI AKURASI</h3>
+          </div>
+          <div class="text-right">
+            <span id="poomsae-acc-val" class="font-digital text-3xl sm:text-4xl font-black text-blue-400">4.00</span>
+            <span class="text-[10px] text-neutral-400 block">Dasar: 4.00</span>
+          </div>
+        </div>
+
+        <!-- Tombol Deduksi Ergonomis -->
+        <div class="grid grid-cols-2 gap-3 my-auto">
+          <button onclick="deductPoomsae(0.1)" class="tactile-btn py-8 sm:py-10 bg-gradient-to-b from-blue-600 to-blue-800 hover:from-blue-500 text-white font-black text-lg sm:text-2xl rounded-2xl border-2 border-blue-300 shadow-xl flex flex-col items-center justify-center">
+            <span>- 0.1</span>
+            <span class="text-[10px] font-sans font-medium text-blue-100">Kuda-kuda / Arah Salah</span>
+          </button>
+
+          <button onclick="deductPoomsae(0.3)" class="tactile-btn py-8 sm:py-10 bg-gradient-to-b from-red-600 to-red-800 hover:from-red-500 text-white font-black text-lg sm:text-2xl rounded-2xl border-2 border-red-300 shadow-xl flex flex-col items-center justify-center">
+            <span>- 0.3</span>
+            <span class="text-[10px] font-sans font-medium text-red-100">Jurus Terhenti / Jatuh</span>
+          </button>
+        </div>
+
+        <button onclick="resetPoomsaeAcc()" class="tactile-btn w-full py-2 bg-neutral-900 hover:bg-neutral-800 text-neutral-300 font-bold text-xs rounded-xl border border-neutral-700">
+          ↩️ Reset Nilai Akurasi ke 4.00
+        </button>
+      </div>
+
+      <!-- Panel Kanan: Presentasi (Presentation 6.00) -->
+      <div class="col-span-6 bg-gradient-to-b from-emerald-950/40 via-neutral-900 to-black border-2 border-emerald-500/50 rounded-2xl p-3 flex flex-col justify-between">
+        <div class="flex items-center justify-between border-b border-emerald-500/30 pb-2">
+          <div>
+            <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">PRESENTATION (MAX 6.00)</span>
+            <h3 class="text-sm font-black text-white">NILAI PENYAJIAN</h3>
+          </div>
+          <div class="text-right">
+            <span id="poomsae-pres-val" class="font-digital text-3xl sm:text-4xl font-black text-emerald-400">4.50</span>
+            <span class="text-[10px] text-neutral-400 block">Dasar: 6.00</span>
+          </div>
+        </div>
+
+        <!-- Slider & Quick Selectors Presentasi -->
+        <div class="my-auto space-y-4 px-2">
+          <div>
+            <div class="flex justify-between text-xs text-neutral-300 font-bold mb-1">
+              <span>Kecepatan, Tenaga, & Aliran Tenaga:</span>
+              <span id="pres-slider-val" class="text-emerald-400 font-mono">4.50</span>
+            </div>
+            <input type="range" id="pres-slider" min="1.0" max="6.0" step="0.1" value="4.5" oninput="updatePresSlider(this.value)" class="w-full h-3 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+          </div>
+
+          <div class="grid grid-cols-4 gap-2">
+            <button onclick="updatePresSlider(3.5)" class="py-2 bg-neutral-900 hover:bg-neutral-800 text-xs font-bold rounded-lg border border-neutral-700">3.50</button>
+            <button onclick="updatePresSlider(4.0)" class="py-2 bg-neutral-900 hover:bg-neutral-800 text-xs font-bold rounded-lg border border-neutral-700">4.00</button>
+            <button onclick="updatePresSlider(4.5)" class="py-2 bg-neutral-900 hover:bg-neutral-800 text-xs font-bold rounded-lg border border-neutral-700">4.50</button>
+            <button onclick="updatePresSlider(5.0)" class="py-2 bg-neutral-900 hover:bg-neutral-800 text-xs font-bold rounded-lg border border-neutral-700">5.00</button>
+          </div>
+        </div>
+
+        <!-- Tombol Kirim Nilai ke Meja Operator -->
+        <button onclick="submitPoomsaeScore()" class="tactile-btn w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-black font-black text-xs sm:text-sm rounded-xl shadow-lg border border-emerald-300">
+          KIRIM NILAI JURI KE PAPAN UTAMA ↗
+        </button>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ============================================================ -->
+  <!-- 4. BOTTOM TACTILE TOAST NOTIFIER (LOG SENTUHAN TERAKHIR)       -->
+  <!-- ============================================================ -->
+  <footer class="bg-black border-t border-neutral-800 px-4 py-1.5 flex items-center justify-between text-xs text-neutral-400 shrink-0 font-mono">
+    <div class="flex items-center space-x-2">
+      <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+      <span id="status-toast" class="text-neutral-300">Perangkat Tablet Siap. Sentuh tombol poin saat teknik atlet mengenai sasaran sah.</span>
+    </div>
+    <div class="flex items-center space-x-3 text-[11px]">
+      <span id="sync-ping" class="text-emerald-400 font-bold">● LIVE SYNC (0ms)</span>
+      <a href="taekwondo_scoring_board_all_in_one.html" target="_blank" class="text-neutral-500 hover:text-white underline">Buka Layar TV</a>
+    </div>
+  </footer>
+
+  <!-- ============================================================ -->
+  <!-- 5. JAVASCRIPT CONTROLLER (TABLET TACTILE & SYNC ENGINE)       -->
+  <!-- ============================================================ -->
+  <script>
+    // State Internal Tablet Judge Pad
+    const tabletState = {
+      judgeId: 'J1',
+      mode: 'dss', // 'dss' | 'pss' | 'poomsae'
+      sound: true,
+      wakeLock: null,
+      poomsaeAcc: 4.00,
+      poomsaePres: 4.50,
+      consensusTimer: null,
+      consensusWindowMs: 1000,
+      activeTouches: []
+    };
+
+    // Web Audio Synthesizer untuk Audio Feedback Sentuhan Tombol
+    let audioCtx = null;
+    function playTouchSound(type = 'click') {
+      if (!tabletState.sound) return;
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!audioCtx) audioCtx = new AudioContext();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        if (type === 'click') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(800, now);
+          osc.frequency.exponentialRampToValueAtTime(300, now + 0.05);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        } else if (type === 'consensus') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now); // C5
+          osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+          gain.gain.setValueAtTime(0.4, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.2);
+        } else if (type === 'cancel') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.linearRampToValueAtTime(150, now + 0.1);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.1);
+        }
+      } catch (e) {}
+    }
+
+    // Haptic Vibration API
+    function triggerHaptic(duration = 25) {
+      if (navigator.vibrate) {
+        try { navigator.vibrate(duration); } catch (e) {}
+      }
+    }
+
+    // WakeLock API (Mencegah Layar Tablet Mati Otomatis)
+    async function requestWakeLock() {
+      if ('wakeLock' in navigator) {
+        try {
+          tabletState.wakeLock = await navigator.wakeLock.request('screen');
+          document.getElementById('wakelock-badge').classList.remove('hidden');
+        } catch (err) {}
+      }
+    }
+    requestWakeLock();
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') requestWakeLock();
+    });
+
+    // Cross-Tab & Cross-Window BroadcastChannel Real-Time Sync
+    let syncChannel = null;
+    if ('BroadcastChannel' in window) {
+      try {
+        syncChannel = new BroadcastChannel('tkd_scoreboard_event_channel');
+        syncChannel.onmessage = (event) => {
+          if (event.data) handleIncomingSync(event.data);
+        };
+      } catch (e) {}
+    }
+
+    // Fallback sync via localStorage storage event
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'tkd_sync_payload' && e.newValue) {
+        try {
+          const data = JSON.parse(e.newValue);
+          handleIncomingSync(data);
+        } catch (err) {}
+      }
+      if (e.key === 'tkd_saved_state' && e.newValue) {
+        try {
+          loadStateFromStorage();
+        } catch (err) {}
+      }
+    });
+
+    function broadcastEvent(type, payload) {
+      const data = { type, payload, judgeId: tabletState.judgeId, timestamp: Date.now() };
+      if (syncChannel) syncChannel.postMessage(data);
+      try {
+        localStorage.setItem('tkd_sync_payload', JSON.stringify(data));
+      } catch (e) {}
+    }
+
+    function handleIncomingSync(msg) {
+      if (!msg) return;
+      if (msg.type === 'POINT_ADDED' || msg.type === 'STATE_CHANGED' || msg.type === 'TIMER_TICK') {
+        loadStateFromStorage();
+      }
+    }
+
+    function loadStateFromStorage() {
+      try {
+        const saved = localStorage.getItem('tkd_saved_state');
+        if (!saved) return;
+        const appState = JSON.parse(saved);
+        
+        // Update timer & round
+        if (appState.kyorugi) {
+          const m = Math.floor(appState.kyorugi.timerSeconds / 60);
+          const s = appState.kyorugi.timerSeconds % 60;
+          document.getElementById('disp-timer').innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+          document.getElementById('disp-round').innerText = `R${appState.kyorugi.round || 1} [BEST OF 3]`;
+          
+          const dot = document.getElementById('timer-status-dot');
+          if (appState.kyorugi.timerRunning) {
+            dot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-ping";
+          } else {
+            dot.className = "w-2 h-2 rounded-full bg-neutral-600";
+          }
+
+          if (appState.kyorugi.chung) {
+            document.getElementById('chung-score-disp').innerText = appState.kyorugi.chung.score;
+            document.getElementById('chung-score-pss').innerText = `SKOR: ${appState.kyorugi.chung.score}`;
+            if (appState.kyorugi.chung.name) document.getElementById('chung-name-sub').innerText = appState.kyorugi.chung.name;
+          }
+          if (appState.kyorugi.hong) {
+            document.getElementById('hong-score-disp').innerText = appState.kyorugi.hong.score;
+            document.getElementById('hong-score-pss').innerText = `SKOR: ${appState.kyorugi.hong.score}`;
+            if (appState.kyorugi.hong.name) document.getElementById('hong-name-sub').innerText = appState.kyorugi.hong.name;
+          }
+        }
+
+        if (appState.court) document.getElementById('disp-court').innerText = appState.court;
+        if (appState.division) document.getElementById('disp-division').innerText = appState.division;
+      } catch (e) {}
+    }
+
+    // Handler Penekanan Tombol Poin oleh Juri
+    function handlePoint(fighter, points, techName) {
+      playTouchSound(points < 0 ? 'cancel' : 'click');
+      triggerHaptic(points < 0 ? 50 : 30);
+
+      const toast = document.getElementById('status-toast');
+      const fighterName = fighter === 'chung' ? 'CHUNG (Biru)' : 'HONG (Merah)';
+      
+      if (points < 0) {
+        toast.innerHTML = `<span class="text-red-400 font-bold">[${tabletState.judgeId}] KOREKSI BATAL ${fighterName}</span>`;
+      } else {
+        toast.innerHTML = `<span class="text-amber-400 font-bold">[${tabletState.judgeId}] ${techName} (+${points} Poin) ${fighterName}</span>`;
+      }
+
+      // Animasi lampu konsensus pada ID juri yang menekan
+      flashJudgeLamp(tabletState.judgeId);
+
+      // Simulasi konsensus WT 1.0 detik (Di kejuaraan sungguhan, server utama memadankan input juri)
+      triggerConsensusSimulation(fighter, points, techName);
+
+      // Kirim event ke papan utama
+      broadcastEvent('JUDGE_ACTION', {
+        judgeId: tabletState.judgeId,
+        fighter: fighter,
+        points: points,
+        techName: techName,
+        mode: tabletState.mode
+      });
+
+      // Update skor lokal di storage langsung agar live
+      try {
+        const saved = localStorage.getItem('tkd_saved_state');
+        if (saved) {
+          const state = JSON.parse(saved);
+          if (state.kyorugi && state.kyorugi[fighter]) {
+            state.kyorugi[fighter].score = Math.max(0, (state.kyorugi[fighter].score || 0) + points);
+            localStorage.setItem('tkd_saved_state', JSON.stringify(state));
+            loadStateFromStorage();
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Flash Lamp Juri
+    function flashJudgeLamp(jId) {
+      const lamp = document.getElementById(`lamp-${jId.toLowerCase()}`);
+      if (lamp) {
+        lamp.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_#10b981] transition-colors";
+        setTimeout(() => {
+          lamp.className = "w-2.5 h-2.5 rounded-full bg-neutral-700 transition-colors";
+        }, 1000);
+      }
+    }
+
+    // Simulasi Konsensus (2 dari 3 Juri Sepakat)
+    function triggerConsensusSimulation(fighter, points, techName) {
+      if (points <= 0) return;
+
+      const badge = document.getElementById('consensus-result-badge');
+      badge.className = "bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider animate-pulse";
+      badge.innerText = "WAITING 1.0s...";
+
+      // Simulasi juri kedua menyetujui dalam 300ms
+      setTimeout(() => {
+        const otherJId = tabletState.judgeId === 'J1' ? 'J2' : 'J1';
+        flashJudgeLamp(otherJId);
+        playTouchSound('consensus');
+
+        badge.className = "bg-emerald-500 text-black px-2 py-0.5 rounded text-[10px] font-black tracking-wider shadow-[0_0_12px_#10b981]";
+        badge.innerText = "KONSENSUS SAH! (+ " + points + " PTS)";
+
+        setTimeout(() => {
+          badge.className = "bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider";
+          badge.innerText = "READY";
+        }, 1500);
+      }, 350);
+    }
+
+    // Switch ID Juri (J1 s/d J5)
+    function setJudge(id) {
+      tabletState.judgeId = id;
+      playTouchSound('click');
+      triggerHaptic(20);
+
+      document.querySelectorAll('.judge-pill').forEach(btn => {
+        btn.className = "judge-pill px-2 py-0.5 rounded text-xs font-black transition-all text-neutral-400 hover:text-white";
+      });
+      document.getElementById(`btn-${id.toLowerCase()}`).className = "judge-pill px-2 py-0.5 rounded text-xs font-black transition-all bg-amber-500 text-black shadow-lg font-black";
+
+      document.getElementById('status-toast').innerText = `ID Juri dialihkan ke: ${id}`;
+    }
+
+    // Switch Mode Tampilan (DSS vs PSS vs Poomsae)
+    function setMode(mode) {
+      tabletState.mode = mode;
+      playTouchSound('click');
+      triggerHaptic(20);
+
+      const dssView = document.getElementById('view-dss');
+      const pssView = document.getElementById('view-pss');
+      const poomsaeView = document.getElementById('view-poomsae');
+      const badgeText = document.getElementById('badge-mode-text');
+
+      dssView.classList.add('hidden');
+      dssView.classList.remove('grid');
+      pssView.classList.add('hidden');
+      pssView.classList.remove('grid');
+      poomsaeView.classList.add('hidden');
+      poomsaeView.classList.remove('grid');
+
+      document.getElementById('mode-btn-dss').className = "px-2 py-0.5 rounded font-bold text-neutral-400 hover:text-white";
+      document.getElementById('mode-btn-pss').className = "px-2 py-0.5 rounded font-bold text-neutral-400 hover:text-white";
+      document.getElementById('mode-btn-poomsae').className = "px-2 py-0.5 rounded font-bold text-neutral-400 hover:text-white";
+
+      if (mode === 'dss') {
+        dssView.classList.remove('hidden');
+        dssView.classList.add('grid');
+        document.getElementById('mode-btn-dss').className = "px-2 py-0.5 rounded font-bold bg-amber-500 text-black font-black";
+        badgeText.innerText = "WT DSS CONTROLLER";
+        document.getElementById('consensus-bar').classList.remove('hidden');
+      } else if (mode === 'pss') {
+        pssView.classList.remove('hidden');
+        pssView.classList.add('grid');
+        document.getElementById('mode-btn-pss').className = "px-2 py-0.5 rounded font-bold bg-blue-600 text-white font-black";
+        badgeText.innerText = "DAEDO & KPNP PSS";
+        document.getElementById('consensus-bar').classList.remove('hidden');
+      } else if (mode === 'poomsae') {
+        poomsaeView.classList.remove('hidden');
+        poomsaeView.classList.add('grid');
+        document.getElementById('mode-btn-poomsae').className = "px-2 py-0.5 rounded font-bold bg-purple-600 text-white font-black";
+        badgeText.innerText = "POOMSAE TERMINAL";
+        document.getElementById('consensus-bar').classList.add('hidden');
+      }
+    }
+
+    // Poomsae Logic
+    function deductPoomsae(val) {
+      tabletState.poomsaeAcc = Math.max(0, +(tabletState.poomsaeAcc - val).toFixed(2));
+      playTouchSound('click');
+      triggerHaptic(30);
+      document.getElementById('poomsae-acc-val').innerText = tabletState.poomsaeAcc.toFixed(2);
+      document.getElementById('status-toast').innerText = `[${tabletState.judgeId}] Pengurangan Akurasi Poomsae: -${val.toFixed(1)} -> Sisa: ${tabletState.poomsaeAcc.toFixed(2)}`;
+    }
+
+    function resetPoomsaeAcc() {
+      tabletState.poomsaeAcc = 4.00;
+      playTouchSound('cancel');
+      triggerHaptic(20);
+      document.getElementById('poomsae-acc-val').innerText = "4.00";
+    }
+
+    function updatePresSlider(val) {
+      tabletState.poomsaePres = parseFloat(val);
+      document.getElementById('pres-slider').value = val;
+      document.getElementById('pres-slider-val').innerText = parseFloat(val).toFixed(2);
+      document.getElementById('poomsae-pres-val').innerText = parseFloat(val).toFixed(2);
+    }
+
+    function submitPoomsaeScore() {
+      playTouchSound('consensus');
+      triggerHaptic(50);
+      const total = +(tabletState.poomsaeAcc + tabletState.poomsaePres).toFixed(2);
+      broadcastEvent('POOMSAE_JUDGE_SUBMIT', {
+        judgeId: tabletState.judgeId,
+        accuracy: tabletState.poomsaeAcc,
+        presentation: tabletState.poomsaePres,
+        total: total
+      });
+      document.getElementById('status-toast').innerHTML = `<span class="text-emerald-400 font-bold">Nilai Poomsae [${tabletState.judgeId}] Berhasil Dikirim: Total ${total} (Acc: ${tabletState.poomsaeAcc}, Pres: ${tabletState.poomsaePres})</span>`;
+    }
+
+    // Toggles
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+
+    function toggleSound() {
+      tabletState.sound = !tabletState.sound;
+      document.getElementById('sound-btn').innerText = tabletState.sound ? '🔊' : '🔇';
+      document.getElementById('sound-btn').className = tabletState.sound ? 'p-1 px-2 bg-neutral-800 text-emerald-400 rounded border border-neutral-700' : 'p-1 px-2 bg-neutral-800 text-neutral-500 rounded border border-neutral-700';
+    }
+
+    // Initial State Load & Periodic Polling
+    loadStateFromStorage();
+    setInterval(loadStateFromStorage, 1000);
+  </script>
+</body>
+</html>
