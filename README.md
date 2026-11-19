@@ -18,9 +18,15 @@ Aplikasi ini dilengkapi 4 mode tampilan interaktif yang dapat dipilih langsung m
 | Mode Tampilan | Target Perangkat | Deskripsi & Fitur |
 | :--- | :--- | :--- |
 | **📺 1. Layar TV (Display)** | TV LED / Proyektor / OBS | Tampilan layar besar resolusi tinggi untuk atlet, pelatih, dan penonton. Menampilkan skor digital besar bercahaya (*glow*), timer pusat, ronde, Gam-jeom counter, banner Video Replay (IVR), dan Kesiapan Medis. |
-| **🎛️ 2. Operator Meja** | Laptop Meja Pertandingan | Konsol kendali lengkap: tombol tambah poin cepat (+1, +2, +3, +4, +5, -1), Start/Pause timer (*Kye-sok / Kal-yeo*), tombol Gam-jeom (+/-), pemicu kartu banding Video Replay, dan Medical Timeout 60s. |
+| **🎛️ 2. Operator Meja** | Laptop Meja Pertandingan | Konsol kendali lengkap: tombol tambah poin cepat (+1, +2, +3, +4, +5, -1), Start/Pause timer (*Kye-sok / Kal-yeo*), tombol Gam-jeom (+/-), pemicu kartu banding Video Replay, dan Medical Timeout 60s.<br>• **Aplikasi Monitoring Khusus:** Dashboard pengawas meja turnamen lengkap tersedia pada **[operator_monitoring_system.html](file:///c:/Users/susen/OneDrive/Documents/githublab/scooring%20board/operator_monitoring_system.html)**. |
 | **📱 3. Pad Juri (Touch Pad)** | Tablet / Smartphone Juri | Antarmuka ramah sentuhan (*touch-friendly*) untuk hakim sudut dengan 2 pilihan mode:<br>• **Model PSS (Sensor Elektronik KPNP / Daedo):** Tombol Pukulan (1 pt) & Teknik Putar (+2 pts).<br>• **Model DSS (Digital Scoring System):** 6 Tombol Taktil manual lengkap (Pukulan 1pt, Badan 2pt, Kepala 3pt, Putar Badan 4pt, Putar Kepala 5pt, Batal/Koreksi -1pt) dengan indikator konsensus WT 1.0 detik.<br>• **Poomsae:** Pengurangan akurasi (-0.1, -0.3) & slider presentasi.<br>• **Aplikasi Khusus Tablet:** Tersedia antarmuka layar sentuh mandiri khusus tablet pada **[judge_pad_tablet.html](file:///c:/Users/susen/OneDrive/Documents/githublab/scooring%20board/judge_pad_tablet.html)**. |
 | **📋 4. Jadwal Partai** | Laptop Panitia / Admin | Daftar bagan pertandingan (*match queue*). Operator cukup mengklik **"Muat Partai ↗"** untuk langsung memuat nama atlet, kontingen, dan kelas ke Layar TV. |
+
+### 🖥️ Visual Display Monitoring Operator System Workstation (Meja Pertandingan)
+
+Stasiun kerja pengawas meja pertandingan (*Table Operator & Match Supervisor Workstation*) standar resmi World Taekwondo (WT) dengan layar ganda monitoring telemetri sensor, konsensus juri, dan panel kendali jam master:
+
+![Display Monitoring Operator System Workstation](assets/taekwondo_operator_monitoring_display.jpg)
 
 ### 📱 Visual Display Judge Pad Khusus Tablet (Tablet Edition in Action)
 

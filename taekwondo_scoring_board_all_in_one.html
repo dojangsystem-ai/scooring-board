@@ -1461,6 +1461,10 @@
           </button>
         </div>
 
+        <a href="operator_monitoring_system.html" target="_blank" title="Buka Layar Monitoring Operator Meja Lengkap" class="px-2.5 py-1 bg-gradient-to-r from-amber-500 to-emerald-500 text-black font-extrabold rounded-lg text-xs shadow hover:opacity-90 flex items-center space-x-1">
+          <span>🖥️</span><span class="hidden md:inline">CMS Monitor ↗</span>
+        </a>
+
         <button onclick="window.soundSys.playBuzzer()" title="Uji Suara Klakson Buzzer" class="p-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded border border-slate-700 flex items-center space-x-1">
           <span>ðŸ”Š</span> <span class="hidden sm:inline">Buzzer</span>
         </button>
@@ -1945,9 +1949,14 @@
               <p class="text-xs text-indigo-300">Setiap perubahan skor dan timer akan langsung disinkronkan ke Layar TV secara real-time.</p>
             </div>
           </div>
-          <button onclick="openDisplayWindow()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold">
-            Buka TV di Jendela Baru (Dual Screen) â†—
-          </button>
+          <div class="flex items-center space-x-2">
+            <a href="operator_monitoring_system.html" target="_blank" class="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-emerald-500 text-black font-extrabold rounded text-xs shadow hover:opacity-90 flex items-center space-x-1">
+              <span>🖥️</span><span>Buka CMS Monitoring ↗</span>
+            </a>
+            <button onclick="openDisplayWindow()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold">
+              Buka TV di Jendela Baru (Dual Screen) â†—
+            </button>
+          </div>
         </div>
 
         ${category === 'kyorugi' ? renderKyorugiOperator(appState) : ''}
