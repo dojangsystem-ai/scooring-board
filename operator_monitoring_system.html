@@ -1,35 +1,23 @@
 <!DOCTYPE html>
-<html lang="id" class="h-full bg-slate-950">
+<html lang="id" class="h-screen overflow-hidden bg-slate-950">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WT Competition Management System (CMS) - Match Operator Monitoring Display</title>
-  
-  <!-- Tailwind CSS CDN -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>WT CMS – Operator Monitoring Station</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
-  
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            chung: {
-              DEFAULT: '#0055ff',
-              dark: '#002f99',
-              light: '#3377ff',
-              surface: '#081735'
-            },
-            hong: {
-              DEFAULT: '#e60026',
-              dark: '#8a0017',
-              light: '#ff2647',
-              surface: '#30080e'
-            }
+            chung:  { DEFAULT:'#0055ff', dark:'#002f99', light:'#3377ff', surface:'#071530' },
+            hong:   { DEFAULT:'#e60026', dark:'#8a0017', light:'#ff2647', surface:'#2a0309' }
           },
           fontFamily: {
-            digital: ['Courier New', 'Consolas', 'monospace'],
-            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-            mono: ['Consolas', 'Monaco', 'Courier New', 'monospace']
+            digital: ['Courier New','Consolas','monospace'],
+            sans:    ['Inter','system-ui','-apple-system','sans-serif'],
+            mono:    ['Consolas','Monaco','Courier New','monospace']
           }
         }
       }
@@ -37,989 +25,1083 @@
   </script>
 
   <style>
-    /* Custom Scrollbar for dense monitoring dashboard */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #020617;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #1e293b;
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #334155;
+    /* ===== RESET & BASE ===== */
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;width:100%;overflow:hidden}
+
+    /* ===== THIN SCROLLBAR (inner panels only) ===== */
+    ::-webkit-scrollbar{width:4px;height:4px}
+    ::-webkit-scrollbar-track{background:#020617}
+    ::-webkit-scrollbar-thumb{background:#1e293b;border-radius:4px}
+    ::-webkit-scrollbar-thumb:hover{background:#334155}
+
+    /* ===== FULLSCREEN LAYOUT ===== */
+    #app{
+      display:flex;
+      flex-direction:column;
+      height:100vh;
+      width:100vw;
+      overflow:hidden;
+      background:#020617;
+      color:#f1f5f9;
+      font-family:Inter,system-ui,sans-serif;
+      user-select:none;
     }
 
-    .telemetry-card {
-      background: radial-gradient(circle at 50% 0%, rgba(30, 41, 59, 0.4) 0%, rgba(2, 6, 23, 0.95) 100%);
+    /* Header strip */
+    #hdr{
+      flex:0 0 auto;
+      height:40px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 12px;
+      background:#0f172a;
+      border-bottom:1px solid #1e293b;
+      gap:8px;
+      overflow:hidden;
     }
+
+    /* Main 3-column grid */
+    #main-grid{
+      flex:1 1 0;
+      min-height:0;
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:6px;
+      padding:6px;
+      overflow:hidden;
+    }
+
+    /* Each column card */
+    .col-card{
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+      overflow:hidden;
+      border-radius:14px;
+      border-width:2px;
+      border-style:solid;
+    }
+    .col-card-inner{
+      flex:1 1 0;
+      min-height:0;
+      overflow-y:auto;
+      overflow-x:hidden;
+      padding:10px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    /* Color themes */
+    .chung-card{
+      background:linear-gradient(180deg,#071530 0%,#030b1a 60%,#020612 100%);
+      border-color:#1d4ed8;
+    }
+    .hong-card{
+      background:linear-gradient(180deg,#2a0309 0%,#160206 60%,#020612 100%);
+      border-color:#b91c1c;
+    }
+    .center-card{
+      background:#0f172a;
+      border-color:#334155;
+    }
+
+    /* Score digit */
+    .score-digit{
+      font-family:'Courier New',monospace;
+      font-size:clamp(2.5rem,5vw,4rem);
+      font-weight:900;
+      line-height:1;
+    }
+
+    /* Timer digit */
+    .timer-digit{
+      font-family:'Courier New',monospace;
+      font-size:clamp(2.2rem,4.5vw,3.5rem);
+      font-weight:900;
+      letter-spacing:0.05em;
+    }
+
+    /* Button base */
+    .btn{
+      display:flex;align-items:center;justify-content:center;
+      gap:4px;border-radius:8px;font-weight:700;cursor:pointer;
+      border:1px solid transparent;transition:background 0.15s;
+      white-space:nowrap;
+    }
+    .btn:active{transform:scale(0.97)}
+
+    /* Score modifier buttons */
+    .mod-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:4px;
+    }
+    .mod-btn{
+      padding:5px 2px;
+      font-size:0.65rem;
+      font-weight:700;
+      border-radius:7px;
+      text-align:center;
+      cursor:pointer;
+      border:1px solid transparent;
+      transition:filter 0.15s;
+    }
+    .mod-btn:active{filter:brightness(1.3)}
+
+    /* Pip gauge */
+    .pip-row{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:4px;
+    }
+    .pip{
+      height:7px;border-radius:4px;background:#1e293b;transition:background 0.2s;
+    }
+
+    /* Sensor bars */
+    .sensor-bar-wrap{
+      background:#020617;
+      border-radius:6px;
+      height:7px;
+      overflow:hidden;
+      border:1px solid #1e293b;
+    }
+    .sensor-bar{
+      height:100%;width:0%;transition:width 0.3s;
+    }
+
+    /* Section separator label */
+    .sec-label{
+      font-size:0.6rem;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:0.1em;
+      color:#64748b;
+      padding:2px 0;
+      border-bottom:1px solid #1e293b;
+      margin-bottom:2px;
+    }
+
+    /* Judge card */
+    .judge-card{
+      background:#020617;
+      border:1px solid #1e293b;
+      border-radius:10px;
+      padding:5px 6px;
+      text-align:center;
+      flex:1;
+    }
+
+    /* Footer strip */
+    #ftr{
+      flex:0 0 auto;
+      height:36px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 12px;
+      background:#0f172a;
+      border-top:1px solid #1e293b;
+      gap:8px;
+      overflow:hidden;
+    }
+
+    /* Fullscreen button glow */
+    #btn-fs{
+      animation:glow 2s ease-in-out infinite;
+    }
+    @keyframes glow{
+      0%,100%{box-shadow:0 0 4px #f59e0b80}
+      50%{box-shadow:0 0 10px #f59e0bcc}
+    }
+
+    /* Winning / alert flash */
+    @keyframes flashAlert{
+      0%,100%{opacity:1}50%{opacity:0.4}
+    }
+    .flash{animation:flashAlert 0.5s ease-in-out 3}
+
+    /* Ping animation for status dots */
+    @keyframes ping{
+      75%,100%{transform:scale(1.8);opacity:0}
+    }
+    .ping-dot{animation:ping 1.2s cubic-bezier(0,0,0.2,1) infinite}
+
+    /* IVR Modal */
+    #ivr-modal{
+      display:none;position:fixed;inset:0;z-index:999;
+      background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);
+      align-items:center;justify-content:center;
+    }
+    #ivr-modal.open{display:flex}
   </style>
 </head>
-<body class="h-full w-full overflow-x-hidden text-slate-100 font-sans flex flex-col select-none">
+<body style="height:100%;width:100%;overflow:hidden;background:#020617">
 
-  <!-- ============================================================ -->
-  <!-- 1. TOP MASTER TELEMETRY BAR & SYSTEM STATUS                    -->
-  <!-- ============================================================ -->
-  <header class="bg-slate-900 border-b border-slate-800 px-4 py-2 flex flex-wrap items-center justify-between text-xs shrink-0 gap-2">
-    <!-- Left: Tournament Title & Ring Identity -->
-    <div class="flex items-center space-x-3">
-      <div class="flex items-center space-x-2">
-        <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
-        <span class="font-extrabold tracking-wider text-amber-400 font-mono text-sm">WT CMS MONITOR // OP-STATION</span>
-      </div>
-      <span class="text-slate-600">|</span>
-      <div class="flex items-center space-x-2 font-mono">
-        <span id="header-court" class="bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded font-black">COURT 1</span>
-        <span id="header-division" class="text-slate-300 font-bold">SENIOR PUTRA -68 KG</span>
-        <span class="text-slate-500">•</span>
-        <span id="header-match" class="text-emerald-400 font-bold">PARTAI #04</span>
-      </div>
+<div id="app">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       HEADER BAR
+  ════════════════════════════════════════════════════════════ -->
+  <header id="hdr">
+
+    <!-- Left: Identity -->
+    <div style="display:flex;align-items:center;gap:8px;min-width:0;flex-shrink:0">
+      <span style="width:9px;height:9px;border-radius:50%;background:#22c55e;flex-shrink:0" class="ping-dot"></span>
+      <span style="font-family:Consolas,monospace;font-weight:900;font-size:0.7rem;color:#fbbf24;letter-spacing:0.1em;white-space:nowrap">WT CMS // OP-STATION</span>
+      <span style="color:#334155">|</span>
+      <span id="header-court" style="background:#451a03;color:#fbbf24;border:1px solid #78350f;padding:1px 7px;border-radius:4px;font-family:Consolas,monospace;font-size:0.65rem;font-weight:900;white-space:nowrap">COURT 1</span>
+      <span id="header-division" style="color:#94a3b8;font-size:0.65rem;font-weight:700;white-space:nowrap">SENIOR PUTRA -68 KG</span>
+      <span style="color:#475569">•</span>
+      <span id="header-match" style="color:#34d399;font-family:Consolas,monospace;font-size:0.65rem;font-weight:900">PARTAI #04</span>
     </div>
 
-    <!-- Center: Live Clock & System Latency -->
-    <div class="flex items-center space-x-3 text-slate-400 font-mono text-[11px]">
-      <span class="flex items-center space-x-1">
-        <span class="text-slate-500">JAM SISTEM:</span>
-        <span id="wall-clock" class="text-white font-bold">14:30:25</span>
-      </span>
-      <span>•</span>
-      <span class="flex items-center space-x-1 text-emerald-400 font-bold">
-        <span>📶 RF 2.4GHz CH-11</span>
-        <span class="text-slate-500">(-42 dBm)</span>
-      </span>
-      <span>•</span>
-      <span class="text-cyan-400 font-bold">⚡ SYNC: 0ms LATENCY</span>
+    <!-- Center: Clock & RF -->
+    <div style="display:flex;align-items:center;gap:10px;font-family:Consolas,monospace;font-size:0.65rem;color:#94a3b8">
+      <span>JAM: <b id="wall-clock" style="color:#fff">--:--:--</b></span>
+      <span style="color:#22c55e;font-weight:700">📶 RF 2.4GHz CH-11 &nbsp;⚡ SYNC: 0ms</span>
     </div>
 
-    <!-- Right: Quick Navigation & Tools -->
-    <div class="flex items-center space-x-2">
-      <a href="taekwondo_scoring_board_all_in_one.html" target="_blank" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded text-xs font-semibold flex items-center space-x-1">
-        <span>📺</span><span>Layar TV Penonton ↗</span>
-      </a>
-      <a href="judge_pad_tablet.html" target="_blank" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 rounded text-xs font-semibold flex items-center space-x-1">
-        <span>📱</span><span>Pad Juri Tablet ↗</span>
-      </a>
-      <button onclick="toggleAudio()" id="btn-audio" class="p-1 px-2.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 rounded text-xs font-bold">
-        🔊 AUDIO AKTIF
-      </button>
-      <button onclick="testBuzzer()" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-black font-black rounded text-xs shadow">
-        BUZZER
-      </button>
+    <!-- Right: Nav & Tools -->
+    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+      <a href="taekwondo_scoring_board_all_in_one.html" target="_blank"
+         style="padding:2px 8px;background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:5px;font-size:0.6rem;font-weight:700;text-decoration:none">📺 TV ↗</a>
+      <a href="judge_pad_tablet.html" target="_blank"
+         style="padding:2px 8px;background:#1e293b;color:#fbbf24;border:1px solid #334155;border-radius:5px;font-size:0.6rem;font-weight:700;text-decoration:none">📱 PAD ↗</a>
+      <button id="btn-audio" onclick="toggleAudio()"
+              style="padding:2px 8px;background:#1e293b;color:#34d399;border:1px solid #334155;border-radius:5px;font-size:0.6rem;font-weight:700;cursor:pointer">🔊 AUDIO</button>
+      <button onclick="testBuzzer()"
+              style="padding:2px 10px;background:#d97706;color:#000;border:none;border-radius:5px;font-size:0.6rem;font-weight:900;cursor:pointer">BUZZER</button>
+      <button id="btn-fs" onclick="toggleFullscreen()"
+              style="padding:2px 8px;background:#1e293b;color:#fbbf24;border:1px solid #78350f;border-radius:5px;font-size:0.6rem;font-weight:900;cursor:pointer">⛶ FULLSCREEN</button>
     </div>
   </header>
 
-  <!-- ============================================================ -->
-  <!-- 2. MAIN MONITORING COMMAND CENTER (GRID 12 COLUMNS)           -->
-  <!-- ============================================================ -->
-  <main class="flex-1 w-full p-3 sm:p-4 gap-4 grid grid-cols-1 xl:grid-cols-12 overflow-y-auto">
+  <!-- ═══════════════════════════════════════════════════════════
+       MAIN GRID  (3 columns fill remaining height)
+  ════════════════════════════════════════════════════════════ -->
+  <div id="main-grid">
 
-    <!-- ========================================================== -->
-    <!-- KOLOM KIRI (XL: 4 COLUMNS): SUDUT CHUNG (BIRU) DEEP TELEMETRY -->
-    <!-- ========================================================== -->
-    <div class="xl:col-span-4 bg-gradient-to-b from-[#051838] via-[#020b1e] to-black border-2 border-blue-600/80 rounded-2xl p-3.5 flex flex-col justify-between shadow-2xl relative">
-      
-      <!-- Card Header: Profile Atlet Chung -->
-      <div class="border-b border-blue-500/40 pb-2.5">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-2">
-            <span class="w-3 h-3 rounded-full bg-blue-400 animate-ping"></span>
-            <span class="text-blue-200 text-xs font-black tracking-widest uppercase">CORNER CHUNG (청) • BIRU</span>
+    <!-- ─────────────────────────────────────────────────────────
+         KOLOM KIRI: CHUNG (BIRU)
+    ────────────────────────────────────────────────────────── -->
+    <div class="col-card chung-card">
+      <!-- Card Header -->
+      <div style="padding:7px 10px 5px;background:#07152e;border-bottom:1px solid #1d4ed850;border-radius:12px 12px 0 0;flex-shrink:0">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:5px">
+            <span style="width:8px;height:8px;border-radius:50%;background:#60a5fa" class="ping-dot"></span>
+            <span style="font-size:0.6rem;font-weight:900;letter-spacing:0.1em;color:#bfdbfe;text-transform:uppercase">CORNER CHUNG (청) · BIRU</span>
           </div>
-          <span class="bg-blue-950 text-blue-300 border border-blue-500/50 text-[10px] font-mono font-bold px-2 py-0.5 rounded">SEED #1</span>
+          <span style="background:#1e3a8a;color:#93c5fd;border:1px solid #3b82f650;font-family:Consolas,monospace;font-size:0.6rem;font-weight:700;padding:1px 6px;border-radius:4px">SEED #1</span>
         </div>
-        
-        <!-- Editable Athlete Info -->
-        <div class="mt-1 flex items-center justify-between">
-          <input type="text" id="chung-name-input" value="Ahmad Rizky" onchange="updateFighterName('chung', this.value)" class="bg-blue-950/80 border border-blue-400/50 text-white font-black text-lg px-2 py-1 rounded w-3/5 focus:outline-none focus:ring-1 focus:ring-blue-300">
-          <input type="text" id="chung-team-input" value="JABAR (INA)" onchange="updateFighterTeam('chung', this.value)" class="bg-slate-900 border border-slate-700 text-blue-300 font-bold text-xs px-2 py-1 rounded w-1/3 text-right">
+        <!-- Athlete name + team -->
+        <div style="display:flex;gap:5px;margin-top:4px">
+          <input type="text" id="chung-name-input" value="Ahmad Rizky"
+                 onchange="updateFighterName('chung',this.value)"
+                 style="background:#0f2a52;border:1px solid #1d4ed870;color:#fff;font-weight:900;font-size:0.85rem;padding:2px 7px;border-radius:6px;width:60%;outline:none">
+          <input type="text" id="chung-team-input" value="JABAR (INA)"
+                 onchange="updateFighterTeam('chung',this.value)"
+                 style="background:#0f172a;border:1px solid #334155;color:#93c5fd;font-weight:700;font-size:0.6rem;padding:2px 5px;border-radius:6px;width:40%;text-align:right;outline:none">
         </div>
       </div>
 
-      <!-- Skor Utama & Ronde Wins (Best of 3) -->
-      <div class="my-3 bg-black/60 border border-blue-500/30 rounded-xl p-3 flex items-center justify-between">
-        <div>
-          <span class="text-[10px] font-mono text-slate-400 uppercase">TOTAL SKOR RONDE INI</span>
-          <div id="chung-main-score" class="font-digital text-6xl font-black text-blue-400 leading-none mt-1">0</div>
-        </div>
-        <div class="text-right">
-          <span class="text-[10px] font-mono text-slate-400 uppercase">RONDE MENANG (BO3)</span>
-          <div class="flex items-center justify-end space-x-1.5 mt-1">
-            <span id="chung-win-r1" class="w-4 h-4 rounded-full border border-blue-400 bg-neutral-800"></span>
-            <span id="chung-win-r2" class="w-4 h-4 rounded-full border border-blue-400 bg-neutral-800"></span>
-            <span id="chung-win-r3" class="w-4 h-4 rounded-full border border-blue-400 bg-neutral-800"></span>
-          </div>
-          <button onclick="toggleRoundWin('chung')" class="mt-2 text-[10px] bg-blue-900 hover:bg-blue-800 text-blue-200 px-2 py-0.5 rounded border border-blue-500/50">
-            + Win Ronde
-          </button>
-        </div>
-      </div>
+      <div class="col-card-inner">
 
-      <!-- Rincian Poin Teknik & Modifier Cepat -->
-      <div class="space-y-2 mb-3">
-        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Input Poin Operator (Bypass):</span>
-        <div class="grid grid-cols-3 gap-1.5 text-xs">
-          <button onclick="modifyScore('chung', 1, 'Pukulan')" class="py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg shadow border border-blue-400/40">
-            🥊 +1 Punch
-          </button>
-          <button onclick="modifyScore('chung', 2, 'Badan')" class="py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg shadow border border-blue-400/40">
-            🥋 +2 Badan
-          </button>
-          <button onclick="modifyScore('chung', 3, 'Kepala')" class="py-2 bg-indigo-700 hover:bg-indigo-600 text-white font-bold rounded-lg shadow border border-indigo-400/40">
-            🎯 +3 Kepala
-          </button>
-          <button onclick="modifyScore('chung', 4, 'Putar Badan')" class="py-2 bg-cyan-700 hover:bg-cyan-600 text-white font-bold rounded-lg shadow border border-cyan-400/40">
-            🌪️ +4 Putar B.
-          </button>
-          <button onclick="modifyScore('chung', 5, 'Putar Kepala')" class="py-2 bg-amber-600 hover:bg-amber-500 text-white font-black rounded-lg shadow border border-amber-400/40">
-            ⚡ +5 Putar K.
-          </button>
-          <button onclick="modifyScore('chung', -1, 'Koreksi Batal')" class="py-2 bg-slate-800 hover:bg-slate-700 text-red-400 font-bold rounded-lg border border-slate-700">
-            ↩️ -1 Batal
-          </button>
-        </div>
-      </div>
-
-      <!-- GAM-JEOM MONITOR & 5-POINT LIMIT GAUGE -->
-      <div class="bg-black/70 border border-slate-800 rounded-xl p-2.5 mb-3">
-        <div class="flex items-center justify-between text-xs mb-1.5">
-          <span class="text-amber-400 font-bold font-mono">GAM-JEOM (PENALTI): <b id="chung-gamjeom-count" class="text-white text-sm">0</b> / 5</span>
-          <div class="space-x-1">
-            <button onclick="modifyGamjeom('chung', 1)" class="bg-amber-600 hover:bg-amber-500 text-black font-black px-2 py-0.5 rounded text-[11px]">+1</button>
-            <button onclick="modifyGamjeom('chung', -1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-2 py-0.5 rounded text-[11px]">-1</button>
-          </div>
-        </div>
-        <!-- 5 Pips Gauge -->
-        <div class="grid grid-cols-5 gap-1.5">
-          <div id="chung-pip-1" class="h-2 rounded bg-neutral-800 transition-colors"></div>
-          <div id="chung-pip-2" class="h-2 rounded bg-neutral-800 transition-colors"></div>
-          <div id="chung-pip-3" class="h-2 rounded bg-neutral-800 transition-colors"></div>
-          <div id="chung-pip-4" class="h-2 rounded bg-neutral-800 transition-colors"></div>
-          <div id="chung-pip-5" class="h-2 rounded bg-neutral-800 transition-colors"></div>
-        </div>
-        <span id="chung-disqual-warning" class="hidden text-[10px] text-red-400 font-bold font-mono text-center mt-1 block">⚠️ 5 GAM-JEOM TERCAPAI: DISKUALIFIKASI RONDE!</span>
-      </div>
-
-      <!-- PSS SENSOR TELEMETRY BARS (DAEDO / KPNP SIMULATOR) -->
-      <div class="bg-blue-950/30 border border-blue-500/30 rounded-xl p-2.5 text-xs font-mono">
-        <div class="flex items-center justify-between text-[11px] text-blue-300 mb-1">
-          <span class="font-bold">TELEMETRI SENSOR PSS CHUNG:</span>
-          <span class="text-emerald-400">CONNECT (98%)</span>
-        </div>
-        <!-- Hogu Trunk Impact Level Bar -->
-        <div class="mb-2">
-          <div class="flex justify-between text-[10px] text-slate-400 mb-0.5">
-            <span>Pelindung Badan (Hogu): <b id="chung-hogu-val" class="text-white">0</b></span>
-            <span>Threshold Sah: <b class="text-amber-400">24</b></span>
-          </div>
-          <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
-            <div id="chung-hogu-bar" class="bg-blue-500 h-full w-[0%] transition-all duration-300"></div>
-          </div>
-        </div>
-        <!-- Headgear Impact Level Bar -->
-        <div>
-          <div class="flex justify-between text-[10px] text-slate-400 mb-0.5">
-            <span>Helm Elektronik (Head): <b id="chung-head-val" class="text-white">0</b></span>
-            <span>Threshold Sah: <b class="text-amber-400">16</b></span>
-          </div>
-          <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
-            <div id="chung-head-bar" class="bg-indigo-500 h-full w-[0%] transition-all duration-300"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- IVR & Medical Coach Action -->
-      <div class="grid grid-cols-2 gap-2 mt-2.5">
-        <button onclick="triggerIVRModal('chung')" class="py-1.5 bg-blue-900/60 hover:bg-blue-800 text-blue-200 border border-blue-500/50 rounded-lg text-xs font-bold flex items-center justify-center space-x-1">
-          <span>📹</span><span>Banding IVR (<span id="chung-ivr-card">1</span>)</span>
-        </button>
-        <button onclick="startMedicalTimer('chung')" class="py-1.5 bg-red-950/80 hover:bg-red-900 text-red-200 border border-red-500/50 rounded-lg text-xs font-bold flex items-center justify-center space-x-1">
-          <span>🚑</span><span>Medis 1:00</span>
-        </button>
-      </div>
-
-    </div>
-
-    <!-- ========================================================== -->
-    <!-- KOLOM TENGAH (XL: 4 COLUMNS): MASTER TIMER & CONSENSUS RADAR -->
-    <!-- ========================================================== -->
-    <div class="xl:col-span-4 flex flex-col justify-between space-y-3">
-      
-      <!-- MASTER CLOCK & PERIOD CONTROLLER -->
-      <div class="bg-slate-900 border-2 border-slate-800 rounded-2xl p-4 text-center shadow-xl">
-        <div class="flex items-center justify-between text-xs text-slate-400 font-mono mb-2">
-          <span class="bg-slate-950 px-2 py-0.5 rounded border border-slate-800">SYSTEM CLOCK</span>
-          <span id="disp-active-round" class="text-amber-400 font-black text-sm">RONDE 1 [BEST OF 3]</span>
-          <span id="clock-status-tag" class="text-red-400 font-bold">PAUSED</span>
-        </div>
-
-        <!-- Big Digital Master Timer -->
-        <div class="my-2 py-3 bg-black rounded-xl border border-slate-800 relative overflow-hidden">
-          <div id="master-timer" class="font-digital text-6xl sm:text-7xl font-black text-amber-400 tracking-wider">
-            02:00
-          </div>
-          <div class="text-[10px] text-slate-500 font-mono">DURASI STANDAR: 2 MENIT (120 DETIK)</div>
-        </div>
-
-        <!-- Master Start / Pause Action Buttons -->
-        <div class="grid grid-cols-2 gap-2 my-2.5">
-          <button onclick="toggleMasterTimer()" id="btn-master-toggle" class="py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm rounded-xl shadow-lg border border-emerald-400 flex items-center justify-center space-x-1.5">
-            <span>▶</span><span>START (KYE-SOK)</span>
-          </button>
-          <button onclick="pauseMasterTimer()" class="py-3 bg-amber-600 hover:bg-amber-500 text-black font-black text-sm rounded-xl shadow-lg border border-amber-300 flex items-center justify-center space-x-1.5">
-            <span>⏸</span><span>PAUSE (KAL-YEO)</span>
-          </button>
-        </div>
-
-        <!-- Quick Precision Adjustments -->
-        <div class="grid grid-cols-5 gap-1 text-xs font-mono">
-          <button onclick="adjustTimer(1)" class="py-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 border border-slate-700">+1s</button>
-          <button onclick="adjustTimer(-1)" class="py-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 border border-slate-700">-1s</button>
-          <button onclick="setTimerDirect(60)" class="py-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 border border-slate-700">1:00</button>
-          <button onclick="setTimerDirect(90)" class="py-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 border border-slate-700">1:30</button>
-          <button onclick="setTimerDirect(120)" class="py-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 border border-slate-700">2:00</button>
-        </div>
-
-        <!-- Round Advancement & Rest Controls -->
-        <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-slate-800 text-xs">
-          <button onclick="nextRoundAction()" class="py-2 bg-indigo-900 hover:bg-indigo-800 text-indigo-100 font-bold rounded-lg border border-indigo-700">
-            ⏩ Ronde Berikutnya
-          </button>
-          <button onclick="startRestTimer()" class="py-2 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold rounded-lg border border-slate-700">
-            ⏳ Istirahat (1:00)
-          </button>
-        </div>
-      </div>
-
-      <!-- CORNER JUDGES WIRELESS STATUS & CONSENSUS TIMELINE RADAR -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 shadow-xl flex-1 flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between text-xs font-mono border-b border-slate-800 pb-2 mb-2">
-            <span class="font-bold text-slate-300">RADAR KONSENSUS JURI (WT 1.0s)</span>
-            <span class="text-emerald-400 font-bold">MIN. 2/3 SEPAKAT</span>
-          </div>
-
-          <!-- 3 / 5 Corner Judges Status Cards -->
-          <div class="grid grid-cols-3 gap-2 mb-3">
-            <div class="bg-black border border-slate-800 rounded-xl p-2 text-center">
-              <div class="flex items-center justify-between text-[10px] text-slate-500">
-                <span>RF 2.4</span>
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-              </div>
-              <div class="font-black text-sm text-white mt-0.5">JURI 1</div>
-              <div id="radar-j1-btn" class="mt-1 text-[10px] bg-slate-900 text-slate-400 rounded py-0.5 font-mono">READY</div>
-            </div>
-
-            <div class="bg-black border border-slate-800 rounded-xl p-2 text-center">
-              <div class="flex items-center justify-between text-[10px] text-slate-500">
-                <span>RF 2.4</span>
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-              </div>
-              <div class="font-black text-sm text-white mt-0.5">JURI 2</div>
-              <div id="radar-j2-btn" class="mt-1 text-[10px] bg-slate-900 text-slate-400 rounded py-0.5 font-mono">READY</div>
-            </div>
-
-            <div class="bg-black border border-slate-800 rounded-xl p-2 text-center">
-              <div class="flex items-center justify-between text-[10px] text-slate-500">
-                <span>RF 2.4</span>
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-              </div>
-              <div class="font-black text-sm text-white mt-0.5">JURI 3</div>
-              <div id="radar-j3-btn" class="mt-1 text-[10px] bg-slate-900 text-slate-400 rounded py-0.5 font-mono">READY</div>
-            </div>
-          </div>
-
-          <!-- Live 1.0s Window Progress Gauge -->
-          <div class="bg-black/80 rounded-xl p-2.5 border border-slate-800 mb-2">
-            <div class="flex justify-between text-[11px] font-mono text-slate-400 mb-1">
-              <span>Status Jendela Konsensus:</span>
-              <span id="consensus-meter-text" class="text-amber-400 font-bold">STANDBY (1.00s)</span>
-            </div>
-            <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden">
-              <div id="consensus-progress-bar" class="bg-emerald-500 h-full w-[0%] transition-all duration-75"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Master Emergency Override Actions -->
-        <div class="pt-2 border-t border-slate-800 flex items-center justify-between text-xs">
-          <button onclick="emergencyUndo()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-lg border border-slate-700">
-            ↩️ Undo Aksi Terakhir
-          </button>
-          <button onclick="resetMatchParty()" class="px-3 py-1.5 bg-red-950/80 hover:bg-red-900 text-red-300 font-bold rounded-lg border border-red-700">
-            ⚠️ Reset Skor Partai
-          </button>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- ========================================================== -->
-    <!-- KOLOM KANAN (XL: 4 COLUMNS): SUDUT HONG (MERAH) DEEP TELEMETRY -->
-    <!-- ========================================================== -->
-    <div class="xl:col-span-4 bg-gradient-to-b from-[#38050e] via-[#1e0207] to-black border-2 border-red-600/80 rounded-2xl p-3.5 flex flex-col justify-between shadow-2xl relative">
-      
-      <!-- Card Header: Profile Atlet Hong -->
-      <div class="border-b border-red-500/40 pb-2.5">
-        <div class="flex items-center justify-between">
-          <span class="bg-red-950 text-red-300 border border-red-500/50 text-[10px] font-mono font-bold px-2 py-0.5 rounded">SEED #2</span>
-          <div class="flex items-center space-x-2">
-            <span class="text-red-200 text-xs font-black tracking-widest uppercase">CORNER HONG (홍) • MERAH</span>
-            <span class="w-3 h-3 rounded-full bg-red-400 animate-ping"></span>
-          </div>
-        </div>
-        
-        <!-- Editable Athlete Info -->
-        <div class="mt-1 flex items-center justify-between">
-          <input type="text" id="hong-team-input" value="DKI JAKARTA" onchange="updateFighterTeam('hong', this.value)" class="bg-slate-900 border border-slate-700 text-red-300 font-bold text-xs px-2 py-1 rounded w-1/3">
-          <input type="text" id="hong-name-input" value="Budi Santoso" onchange="updateFighterName('hong', this.value)" class="bg-red-950/80 border border-red-400/50 text-white font-black text-lg px-2 py-1 rounded w-3/5 text-right focus:outline-none focus:ring-1 focus:ring-red-300">
-        </div>
-      </div>
-
-      <!-- Skor Utama & Ronde Wins (Best of 3) -->
-      <div class="my-3 bg-black/60 border border-red-500/30 rounded-xl p-3 flex items-center justify-between">
-        <div>
-          <span class="text-[10px] font-mono text-slate-400 uppercase">RONDE MENANG (BO3)</span>
-          <div class="flex items-center space-x-1.5 mt-1">
-            <span id="hong-win-r1" class="w-4 h-4 rounded-full border border-red-400 bg-neutral-800"></span>
-            <span id="hong-win-r2" class="w-4 h-4 rounded-full border border-red-400 bg-neutral-800"></span>
-            <span id="hong-win-r3" class="w-4 h-4 rounded-full border border-red-400 bg-neutral-800"></span>
-          </div>
-          <button onclick="toggleRoundWin('hong')" class="mt-2 text-[10px] bg-red-900 hover:bg-red-800 text-red-200 px-2 py-0.5 rounded border border-red-500/50">
-            + Win Ronde
-          </button>
-        </div>
-        <div class="text-right">
-          <span class="text-[10px] font-mono text-slate-400 uppercase">TOTAL SKOR RONDE INI</span>
-          <div id="hong-main-score" class="font-digital text-6xl font-black text-red-400 leading-none mt-1">0</div>
-        </div>
-      </div>
-
-      <!-- Rincian Poin Teknik & Modifier Cepat -->
-      <div class="space-y-2 mb-3">
-        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block text-right">Input Poin Operator (Bypass):</span>
-        <div class="grid grid-cols-3 gap-1.5 text-xs">
-          <button onclick="modifyScore('hong', 1, 'Pukulan')" class="py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg shadow border border-red-400/40">
-            🥊 +1 Punch
-          </button>
-          <button onclick="modifyScore('hong', 2, 'Badan')" class="py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg shadow border border-red-400/40">
-            🥋 +2 Badan
-          </button>
-          <button onclick="modifyScore('hong', 3, 'Kepala')" class="py-2 bg-rose-700 hover:bg-rose-600 text-white font-bold rounded-lg shadow border border-rose-400/40">
-            🎯 +3 Kepala
-          </button>
-          <button onclick="modifyScore('hong', 4, 'Putar Badan')" class="py-2 bg-orange-700 hover:bg-orange-600 text-white font-bold rounded-lg shadow border border-orange-400/40">
-            🌪️ +4 Putar B.
-          </button>
-          <button onclick="modifyScore('hong', 5, 'Putar Kepala')" class="py-2 bg-amber-600 hover:bg-amber-500 text-white font-black rounded-lg shadow border border-amber-400/40">
-            ⚡ +5 Putar K.
-          </button>
-          <button onclick="modifyScore('hong', -1, 'Koreksi Batal')" class="py-2 bg-slate-800 hover:bg-slate-700 text-red-400 font-bold rounded-lg border border-slate-700">
-            ↩️ -1 Batal
-          </button>
-        </div>
-      </div>
-
-      <!-- GAM-JEOM MONITOR & 5-POINT LIMIT GAUGE -->
-      <div class="bg-black/70 border border-slate-800 rounded-xl p-2.5 mb-3">
-        <div class="flex items-center justify-between text-xs mb-1.5">
-          <div class="space-x-1">
-            <button onclick="modifyGamjeom('hong', 1)" class="bg-amber-600 hover:bg-amber-500 text-black font-black px-2 py-0.5 rounded text-[11px]">+1</button>
-            <button onclick="modifyGamjeom('hong', -1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-2 py-0.5 rounded text-[11px]">-1</button>
-          </div>
-          <span class="text-amber-400 font-bold font-mono">GAM-JEOM (PENALTI): <b id="hong-gamjeom-count" class="text-white text-sm">0</b> / 5</span>
-        </div>
-        <!-- 5 Pips Gauge -->
-        <div class="grid grid-cols-5 gap-1.5">
-          <div id="hong-pip-1" class="h-2 rounded bg-neutral-800 transition-colors"></div>
-          <div id="hong-pip-2" class="h-2 rounded bg-neutral-800 transition-colors"></div>
-          <div id="hong-pip-3" class="h-2 rounded bg-neutral-800 transition-colors"></div>
-          <div id="hong-pip-4" class="h-2 rounded bg-neutral-800 transition-colors"></div>
-          <div id="hong-pip-5" class="h-2 rounded bg-neutral-800 transition-colors"></div>
-        </div>
-        <span id="hong-disqual-warning" class="hidden text-[10px] text-red-400 font-bold font-mono text-center mt-1 block">⚠️ 5 GAM-JEOM TERCAPAI: DISKUALIFIKASI RONDE!</span>
-      </div>
-
-      <!-- PSS SENSOR TELEMETRY BARS (DAEDO / KPNP SIMULATOR) -->
-      <div class="bg-red-950/30 border border-red-500/30 rounded-xl p-2.5 text-xs font-mono">
-        <div class="flex items-center justify-between text-[11px] text-red-300 mb-1">
-          <span class="font-bold">TELEMETRI SENSOR PSS HONG:</span>
-          <span class="text-emerald-400">CONNECT (96%)</span>
-        </div>
-        <!-- Hogu Trunk Impact Level Bar -->
-        <div class="mb-2">
-          <div class="flex justify-between text-[10px] text-slate-400 mb-0.5">
-            <span>Pelindung Badan (Hogu): <b id="hong-hogu-val" class="text-white">0</b></span>
-            <span>Threshold Sah: <b class="text-amber-400">24</b></span>
-          </div>
-          <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
-            <div id="hong-hogu-bar" class="bg-red-500 h-full w-[0%] transition-all duration-300"></div>
-          </div>
-        </div>
-        <!-- Headgear Impact Level Bar -->
-        <div>
-          <div class="flex justify-between text-[10px] text-slate-400 mb-0.5">
-            <span>Helm Elektronik (Head): <b id="hong-head-val" class="text-white">0</b></span>
-            <span>Threshold Sah: <b class="text-amber-400">16</b></span>
-          </div>
-          <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
-            <div id="hong-head-bar" class="bg-rose-500 h-full w-[0%] transition-all duration-300"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- IVR & Medical Coach Action -->
-      <div class="grid grid-cols-2 gap-2 mt-2.5">
-        <button onclick="triggerIVRModal('hong')" class="py-1.5 bg-red-900/60 hover:bg-red-800 text-red-200 border border-red-500/50 rounded-lg text-xs font-bold flex items-center justify-center space-x-1">
-          <span>📹</span><span>Banding IVR (<span id="hong-ivr-card">1</span>)</span>
-        </button>
-        <button onclick="startMedicalTimer('hong')" class="py-1.5 bg-red-950/80 hover:bg-red-900 text-red-200 border border-red-500/50 rounded-lg text-xs font-bold flex items-center justify-center space-x-1">
-          <span>🚑</span><span>Medis 1:00</span>
-        </button>
-      </div>
-
-    </div>
-
-  </main>
-
-  <!-- ============================================================ -->
-  <!-- 3. BOTTOM AUDIT TRAIL LOG & MULTI-ANGLE IVR SUPERVISOR DOCK    -->
-  <!-- ============================================================ -->
-  <section class="bg-slate-900 border-t border-slate-800 px-4 py-2.5 shrink-0 flex flex-wrap items-center justify-between text-xs gap-3">
-    
-    <!-- Real-time Event Log Scroller -->
-    <div class="flex-1 min-w-[300px] flex items-center space-x-2 font-mono">
-      <span class="bg-black text-amber-400 border border-slate-800 px-2 py-1 rounded text-[10px] font-bold shrink-0">
-        LOG TELEMETRI:
-      </span>
-      <div id="event-ticker" class="text-slate-300 truncate text-[11px] bg-slate-950 px-3 py-1 rounded border border-slate-800/80 w-full">
-        [14:30:25] Sistem siap. Menunggu aba-aba Kye-sok dari Wasit Tengah.
-      </div>
-    </div>
-
-    <!-- Quick Tools & Print Berita Acara -->
-    <div class="flex items-center space-x-2">
-      <a href="form_berita_acara_wt.html" target="_blank" class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded-lg border border-emerald-500/50 flex items-center space-x-1 shadow">
-        <span>🖨️</span><span>Cetak Berita Acara WT ↗</span>
-      </a>
-      <button onclick="exportMatchLog()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-lg border border-slate-700">
-        💾 Unduh Log Pertandingan
-      </button>
-    </div>
-
-  </section>
-
-  <!-- ============================================================ -->
-  <!-- 4. MODAL INSTANT VIDEO REPLAY (IVR) SUPERVISOR CONSOLE         -->
-  <!-- ============================================================ -->
-  <div id="ivr-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border-2 border-amber-500 rounded-2xl max-w-xl w-full p-5 shadow-2xl">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-        <div class="flex items-center space-x-2">
-          <span class="text-2xl animate-spin">📹</span>
+        <!-- SKOR + RONDE WIN -->
+        <div style="background:#00000066;border:1px solid #1d4ed840;border-radius:10px;padding:7px 10px;display:flex;align-items:center;justify-content:space-between">
           <div>
-            <h3 class="text-base font-black text-white">INSTANT VIDEO REPLAY (IVR) SUPERVISOR</h3>
-            <p class="text-xs text-amber-300">Pemeriksaan Banding Kartu Kuota Pelatih Resmi WT</p>
+            <div style="font-size:0.55rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em">SKOR RONDE</div>
+            <div id="chung-main-score" class="score-digit" style="color:#60a5fa">0</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:0.55rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em">RONDE MENANG</div>
+            <div style="display:flex;gap:5px;justify-content:flex-end;margin-top:4px">
+              <span id="chung-win-r1" style="width:14px;height:14px;border-radius:50%;border:1px solid #3b82f6;background:#1e293b;display:inline-block"></span>
+              <span id="chung-win-r2" style="width:14px;height:14px;border-radius:50%;border:1px solid #3b82f6;background:#1e293b;display:inline-block"></span>
+              <span id="chung-win-r3" style="width:14px;height:14px;border-radius:50%;border:1px solid #3b82f6;background:#1e293b;display:inline-block"></span>
+            </div>
+            <button onclick="toggleRoundWin('chung')"
+                    style="margin-top:3px;font-size:0.55rem;background:#1e3a8a;color:#bfdbfe;border:1px solid #3b82f650;padding:1px 6px;border-radius:4px;cursor:pointer">+Win Ronde</button>
           </div>
         </div>
-        <button onclick="closeIVRModal()" class="text-slate-400 hover:text-white font-bold text-lg">✕</button>
-      </div>
 
-      <div class="space-y-3 text-xs">
-        <div class="bg-black/60 p-3 rounded-xl border border-slate-800">
-          <div class="text-slate-400 mb-1">Sudut Pemohon Banding:</div>
-          <div id="ivr-applicant-tag" class="text-lg font-black text-blue-400">CHUNG (BIRU)</div>
-        </div>
-
+        <!-- MODIFIER BUTTONS -->
         <div>
-          <label class="text-slate-400 block mb-1 font-bold">Materi yang Dimohonkan / Ditinjau:</label>
-          <select id="ivr-item-select" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-white font-bold">
-            <option value="Tendangan Kepala (Head Kick 3 Poin)">Tendangan Kepala Tidak Terbaca Sensor (Head Kick +3 Pts)</option>
-            <option value="Tendangan Putar Kepala (Spin Head 5 Poin)">Tendangan Putar Kepala (Spinning Head +5 Pts)</option>
-            <option value="Pembatalan Gam-jeom (Penalty Revocation)">Pembatalan Penalti Gam-jeom Wasit</option>
-            <option value="Pembatalan Poin Pukulan Lawan">Pembatalan Poin Pukulan Lawan</option>
-            <option value="Serangan Setelah Kal-yeo">Serangan Lawan Terjadi Setelah Kal-yeo</option>
-          </select>
+          <div class="sec-label">Input Poin Operator (Bypass)</div>
+          <div class="mod-grid">
+            <button onclick="modifyScore('chung',1,'Pukulan')"    class="mod-btn" style="background:#1d4ed8;color:#fff;border-color:#3b82f630">🥊 +1 Punch</button>
+            <button onclick="modifyScore('chung',2,'Badan')"      class="mod-btn" style="background:#1d4ed8;color:#fff;border-color:#3b82f630">🥋 +2 Badan</button>
+            <button onclick="modifyScore('chung',3,'Kepala')"     class="mod-btn" style="background:#3730a3;color:#fff;border-color:#6366f130">🎯 +3 Kepala</button>
+            <button onclick="modifyScore('chung',4,'Putar Badan')" class="mod-btn" style="background:#155e75;color:#fff;border-color:#06b6d430">🌪️ +4 Putar B</button>
+            <button onclick="modifyScore('chung',5,'Putar Kepala')" class="mod-btn" style="background:#92400e;color:#fff;border-color:#f59e0b30">⚡ +5 Putar K</button>
+            <button onclick="modifyScore('chung',-1,'Koreksi')"   class="mod-btn" style="background:#1e293b;color:#f87171;border-color:#334155">↩️ -1 Batal</button>
+          </div>
         </div>
 
-        <div class="bg-amber-950/40 border border-amber-500/40 rounded-xl p-3 text-amber-200">
-          <span class="font-bold">Putusan Dewan Juri Replay (Review Jury):</span>
-          <p class="text-[11px] text-slate-400 mt-0.5">Jika banding DITERIMA, kuota kartu pelatih tetap utuh. Jika DITOLAK, kartu disita panitia.</p>
+        <!-- GAM-JEOM -->
+        <div style="background:#00000066;border:1px solid #334155;border-radius:9px;padding:6px 8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+            <span style="font-size:0.6rem;font-family:Consolas,monospace;color:#fbbf24;font-weight:700">GAM-JEOM: <b id="chung-gamjeom-count" style="color:#fff">0</b>/5</span>
+            <div style="display:flex;gap:3px">
+              <button onclick="modifyGamjeom('chung',1)"  style="background:#d97706;color:#000;font-weight:900;font-size:0.6rem;padding:1px 6px;border:none;border-radius:4px;cursor:pointer">+1</button>
+              <button onclick="modifyGamjeom('chung',-1)" style="background:#1e293b;color:#94a3b8;font-weight:700;font-size:0.6rem;padding:1px 6px;border:1px solid #334155;border-radius:4px;cursor:pointer">-1</button>
+            </div>
+          </div>
+          <div class="pip-row">
+            <div id="chung-pip-1" class="pip"></div>
+            <div id="chung-pip-2" class="pip"></div>
+            <div id="chung-pip-3" class="pip"></div>
+            <div id="chung-pip-4" class="pip"></div>
+            <div id="chung-pip-5" class="pip"></div>
+          </div>
+          <div id="chung-disqual-warning" style="display:none;font-size:0.55rem;color:#f87171;font-weight:700;font-family:Consolas,monospace;text-align:center;margin-top:3px">⚠️ 5 GAM-JEOM: RSC DISKUALIFIKASI!</div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3 pt-2">
-          <button onclick="resolveIVRDecision('ACCEPTED')" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm rounded-xl shadow-lg border border-emerald-300">
-            ✓ BANDING DITERIMA
+        <!-- PSS SENSOR -->
+        <div style="background:#071530;border:1px solid #1d4ed840;border-radius:9px;padding:6px 8px">
+          <div style="display:flex;justify-content:space-between;font-size:0.6rem;margin-bottom:4px">
+            <span style="color:#93c5fd;font-weight:700;font-family:Consolas,monospace">SENSOR PSS CHUNG</span>
+            <span style="color:#22c55e">CONNECT (98%)</span>
+          </div>
+          <div style="font-size:0.58rem;color:#64748b;display:flex;justify-content:space-between;margin-bottom:2px">
+            <span>Hogu Badan: <b id="chung-hogu-val" style="color:#fff">0</b></span>
+            <span>Threshold: <b style="color:#fbbf24">24</b></span>
+          </div>
+          <div class="sensor-bar-wrap" style="margin-bottom:4px">
+            <div id="chung-hogu-bar" class="sensor-bar" style="background:#3b82f6"></div>
+          </div>
+          <div style="font-size:0.58rem;color:#64748b;display:flex;justify-content:space-between;margin-bottom:2px">
+            <span>Helm Kepala: <b id="chung-head-val" style="color:#fff">0</b></span>
+            <span>Threshold: <b style="color:#fbbf24">16</b></span>
+          </div>
+          <div class="sensor-bar-wrap">
+            <div id="chung-head-bar" class="sensor-bar" style="background:#818cf8"></div>
+          </div>
+        </div>
+
+        <!-- IVR + MEDIS -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+          <button onclick="triggerIVRModal('chung')"
+                  style="padding:5px;background:#1e3a8a50;color:#bfdbfe;border:1px solid #3b82f650;border-radius:7px;font-size:0.6rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px">
+            📹 IVR (<span id="chung-ivr-card">1</span>)
           </button>
-          <button onclick="resolveIVRDecision('REJECTED')" class="py-2.5 bg-red-700 hover:bg-red-600 text-white font-black text-sm rounded-xl shadow-lg border border-red-300">
-            ✗ BANDING DITOLAK
+          <button onclick="startMedicalTimer('chung')"
+                  style="padding:5px;background:#450a0a80;color:#fca5a5;border:1px solid #ef444450;border-radius:7px;font-size:0.6rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px">
+            🚑 Medis 1:00
           </button>
+        </div>
+
+      </div><!-- /col-card-inner -->
+    </div><!-- /chung card -->
+
+
+    <!-- ─────────────────────────────────────────────────────────
+         KOLOM TENGAH: MASTER TIMER & CONSENSUS
+    ────────────────────────────────────────────────────────── -->
+    <div class="col-card center-card" style="border-radius:14px;overflow:hidden">
+      <div style="display:flex;flex-direction:column;height:100%;overflow:hidden">
+
+        <!-- MASTER CLOCK -->
+        <div style="flex-shrink:0;padding:10px;background:#020917;border-bottom:1px solid #1e293b">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;font-size:0.6rem;font-family:Consolas,monospace">
+            <span style="background:#020617;color:#94a3b8;border:1px solid #1e293b;padding:1px 6px;border-radius:4px">SYSTEM CLOCK</span>
+            <span id="disp-active-round" style="color:#fbbf24;font-weight:900;font-size:0.7rem">RONDE 1 [BEST OF 3]</span>
+            <span id="clock-status-tag" style="color:#f87171;font-weight:900">PAUSED</span>
+          </div>
+
+          <!-- Big Timer -->
+          <div style="text-align:center;padding:8px;background:#000;border-radius:10px;border:1px solid #1e293b;position:relative;overflow:hidden">
+            <div id="master-timer" class="timer-digit" style="color:#fbbf24">02:00</div>
+            <div style="font-size:0.5rem;color:#475569;font-family:Consolas,monospace">DURASI STANDAR: 2 MENIT (120 DETIK)</div>
+          </div>
+
+          <!-- START / PAUSE -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px">
+            <button onclick="toggleMasterTimer()" id="btn-master-toggle"
+                    style="padding:8px;background:#059669;color:#fff;font-weight:900;font-size:0.7rem;border:1px solid #34d399;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px">
+              ▶ START (KYE-SOK)
+            </button>
+            <button onclick="pauseMasterTimer()"
+                    style="padding:8px;background:#d97706;color:#000;font-weight:900;font-size:0.7rem;border:1px solid #fbbf24;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px">
+              ⏸ PAUSE (KAL-YEO)
+            </button>
+          </div>
+
+          <!-- Timer Adjust -->
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-top:5px">
+            <button onclick="adjustTimer(1)"       style="padding:3px;background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:5px;font-size:0.6rem;font-family:Consolas,monospace;cursor:pointer">+1s</button>
+            <button onclick="adjustTimer(-1)"      style="padding:3px;background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:5px;font-size:0.6rem;font-family:Consolas,monospace;cursor:pointer">-1s</button>
+            <button onclick="setTimerDirect(60)"   style="padding:3px;background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:5px;font-size:0.6rem;font-family:Consolas,monospace;cursor:pointer">1:00</button>
+            <button onclick="setTimerDirect(90)"   style="padding:3px;background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:5px;font-size:0.6rem;font-family:Consolas,monospace;cursor:pointer">1:30</button>
+            <button onclick="setTimerDirect(120)"  style="padding:3px;background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:5px;font-size:0.6rem;font-family:Consolas,monospace;cursor:pointer">2:00</button>
+          </div>
+
+          <!-- Round + Rest -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:5px;padding-top:5px;border-top:1px solid #1e293b">
+            <button onclick="nextRoundAction()"
+                    style="padding:5px;background:#312e81;color:#c7d2fe;font-weight:700;font-size:0.6rem;border:1px solid #4338ca;border-radius:7px;cursor:pointer">⏩ Ronde Berikutnya</button>
+            <button onclick="startRestTimer()"
+                    style="padding:5px;background:#1e293b;color:#fde68a;font-weight:700;font-size:0.6rem;border:1px solid #334155;border-radius:7px;cursor:pointer">⏳ Istirahat 1:00</button>
+          </div>
+        </div><!-- /master clock -->
+
+        <!-- CONSENSUS RADAR -->
+        <div style="flex:1;min-height:0;overflow-y:auto;padding:8px">
+
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:0.6rem;font-family:Consolas,monospace;padding-bottom:5px;margin-bottom:5px;border-bottom:1px solid #1e293b">
+            <span style="font-weight:700;color:#e2e8f0">RADAR KONSENSUS JURI (WT 1.0s)</span>
+            <span style="color:#22c55e;font-weight:700">MIN. 2/3 SEPAKAT</span>
+          </div>
+
+          <!-- Judge Status Cards -->
+          <div style="display:flex;gap:4px;margin-bottom:6px">
+            <div class="judge-card">
+              <div style="display:flex;justify-content:space-between;font-size:0.5rem;color:#64748b;margin-bottom:2px">
+                <span>RF 2.4</span><span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block"></span>
+              </div>
+              <div style="font-weight:900;font-size:0.7rem;color:#fff">JURI 1</div>
+              <div id="radar-j1-btn" style="margin-top:2px;font-size:0.55rem;background:#020617;color:#64748b;border-radius:4px;padding:2px 0;font-family:Consolas,monospace">READY</div>
+            </div>
+            <div class="judge-card">
+              <div style="display:flex;justify-content:space-between;font-size:0.5rem;color:#64748b;margin-bottom:2px">
+                <span>RF 2.4</span><span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block"></span>
+              </div>
+              <div style="font-weight:900;font-size:0.7rem;color:#fff">JURI 2</div>
+              <div id="radar-j2-btn" style="margin-top:2px;font-size:0.55rem;background:#020617;color:#64748b;border-radius:4px;padding:2px 0;font-family:Consolas,monospace">READY</div>
+            </div>
+            <div class="judge-card">
+              <div style="display:flex;justify-content:space-between;font-size:0.5rem;color:#64748b;margin-bottom:2px">
+                <span>RF 2.4</span><span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block"></span>
+              </div>
+              <div style="font-weight:900;font-size:0.7rem;color:#fff">JURI 3</div>
+              <div id="radar-j3-btn" style="margin-top:2px;font-size:0.55rem;background:#020617;color:#64748b;border-radius:4px;padding:2px 0;font-family:Consolas,monospace">READY</div>
+            </div>
+          </div>
+
+          <!-- Consensus Window Gauge -->
+          <div style="background:#00000066;border:1px solid #1e293b;border-radius:8px;padding:6px">
+            <div style="display:flex;justify-content:space-between;font-size:0.58rem;font-family:Consolas,monospace;color:#64748b;margin-bottom:3px">
+              <span>Jendela Konsensus:</span>
+              <span id="consensus-meter-text" style="color:#fbbf24;font-weight:700">STANDBY (1.00s)</span>
+            </div>
+            <div style="background:#020617;border-radius:9px;height:6px;overflow:hidden">
+              <div id="consensus-progress-bar" style="background:#22c55e;height:100%;width:0%;transition:width 0.075s"></div>
+            </div>
+          </div>
+
+          <!-- Emergency Actions -->
+          <div style="display:flex;gap:5px;margin-top:6px;padding-top:6px;border-top:1px solid #1e293b">
+            <button onclick="emergencyUndo()"
+                    style="flex:1;padding:5px;background:#1e293b;color:#e2e8f0;font-weight:700;font-size:0.6rem;border:1px solid #334155;border-radius:7px;cursor:pointer">↩️ Undo Aksi Terakhir</button>
+            <button onclick="resetMatchParty()"
+                    style="flex:1;padding:5px;background:#450a0a80;color:#fca5a5;font-weight:700;font-size:0.6rem;border:1px solid #ef444450;border-radius:7px;cursor:pointer">⚠️ Reset Skor Partai</button>
+          </div>
+
+          <!-- VS Score Summary -->
+          <div style="margin-top:6px;background:#020617;border:1px solid #1e293b;border-radius:9px;padding:7px;text-align:center">
+            <div style="font-size:0.55rem;color:#64748b;font-family:Consolas,monospace;margin-bottom:4px">SKOR RINGKASAN PARTAI</div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:10px">
+              <div style="text-align:center">
+                <div style="font-size:0.6rem;color:#60a5fa;font-weight:700">CHUNG</div>
+                <div id="summary-chung" style="font-family:Consolas,monospace;font-size:1.8rem;font-weight:900;color:#60a5fa">0</div>
+              </div>
+              <div style="font-size:0.9rem;color:#334155;font-weight:900">VS</div>
+              <div style="text-align:center">
+                <div style="font-size:0.6rem;color:#f87171;font-weight:700">HONG</div>
+                <div id="summary-hong" style="font-family:Consolas,monospace;font-size:1.8rem;font-weight:900;color:#f87171">0</div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /consensus scroll area -->
+
+      </div>
+    </div><!-- /center card -->
+
+
+    <!-- ─────────────────────────────────────────────────────────
+         KOLOM KANAN: HONG (MERAH)
+    ────────────────────────────────────────────────────────── -->
+    <div class="col-card hong-card">
+      <!-- Card Header -->
+      <div style="padding:7px 10px 5px;background:#210409;border-bottom:1px solid #b91c1c50;border-radius:12px 12px 0 0;flex-shrink:0">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="background:#7f1d1d;color:#fca5a5;border:1px solid #ef444450;font-family:Consolas,monospace;font-size:0.6rem;font-weight:700;padding:1px 6px;border-radius:4px">SEED #2</span>
+          <div style="display:flex;align-items:center;gap:5px">
+            <span style="font-size:0.6rem;font-weight:900;letter-spacing:0.1em;color:#fecaca;text-transform:uppercase">CORNER HONG (홍) · MERAH</span>
+            <span style="width:8px;height:8px;border-radius:50%;background:#f87171" class="ping-dot"></span>
+          </div>
+        </div>
+        <div style="display:flex;gap:5px;margin-top:4px">
+          <input type="text" id="hong-team-input" value="DKI JAKARTA"
+                 onchange="updateFighterTeam('hong',this.value)"
+                 style="background:#0f172a;border:1px solid #334155;color:#fca5a5;font-weight:700;font-size:0.6rem;padding:2px 5px;border-radius:6px;width:35%;outline:none">
+          <input type="text" id="hong-name-input" value="Budi Santoso"
+                 onchange="updateFighterName('hong',this.value)"
+                 style="background:#4c0515;border:1px solid #b91c1c70;color:#fff;font-weight:900;font-size:0.85rem;padding:2px 7px;border-radius:6px;width:65%;text-align:right;outline:none">
         </div>
       </div>
+
+      <div class="col-card-inner">
+
+        <!-- SKOR + RONDE WIN -->
+        <div style="background:#00000066;border:1px solid #b91c1c40;border-radius:10px;padding:7px 10px;display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:0.55rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em">RONDE MENANG</div>
+            <div style="display:flex;gap:5px;margin-top:4px">
+              <span id="hong-win-r1" style="width:14px;height:14px;border-radius:50%;border:1px solid #ef4444;background:#1e293b;display:inline-block"></span>
+              <span id="hong-win-r2" style="width:14px;height:14px;border-radius:50%;border:1px solid #ef4444;background:#1e293b;display:inline-block"></span>
+              <span id="hong-win-r3" style="width:14px;height:14px;border-radius:50%;border:1px solid #ef4444;background:#1e293b;display:inline-block"></span>
+            </div>
+            <button onclick="toggleRoundWin('hong')"
+                    style="margin-top:3px;font-size:0.55rem;background:#7f1d1d;color:#fecaca;border:1px solid #ef444450;padding:1px 6px;border-radius:4px;cursor:pointer">+Win Ronde</button>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:0.55rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em">SKOR RONDE</div>
+            <div id="hong-main-score" class="score-digit" style="color:#f87171">0</div>
+          </div>
+        </div>
+
+        <!-- MODIFIER BUTTONS -->
+        <div>
+          <div class="sec-label" style="text-align:right">Input Poin Operator (Bypass)</div>
+          <div class="mod-grid">
+            <button onclick="modifyScore('hong',1,'Pukulan')"    class="mod-btn" style="background:#991b1b;color:#fff;border-color:#ef444430">🥊 +1 Punch</button>
+            <button onclick="modifyScore('hong',2,'Badan')"      class="mod-btn" style="background:#991b1b;color:#fff;border-color:#ef444430">🥋 +2 Badan</button>
+            <button onclick="modifyScore('hong',3,'Kepala')"     class="mod-btn" style="background:#9f1239;color:#fff;border-color:#f4365230">🎯 +3 Kepala</button>
+            <button onclick="modifyScore('hong',4,'Putar Badan')" class="mod-btn" style="background:#9a3412;color:#fff;border-color:#fb923c30">🌪️ +4 Putar B</button>
+            <button onclick="modifyScore('hong',5,'Putar Kepala')" class="mod-btn" style="background:#92400e;color:#fff;border-color:#f59e0b30">⚡ +5 Putar K</button>
+            <button onclick="modifyScore('hong',-1,'Koreksi')"   class="mod-btn" style="background:#1e293b;color:#f87171;border-color:#334155">↩️ -1 Batal</button>
+          </div>
+        </div>
+
+        <!-- GAM-JEOM -->
+        <div style="background:#00000066;border:1px solid #334155;border-radius:9px;padding:6px 8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+            <div style="display:flex;gap:3px">
+              <button onclick="modifyGamjeom('hong',1)"  style="background:#d97706;color:#000;font-weight:900;font-size:0.6rem;padding:1px 6px;border:none;border-radius:4px;cursor:pointer">+1</button>
+              <button onclick="modifyGamjeom('hong',-1)" style="background:#1e293b;color:#94a3b8;font-weight:700;font-size:0.6rem;padding:1px 6px;border:1px solid #334155;border-radius:4px;cursor:pointer">-1</button>
+            </div>
+            <span style="font-size:0.6rem;font-family:Consolas,monospace;color:#fbbf24;font-weight:700">GAM-JEOM: <b id="hong-gamjeom-count" style="color:#fff">0</b>/5</span>
+          </div>
+          <div class="pip-row">
+            <div id="hong-pip-1" class="pip"></div>
+            <div id="hong-pip-2" class="pip"></div>
+            <div id="hong-pip-3" class="pip"></div>
+            <div id="hong-pip-4" class="pip"></div>
+            <div id="hong-pip-5" class="pip"></div>
+          </div>
+          <div id="hong-disqual-warning" style="display:none;font-size:0.55rem;color:#f87171;font-weight:700;font-family:Consolas,monospace;text-align:center;margin-top:3px">⚠️ 5 GAM-JEOM: RSC DISKUALIFIKASI!</div>
+        </div>
+
+        <!-- PSS SENSOR -->
+        <div style="background:#2a0309;border:1px solid #b91c1c40;border-radius:9px;padding:6px 8px">
+          <div style="display:flex;justify-content:space-between;font-size:0.6rem;margin-bottom:4px">
+            <span style="color:#fca5a5;font-weight:700;font-family:Consolas,monospace">SENSOR PSS HONG</span>
+            <span style="color:#22c55e">CONNECT (96%)</span>
+          </div>
+          <div style="font-size:0.58rem;color:#64748b;display:flex;justify-content:space-between;margin-bottom:2px">
+            <span>Hogu Badan: <b id="hong-hogu-val" style="color:#fff">0</b></span>
+            <span>Threshold: <b style="color:#fbbf24">24</b></span>
+          </div>
+          <div class="sensor-bar-wrap" style="margin-bottom:4px">
+            <div id="hong-hogu-bar" class="sensor-bar" style="background:#ef4444"></div>
+          </div>
+          <div style="font-size:0.58rem;color:#64748b;display:flex;justify-content:space-between;margin-bottom:2px">
+            <span>Helm Kepala: <b id="hong-head-val" style="color:#fff">0</b></span>
+            <span>Threshold: <b style="color:#fbbf24">16</b></span>
+          </div>
+          <div class="sensor-bar-wrap">
+            <div id="hong-head-bar" class="sensor-bar" style="background:#f43f5e"></div>
+          </div>
+        </div>
+
+        <!-- IVR + MEDIS -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+          <button onclick="triggerIVRModal('hong')"
+                  style="padding:5px;background:#7f1d1d50;color:#fecaca;border:1px solid #ef444450;border-radius:7px;font-size:0.6rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px">
+            📹 IVR (<span id="hong-ivr-card">1</span>)
+          </button>
+          <button onclick="startMedicalTimer('hong')"
+                  style="padding:5px;background:#450a0a80;color:#fca5a5;border:1px solid #ef444450;border-radius:7px;font-size:0.6rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px">
+            🚑 Medis 1:00
+          </button>
+        </div>
+
+      </div><!-- /col-card-inner -->
+    </div><!-- /hong card -->
+
+  </div><!-- /main-grid -->
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       FOOTER BAR
+  ════════════════════════════════════════════════════════════ -->
+  <footer id="ftr">
+    <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1">
+      <span style="background:#020617;color:#fbbf24;border:1px solid #1e293b;padding:1px 7px;border-radius:4px;font-size:0.58rem;font-weight:700;font-family:Consolas,monospace;white-space:nowrap;flex-shrink:0">LOG TELEMETRI:</span>
+      <div id="event-ticker" style="font-size:0.6rem;color:#94a3b8;font-family:Consolas,monospace;background:#020617;padding:2px 8px;border-radius:4px;border:1px solid #1e293b;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;flex:1;min-width:0">
+        [--:--:--] Sistem siap. Menunggu aba-aba Kye-sok dari Wasit Tengah.
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+      <a href="form_berita_acara_wt.html" target="_blank"
+         style="padding:2px 10px;background:#065f46;color:#fff;font-weight:700;font-size:0.6rem;border:1px solid #10b98150;border-radius:5px;text-decoration:none;display:flex;align-items:center;gap:4px">🖨️ Cetak Berita Acara WT ↗</a>
+      <button onclick="exportMatchLog()"
+              style="padding:2px 10px;background:#1e293b;color:#94a3b8;font-weight:700;font-size:0.6rem;border:1px solid #334155;border-radius:5px;cursor:pointer">💾 Unduh Log</button>
+    </div>
+  </footer>
+
+</div><!-- /app -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     IVR MODAL
+════════════════════════════════════════════════════════════════ -->
+<div id="ivr-modal">
+  <div style="background:#0f172a;border:2px solid #d97706;border-radius:16px;max-width:480px;width:90%;padding:20px;box-shadow:0 25px 50px #000">
+    <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1e293b;padding-bottom:12px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:1.5rem">📹</span>
+        <div>
+          <div style="font-weight:900;color:#fff;font-size:0.9rem">INSTANT VIDEO REPLAY (IVR)</div>
+          <div style="font-size:0.65rem;color:#fbbf24">Pemeriksaan Banding — Kartu Pelatih Resmi WT</div>
+        </div>
+      </div>
+      <button onclick="closeIVRModal()" style="color:#64748b;font-size:1.2rem;background:none;border:none;cursor:pointer;font-weight:900">✕</button>
+    </div>
+
+    <div style="background:#00000040;border:1px solid #1e293b;border-radius:10px;padding:10px;margin-bottom:10px">
+      <div style="font-size:0.65rem;color:#94a3b8">Sudut Pemohon Banding:</div>
+      <div id="ivr-applicant-tag" style="font-size:1.1rem;font-weight:900;color:#60a5fa;margin-top:3px">CHUNG (BIRU)</div>
+    </div>
+
+    <div style="margin-bottom:10px">
+      <label style="font-size:0.65rem;color:#94a3b8;font-weight:700;display:block;margin-bottom:5px">Materi yang Dimohonkan / Ditinjau:</label>
+      <select id="ivr-item-select" style="width:100%;background:#020617;border:1px solid #334155;border-radius:8px;padding:7px;color:#fff;font-weight:700;font-size:0.7rem">
+        <option value="Tendangan Kepala (Head Kick 3 Poin)">Tendangan Kepala Tidak Terbaca Sensor (+3 Pts)</option>
+        <option value="Tendangan Putar Kepala (Spin Head 5 Poin)">Tendangan Putar Kepala (Spinning Head +5 Pts)</option>
+        <option value="Pembatalan Gam-jeom (Penalty Revocation)">Pembatalan Penalti Gam-jeom Wasit</option>
+        <option value="Pembatalan Poin Pukulan Lawan">Pembatalan Poin Pukulan Lawan</option>
+        <option value="Serangan Setelah Kal-yeo">Serangan Lawan Terjadi Setelah Kal-yeo</option>
+      </select>
+    </div>
+
+    <div style="background:#451a0330;border:1px solid #d9770640;border-radius:10px;padding:10px;margin-bottom:12px;font-size:0.65rem;color:#fde68a">
+      <span style="font-weight:700">Putusan Dewan Juri Replay (Review Jury):</span>
+      <p style="color:#94a3b8;margin-top:3px">Jika banding DITERIMA, kuota kartu pelatih tetap utuh. Jika DITOLAK, kartu disita panitia.</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <button onclick="resolveIVRDecision('ACCEPTED')"
+              style="padding:10px;background:#059669;color:#fff;font-weight:900;font-size:0.8rem;border:1px solid #34d399;border-radius:10px;cursor:pointer">✓ BANDING DITERIMA</button>
+      <button onclick="resolveIVRDecision('REJECTED')"
+              style="padding:10px;background:#b91c1c;color:#fff;font-weight:900;font-size:0.8rem;border:1px solid #f87171;border-radius:10px;cursor:pointer">✗ BANDING DITOLAK</button>
     </div>
   </div>
+</div>
 
-  <!-- ============================================================ -->
-  <!-- 5. JAVASCRIPT MASTER TELEMETRY & SYNC ENGINE                 -->
-  <!-- ============================================================ -->
-  <script>
-    // State Master Operator Console
-    const operatorState = {
-      court: 'COURT 1',
-      division: 'SENIOR PUTRA UNDER 68 KG',
-      matchNumber: 'PARTAI #04',
-      round: 1,
-      timerSeconds: 120,
-      timerRunning: false,
-      timerInterval: null,
-      audioEnabled: true,
-      audioCtx: null,
-      ivrTarget: null,
-      eventLogs: [],
-      chung: {
-        name: 'Ahmad Rizky',
-        team: 'JABAR (INA)',
-        score: 0,
-        gamjeom: 0,
-        roundWins: 0,
-        ivrCard: 1
-      },
-      hong: {
-        name: 'Budi Santoso',
-        team: 'DKI JAKARTA',
-        score: 0,
-        gamjeom: 0,
-        roundWins: 0,
-        ivrCard: 1
-      }
-    };
 
-    // Live Wall Clock
-    setInterval(() => {
-      const now = new Date();
-      document.getElementById('wall-clock').innerText = now.toTimeString().split(' ')[0];
+<!-- ═══════════════════════════════════════════════════════════════
+     JAVASCRIPT ENGINE
+════════════════════════════════════════════════════════════════ -->
+<script>
+  // ── State ──────────────────────────────────────────────────────
+  const operatorState = {
+    court: 'COURT 1', division: 'SENIOR PUTRA UNDER 68 KG',
+    matchNumber: 'PARTAI #04', round: 1,
+    timerSeconds: 120, timerRunning: false, timerInterval: null,
+    audioEnabled: true, audioCtx: null, ivrTarget: null, eventLogs: [],
+    chung: { name:'Ahmad Rizky', team:'JABAR (INA)', score:0, gamjeom:0, roundWins:0, ivrCard:1 },
+    hong:  { name:'Budi Santoso', team:'DKI JAKARTA',  score:0, gamjeom:0, roundWins:0, ivrCard:1 }
+  };
+
+  // ── Wall Clock ─────────────────────────────────────────────────
+  setInterval(() => {
+    document.getElementById('wall-clock').innerText = new Date().toTimeString().split(' ')[0];
+  }, 1000);
+
+  // ── Fullscreen ─────────────────────────────────────────────────
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen();
+    }
+  }
+  // Auto fullscreen on first click
+  document.addEventListener('click', function initFS() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+    document.removeEventListener('click', initFS);
+  }, { once: true });
+  // Update button text
+  document.addEventListener('fullscreenchange', () => {
+    const btn = document.getElementById('btn-fs');
+    if (document.fullscreenElement) {
+      btn.innerText = '✕ EXIT FULLSCREEN';
+      btn.style.color = '#f87171';
+    } else {
+      btn.innerText = '⛶ FULLSCREEN';
+      btn.style.color = '#fbbf24';
+    }
+  });
+
+  // ── Audio ──────────────────────────────────────────────────────
+  function getAudioCtx() {
+    if (!operatorState.audioCtx) {
+      const A = window.AudioContext || window.webkitAudioContext;
+      if (A) operatorState.audioCtx = new A();
+    }
+    if (operatorState.audioCtx?.state === 'suspended') operatorState.audioCtx.resume();
+    return operatorState.audioCtx;
+  }
+
+  function testBuzzer() {
+    if (!operatorState.audioEnabled) return;
+    const ctx = getAudioCtx(); if (!ctx) return;
+    const now = ctx.currentTime;
+    const o1 = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain();
+    o1.type = 'sawtooth'; o1.frequency.setValueAtTime(285, now);
+    o2.type = 'square';   o2.frequency.setValueAtTime(427.5, now);
+    g.gain.setValueAtTime(0.4, now);
+    g.gain.linearRampToValueAtTime(0.01, now + 1.2);
+    o1.connect(g); o2.connect(g); g.connect(ctx.destination);
+    o1.start(now); o2.start(now); o1.stop(now+1.2); o2.stop(now+1.2);
+    logEvent('BUZZER: Klakson turnamen dibunyikan operator meja.');
+  }
+
+  function toggleAudio() {
+    operatorState.audioEnabled = !operatorState.audioEnabled;
+    const btn = document.getElementById('btn-audio');
+    if (operatorState.audioEnabled) {
+      btn.innerText = '🔊 AUDIO'; btn.style.color = '#34d399';
+    } else {
+      btn.innerText = '🔇 SENYAP'; btn.style.color = '#64748b';
+    }
+  }
+
+  // ── Logging ────────────────────────────────────────────────────
+  function logEvent(text) {
+    const time = new Date().toTimeString().split(' ')[0];
+    const entry = `[${time}] ${text}`;
+    operatorState.eventLogs.unshift(entry);
+    document.getElementById('event-ticker').innerText = entry;
+  }
+
+  function exportMatchLog() {
+    const blob = new Blob([operatorState.eventLogs.join('\n')], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `match_log_${operatorState.matchNumber}_${Date.now()}.txt`;
+    a.click();
+  }
+
+  // ── BroadcastChannel / localStorage Sync ───────────────────────
+  let syncChannel = null;
+  if ('BroadcastChannel' in window) {
+    try {
+      syncChannel = new BroadcastChannel('tkd_scoreboard_event_channel');
+      syncChannel.onmessage = e => { if (e.data) handleIncomingMessage(e.data); };
+    } catch (e) {}
+  }
+  window.addEventListener('storage', e => {
+    if (e.key === 'tkd_sync_payload' && e.newValue) {
+      try { handleIncomingMessage(JSON.parse(e.newValue)); } catch (_) {}
+    }
+    if (e.key === 'tkd_saved_state') loadStateFromLocalStorage();
+  });
+
+  function broadcastChange(type, payload) {
+    const msg = { type, payload, timestamp: Date.now() };
+    if (syncChannel) syncChannel.postMessage(msg);
+    try { localStorage.setItem('tkd_sync_payload', JSON.stringify(msg)); } catch (_) {}
+    saveStateToLocalStorage();
+  }
+
+  function handleIncomingMessage(msg) {
+    if (!msg) return;
+    if (msg.type === 'JUDGE_ACTION') {
+      logEvent(`JURI ${msg.judgeId} menekan: ${msg.payload.techName} (${msg.payload.fighter.toUpperCase()} +${msg.payload.points})`);
+      flashRadarJudge(msg.judgeId, msg.payload.techName);
+    } else if (msg.type === 'STATE_CHANGED' || msg.type === 'POINT_ADDED') {
+      loadStateFromLocalStorage();
+    }
+  }
+
+  function flashRadarJudge(jId, tech) {
+    const el = document.getElementById(`radar-${jId.toLowerCase()}-btn`);
+    if (!el) return;
+    el.style.background = '#f59e0b'; el.style.color = '#000'; el.style.fontWeight = '900';
+    el.innerText = tech.substring(0, 10);
+    const bar  = document.getElementById('consensus-progress-bar');
+    const text = document.getElementById('consensus-meter-text');
+    text.innerText = `WINDOW 1.0s (${jId})`;
+    bar.style.width = '100%'; bar.style.background = '#f59e0b';
+    setTimeout(() => {
+      bar.style.width = '0%'; bar.style.background = '#22c55e';
+      text.innerText = 'STANDBY (1.00s)';
+      el.style.background = '#020617'; el.style.color = '#64748b'; el.style.fontWeight = '400';
+      el.innerText = 'READY';
     }, 1000);
+  }
 
-    // Audio Synthesizer
-    function getAudioCtx() {
-      if (!operatorState.audioCtx) {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (AudioContext) operatorState.audioCtx = new AudioContext();
-      }
-      if (operatorState.audioCtx && operatorState.audioCtx.state === 'suspended') {
-        operatorState.audioCtx.resume();
-      }
-      return operatorState.audioCtx;
-    }
+  // ── Timer ──────────────────────────────────────────────────────
+  function updateTimerDisplay() {
+    const m = Math.floor(operatorState.timerSeconds / 60);
+    const s = operatorState.timerSeconds % 60;
+    document.getElementById('master-timer').innerText =
+      `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
 
-    function testBuzzer() {
-      if (!operatorState.audioEnabled) return;
-      const ctx = getAudioCtx();
-      if (!ctx) return;
-      const now = ctx.currentTime;
-      const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc1.type = 'sawtooth';
-      osc1.frequency.setValueAtTime(285, now);
-      osc2.type = 'square';
-      osc2.frequency.setValueAtTime(427.5, now);
-
-      gain.gain.setValueAtTime(0.4, now);
-      gain.gain.linearRampToValueAtTime(0.01, now + 1.2);
-
-      osc1.connect(gain);
-      osc2.connect(gain);
-      gain.connect(ctx.destination);
-      osc1.start(now);
-      osc2.start(now);
-      osc1.stop(now + 1.2);
-      osc2.stop(now + 1.2);
-      logEvent('BUZZER: Klakson turnamen dibunyikan operator meja.');
-    }
-
-    function toggleAudio() {
-      operatorState.audioEnabled = !operatorState.audioEnabled;
-      const btn = document.getElementById('btn-audio');
-      if (operatorState.audioEnabled) {
-        btn.innerText = '🔊 AUDIO AKTIF';
-        btn.className = 'p-1 px-2.5 bg-slate-800 text-emerald-400 border border-slate-700 rounded text-xs font-bold';
-      } else {
-        btn.innerText = '🔇 AUDIO SENYAP';
-        btn.className = 'p-1 px-2.5 bg-slate-800 text-slate-500 border border-slate-700 rounded text-xs font-bold';
-      }
-    }
-
-    // Logging Engine
-    function logEvent(text) {
-      const time = new Date().toTimeString().split(' ')[0];
-      const entry = `[${time}] ${text}`;
-      operatorState.eventLogs.unshift(entry);
-      document.getElementById('event-ticker').innerText = entry;
-    }
-
-    function exportMatchLog() {
-      const blob = new Blob([operatorState.eventLogs.join('\n')], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `match_log_${operatorState.matchNumber}_${Date.now()}.txt`;
-      a.click();
-    }
-
-    // Cross-Window BroadcastChannel Real-Time Sync
-    let syncChannel = null;
-    if ('BroadcastChannel' in window) {
-      try {
-        syncChannel = new BroadcastChannel('tkd_scoreboard_event_channel');
-        syncChannel.onmessage = (event) => {
-          if (event.data) handleIncomingMessage(event.data);
-        };
-      } catch (e) {}
-    }
-
-    // Fallback sync via localStorage storage event
-    window.addEventListener('storage', (e) => {
-      if (e.key === 'tkd_sync_payload' && e.newValue) {
-        try {
-          handleIncomingMessage(JSON.parse(e.newValue));
-        } catch (err) {}
-      }
-      if (e.key === 'tkd_saved_state') {
-        loadStateFromLocalStorage();
-      }
-    });
-
-    function broadcastChange(type, payload) {
-      const msg = { type, payload, timestamp: Date.now() };
-      if (syncChannel) syncChannel.postMessage(msg);
-      try {
-        localStorage.setItem('tkd_sync_payload', JSON.stringify(msg));
-      } catch (e) {}
-      saveStateToLocalStorage();
-    }
-
-    function handleIncomingMessage(msg) {
-      if (!msg) return;
-      if (msg.type === 'JUDGE_ACTION') {
-        logEvent(`JURI ${msg.judgeId} menekan: ${msg.payload.techName} (${msg.payload.fighter.toUpperCase()} +${msg.payload.points})`);
-        flashRadarJudge(msg.judgeId, msg.payload.techName);
-      } else if (msg.type === 'STATE_CHANGED' || msg.type === 'POINT_ADDED') {
-        loadStateFromLocalStorage();
-      }
-    }
-
-    function flashRadarJudge(jId, tech) {
-      const el = document.getElementById(`radar-${jId.toLowerCase()}-btn`);
-      if (el) {
-        el.className = "mt-1 text-[10px] bg-amber-500 text-black rounded py-0.5 font-mono font-bold animate-pulse";
-        el.innerText = tech.substring(0, 10);
-        
-        // Trigger Consensus Progress Bar
-        const bar = document.getElementById('consensus-progress-bar');
-        const text = document.getElementById('consensus-meter-text');
-        text.innerText = `WINDOW 1.0s (${jId})`;
-        bar.className = "bg-amber-400 h-full w-[100%] transition-all duration-75";
-
-        setTimeout(() => {
-          bar.className = "bg-emerald-500 h-full w-[0%] transition-all duration-1000";
-          text.innerText = "STANDBY (1.00s)";
-          el.className = "mt-1 text-[10px] bg-slate-900 text-slate-400 rounded py-0.5 font-mono";
-          el.innerText = "READY";
-        }, 1000);
-      }
-    }
-
-    // Timer Controls
-    function updateTimerDisplay() {
-      const m = Math.floor(operatorState.timerSeconds / 60);
-      const s = operatorState.timerSeconds % 60;
-      document.getElementById('master-timer').innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    }
-
-    function toggleMasterTimer() {
-      if (operatorState.timerRunning) {
-        pauseMasterTimer();
-      } else {
-        operatorState.timerRunning = true;
-        document.getElementById('clock-status-tag').innerText = 'RUNNING';
-        document.getElementById('clock-status-tag').className = 'text-emerald-400 font-bold';
-        document.getElementById('btn-master-toggle').innerHTML = '<span>⏸</span><span>PAUSE (KAL-YEO)</span>';
-        document.getElementById('btn-master-toggle').className = 'py-3 bg-amber-600 hover:bg-amber-500 text-black font-black text-sm rounded-xl shadow-lg border border-amber-300 flex items-center justify-center space-x-1.5';
-        
-        logEvent('WASIT: Kye-sok! Timer pertandingan berjalan.');
-        
-        operatorState.timerInterval = setInterval(() => {
-          if (operatorState.timerSeconds > 0) {
-            operatorState.timerSeconds--;
-            updateTimerDisplay();
-            broadcastChange('TIMER_TICK', { timerSeconds: operatorState.timerSeconds });
-          } else {
-            pauseMasterTimer();
-            testBuzzer();
-            logEvent('WAKTU HABIS: Ronde selesai! Wasit menghentikan laga.');
-          }
-        }, 1000);
-      }
-      broadcastChange('STATE_CHANGED', {});
-    }
-
-    function pauseMasterTimer() {
-      operatorState.timerRunning = false;
-      clearInterval(operatorState.timerInterval);
-      document.getElementById('clock-status-tag').innerText = 'PAUSED';
-      document.getElementById('clock-status-tag').className = 'text-red-400 font-bold';
-      document.getElementById('btn-master-toggle').innerHTML = '<span>▶</span><span>START (KYE-SOK)</span>';
-      document.getElementById('btn-master-toggle').className = 'py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm rounded-xl shadow-lg border border-emerald-400 flex items-center justify-center space-x-1.5';
-      logEvent('WASIT: Kal-yeo! Timer pertandingan dihentikan sementara.');
-      broadcastChange('STATE_CHANGED', {});
-    }
-
-    function adjustTimer(sec) {
-      operatorState.timerSeconds = Math.max(0, operatorState.timerSeconds + sec);
-      updateTimerDisplay();
-      logEvent(`OPERATOR: Menyesuaikan timer ${sec > 0 ? '+' : ''}${sec} detik.`);
-      broadcastChange('STATE_CHANGED', {});
-    }
-
-    function setTimerDirect(sec) {
-      operatorState.timerSeconds = sec;
-      updateTimerDisplay();
-      logEvent(`OPERATOR: Set timer langsung ke ${sec} detik.`);
-      broadcastChange('STATE_CHANGED', {});
-    }
-
-    function nextRoundAction() {
-      pauseMasterTimer();
-      operatorState.round = Math.min(3, operatorState.round + 1);
-      operatorState.timerSeconds = 120;
-      updateTimerDisplay();
-      document.getElementById('disp-active-round').innerText = `RONDE ${operatorState.round} [BEST OF 3]`;
-      logEvent(`PENGATUR RONDE: Memasuki Ronde ${operatorState.round}. Skor ronde direset 0-0.`);
-      broadcastChange('STATE_CHANGED', {});
-    }
-
-    function startRestTimer() {
-      pauseMasterTimer();
-      setTimerDirect(60);
-      logEvent('OPERATOR: Memulai waktu istirahat atlet 1 menit (60 detik).');
-      toggleMasterTimer();
-    }
-
-    // Scoring & Penalty Controls
-    function modifyScore(fighter, pts, tech) {
-      operatorState[fighter].score = Math.max(0, operatorState[fighter].score + pts);
-      document.getElementById(`${fighter}-main-score`).innerText = operatorState[fighter].score;
-      
-      const fighterName = fighter === 'chung' ? 'CHUNG (Biru)' : 'HONG (Merah)';
-      logEvent(`POIN: ${fighterName} ${pts > 0 ? '+' : ''}${pts} poin (${tech}). Skor sekarang: ${operatorState[fighter].score}`);
-      
-      // Simulate Sensor Pulse Bar
-      triggerSensorPulse(fighter, pts);
-      broadcastChange('POINT_ADDED', { fighter, score: operatorState[fighter].score });
-    }
-
-    function triggerSensorPulse(fighter, pts) {
-      const hoguBar = document.getElementById(`${fighter}-hogu-bar`);
-      const hoguVal = document.getElementById(`${fighter}-hogu-val`);
-      const headBar = document.getElementById(`${fighter}-head-bar`);
-      const headVal = document.getElementById(`${fighter}-head-val`);
-
-      if (pts === 2 || pts === 4) {
-        const impact = Math.floor(Math.random() * 15) + 25;
-        hoguVal.innerText = impact;
-        hoguBar.style.width = `${Math.min(100, impact * 2.5)}%`;
-        setTimeout(() => {
-          hoguBar.style.width = '0%';
-          hoguVal.innerText = '0';
-        }, 1500);
-      } else if (pts === 3 || pts === 5) {
-        const impact = Math.floor(Math.random() * 12) + 18;
-        headVal.innerText = impact;
-        headBar.style.width = `${Math.min(100, impact * 3)}%`;
-        setTimeout(() => {
-          headBar.style.width = '0%';
-          headVal.innerText = '0';
-        }, 1500);
-      }
-    }
-
-    function modifyGamjeom(fighter, val) {
-      operatorState[fighter].gamjeom = Math.max(0, Math.min(5, operatorState[fighter].gamjeom + val));
-      const gCount = operatorState[fighter].gamjeom;
-      document.getElementById(`${fighter}-gamjeom-count`).innerText = gCount;
-
-      // Update Pips
-      for (let i = 1; i <= 5; i++) {
-        const pip = document.getElementById(`${fighter}-pip-${i}`);
-        if (i <= gCount) {
-          pip.className = i >= 4 ? "h-2 rounded bg-red-500 shadow-[0_0_8px_#ef4444]" : "h-2 rounded bg-amber-400";
-        } else {
-          pip.className = "h-2 rounded bg-neutral-800 transition-colors";
-        }
-      }
-
-      // Check Disqualification
-      const warn = document.getElementById(`${fighter}-disqual-warning`);
-      if (gCount >= 5) {
-        warn.classList.remove('hidden');
-        logEvent(`PENALTI: ${fighter.toUpperCase()} MENCAPAI 5 GAM-JEOM! Diskualifikasi ronde (RSC) otomatis!`);
-        testBuzzer();
-      } else {
-        warn.classList.add('hidden');
-        const opponent = fighter === 'chung' ? 'hong' : 'chung';
-        if (val > 0) {
-          modifyScore(opponent, 1, 'Penalti Gam-jeom Lawan');
-        }
-      }
-      broadcastChange('STATE_CHANGED', {});
-    }
-
-    function toggleRoundWin(fighter) {
-      operatorState[fighter].roundWins = (operatorState[fighter].roundWins + 1) % 4;
-      for (let i = 1; i <= 3; i++) {
-        const indicator = document.getElementById(`${fighter}-win-r${i}`);
-        if (i <= operatorState[fighter].roundWins) {
-          indicator.className = fighter === 'chung' ? "w-4 h-4 rounded-full border border-blue-400 bg-blue-500 shadow-[0_0_10px_#3b82f6]" : "w-4 h-4 rounded-full border border-red-400 bg-red-500 shadow-[0_0_10px_#ef4444]";
-        } else {
-          indicator.className = "w-4 h-4 rounded-full border border-slate-700 bg-neutral-800";
-        }
-      }
-      logEvent(`RONDE: Kemenangan ronde ${fighter.toUpperCase()} diubah menjadi ${operatorState[fighter].roundWins}`);
-      broadcastChange('STATE_CHANGED', {});
-    }
-
-    function updateFighterName(fighter, name) {
-      operatorState[fighter].name = name;
-      logEvent(`PESERTA: Nama atlet ${fighter.toUpperCase()} diubah menjadi "${name}"`);
-      broadcastChange('STATE_CHANGED', {});
-    }
-
-    function updateFighterTeam(fighter, team) {
-      operatorState[fighter].team = team;
-      broadcastChange('STATE_CHANGED', {});
-    }
-
-    // IVR Modal
-    function triggerIVRModal(fighter) {
-      operatorState.ivrTarget = fighter;
-      const tag = document.getElementById('ivr-applicant-tag');
-      tag.innerText = fighter === 'chung' ? 'CHUNG (BIRU)' : 'HONG (MERAH)';
-      tag.className = fighter === 'chung' ? 'text-lg font-black text-blue-400' : 'text-lg font-black text-red-400';
-      document.getElementById('ivr-modal').classList.remove('hidden');
-      logEvent(`BANDING: Pelatih ${fighter.toUpperCase()} meminta Video Replay (IVR).`);
-    }
-
-    function closeIVRModal() {
-      document.getElementById('ivr-modal').classList.add('hidden');
-    }
-
-    function resolveIVRDecision(decision) {
-      const fighter = operatorState.ivrTarget;
-      const item = document.getElementById('ivr-item-select').value;
-      closeIVRModal();
-
-      if (decision === 'ACCEPTED') {
-        logEvent(`IVR DITERIMA: Banding ${fighter.toUpperCase()} (${item}) sah! Kartu pelatih dipertahankan.`);
-        if (item.includes('Head Kick')) modifyScore(fighter, 3, 'Hasil IVR Head Kick');
-        else if (item.includes('Spin Head')) modifyScore(fighter, 5, 'Hasil IVR Spin Head');
-      } else {
-        operatorState[fighter].ivrCard = 0;
-        document.getElementById(`${fighter}-ivr-card`).innerText = '0';
-        logEvent(`IVR DITOLAK: Banding ${fighter.toUpperCase()} ditolak dewan juri replay! Kartu pelatih disita.`);
-      }
-      broadcastChange('STATE_CHANGED', {});
-    }
-
-    function startMedicalTimer(fighter) {
-      logEvent(`MEDIS: Wasit memberikan waktu perawatan medis 1:00 kepada atlet ${fighter.toUpperCase()}`);
-      setTimerDirect(60);
-      toggleMasterTimer();
-    }
-
-    function resetMatchParty() {
-      if (confirm('Apakah Anda yakin ingin mereset seluruh skor dan ronde partai ini?')) {
-        operatorState.chung.score = 0;
-        operatorState.hong.score = 0;
-        operatorState.chung.gamjeom = 0;
-        operatorState.hong.gamjeom = 0;
-        operatorState.chung.roundWins = 0;
-        operatorState.hong.roundWins = 0;
-        operatorState.round = 1;
-        operatorState.timerSeconds = 120;
-        pauseMasterTimer();
+  function toggleMasterTimer() {
+    if (operatorState.timerRunning) { pauseMasterTimer(); return; }
+    operatorState.timerRunning = true;
+    document.getElementById('clock-status-tag').innerText = 'RUNNING';
+    document.getElementById('clock-status-tag').style.color = '#34d399';
+    const btn = document.getElementById('btn-master-toggle');
+    btn.innerHTML = '⏸ PAUSE (KAL-YEO)';
+    btn.style.background = '#d97706'; btn.style.color = '#000'; btn.style.borderColor = '#fbbf24';
+    logEvent('WASIT: Kye-sok! Timer pertandingan berjalan.');
+    operatorState.timerInterval = setInterval(() => {
+      if (operatorState.timerSeconds > 0) {
+        operatorState.timerSeconds--;
         updateTimerDisplay();
-        document.getElementById('chung-main-score').innerText = '0';
-        document.getElementById('hong-main-score').innerText = '0';
-        document.getElementById('chung-gamjeom-count').innerText = '0';
-        document.getElementById('hong-gamjeom-count').innerText = '0';
-        logEvent('OPERATOR: Seluruh skor dan ronde partai telah di-reset ke 0.');
-        broadcastChange('STATE_CHANGED', {});
+        broadcastChange('TIMER_TICK', { timerSeconds: operatorState.timerSeconds });
+      } else {
+        pauseMasterTimer(); testBuzzer();
+        logEvent('WAKTU HABIS: Ronde selesai! Wasit menghentikan laga.');
+      }
+    }, 1000);
+    broadcastChange('STATE_CHANGED', {});
+  }
+
+  function pauseMasterTimer() {
+    operatorState.timerRunning = false;
+    clearInterval(operatorState.timerInterval);
+    document.getElementById('clock-status-tag').innerText = 'PAUSED';
+    document.getElementById('clock-status-tag').style.color = '#f87171';
+    const btn = document.getElementById('btn-master-toggle');
+    btn.innerHTML = '▶ START (KYE-SOK)';
+    btn.style.background = '#059669'; btn.style.color = '#fff'; btn.style.borderColor = '#34d399';
+    logEvent('WASIT: Kal-yeo! Timer pertandingan dihentikan sementara.');
+    broadcastChange('STATE_CHANGED', {});
+  }
+
+  function adjustTimer(sec) {
+    operatorState.timerSeconds = Math.max(0, operatorState.timerSeconds + sec);
+    updateTimerDisplay();
+    logEvent(`OPERATOR: Menyesuaikan timer ${sec > 0 ? '+' : ''}${sec} detik.`);
+    broadcastChange('STATE_CHANGED', {});
+  }
+
+  function setTimerDirect(sec) {
+    operatorState.timerSeconds = sec; updateTimerDisplay();
+    logEvent(`OPERATOR: Set timer langsung ke ${sec} detik.`);
+    broadcastChange('STATE_CHANGED', {});
+  }
+
+  function nextRoundAction() {
+    pauseMasterTimer();
+    operatorState.round = Math.min(3, operatorState.round + 1);
+    operatorState.timerSeconds = 120; updateTimerDisplay();
+    document.getElementById('disp-active-round').innerText = `RONDE ${operatorState.round} [BEST OF 3]`;
+    logEvent(`PENGATUR RONDE: Memasuki Ronde ${operatorState.round}. Skor ronde direset 0-0.`);
+    broadcastChange('STATE_CHANGED', {});
+  }
+
+  function startRestTimer() {
+    pauseMasterTimer(); setTimerDirect(60);
+    logEvent('OPERATOR: Memulai waktu istirahat atlet 1 menit (60 detik).');
+    toggleMasterTimer();
+  }
+
+  // ── Scoring & Penalty ──────────────────────────────────────────
+  function modifyScore(fighter, pts, tech) {
+    operatorState[fighter].score = Math.max(0, operatorState[fighter].score + pts);
+    const sc = operatorState[fighter].score;
+    document.getElementById(`${fighter}-main-score`).innerText = sc;
+    if (document.getElementById(`summary-${fighter}`))
+      document.getElementById(`summary-${fighter}`).innerText = sc;
+    const fName = fighter === 'chung' ? 'CHUNG (Biru)' : 'HONG (Merah)';
+    logEvent(`POIN: ${fName} ${pts > 0 ? '+' : ''}${pts} (${tech}). Skor: ${sc}`);
+    triggerSensorPulse(fighter, pts);
+    broadcastChange('POINT_ADDED', { fighter, score: sc });
+  }
+
+  function triggerSensorPulse(fighter, pts) {
+    const hBar = document.getElementById(`${fighter}-hogu-bar`);
+    const hVal = document.getElementById(`${fighter}-hogu-val`);
+    const dBar = document.getElementById(`${fighter}-head-bar`);
+    const dVal = document.getElementById(`${fighter}-head-val`);
+    if (pts === 2 || pts === 4) {
+      const v = Math.floor(Math.random()*15)+25;
+      hVal.innerText = v; hBar.style.width = `${Math.min(100,v*2.5)}%`;
+      setTimeout(() => { hBar.style.width='0%'; hVal.innerText='0'; }, 1500);
+    } else if (pts === 3 || pts === 5) {
+      const v = Math.floor(Math.random()*12)+18;
+      dVal.innerText = v; dBar.style.width = `${Math.min(100,v*3)}%`;
+      setTimeout(() => { dBar.style.width='0%'; dVal.innerText='0'; }, 1500);
+    }
+  }
+
+  function modifyGamjeom(fighter, val) {
+    operatorState[fighter].gamjeom = Math.max(0, Math.min(5, operatorState[fighter].gamjeom + val));
+    const gc = operatorState[fighter].gamjeom;
+    document.getElementById(`${fighter}-gamjeom-count`).innerText = gc;
+    for (let i = 1; i <= 5; i++) {
+      const pip = document.getElementById(`${fighter}-pip-${i}`);
+      if (i <= gc) {
+        pip.style.background = i >= 4 ? '#ef4444' : '#f59e0b';
+        pip.style.boxShadow  = i >= 4 ? '0 0 8px #ef4444' : 'none';
+      } else {
+        pip.style.background = '#1e293b'; pip.style.boxShadow = 'none';
       }
     }
-
-    function emergencyUndo() {
-      logEvent('OPERATOR: Menjalankan aksi Emergency Undo.');
-      broadcastChange('STATE_CHANGED', {});
+    const warn = document.getElementById(`${fighter}-disqual-warning`);
+    if (gc >= 5) {
+      warn.style.display = 'block';
+      logEvent(`PENALTI: ${fighter.toUpperCase()} MENCAPAI 5 GAM-JEOM! RSC Diskualifikasi!`);
+      testBuzzer();
+    } else {
+      warn.style.display = 'none';
+      const opp = fighter === 'chung' ? 'hong' : 'chung';
+      if (val > 0) modifyScore(opp, 1, 'Penalti Gam-jeom Lawan');
     }
+    broadcastChange('STATE_CHANGED', {});
+  }
 
-    // LocalStorage State Sync
-    function saveStateToLocalStorage() {
-      try {
-        const fullState = {
-          court: operatorState.court,
-          division: operatorState.division,
-          matchNumber: operatorState.matchNumber,
-          kyorugi: {
-            round: operatorState.round,
-            timerSeconds: operatorState.timerSeconds,
-            timerRunning: operatorState.timerRunning,
-            chung: {
-              name: operatorState.chung.name,
-              score: operatorState.chung.score,
-              gamjeom: operatorState.chung.gamjeom
-            },
-            hong: {
-              name: operatorState.hong.name,
-              score: operatorState.hong.score,
-              gamjeom: operatorState.hong.gamjeom
-            }
-          }
-        };
-        localStorage.setItem('tkd_saved_state', JSON.stringify(fullState));
-      } catch (e) {}
+  function toggleRoundWin(fighter) {
+    operatorState[fighter].roundWins = (operatorState[fighter].roundWins + 1) % 4;
+    for (let i = 1; i <= 3; i++) {
+      const dot = document.getElementById(`${fighter}-win-r${i}`);
+      if (i <= operatorState[fighter].roundWins) {
+        dot.style.background = fighter === 'chung' ? '#3b82f6' : '#ef4444';
+        dot.style.boxShadow  = fighter === 'chung' ? '0 0 8px #3b82f6' : '0 0 8px #ef4444';
+      } else {
+        dot.style.background = '#1e293b'; dot.style.boxShadow = 'none';
+      }
     }
+    logEvent(`RONDE: Kemenangan ronde ${fighter.toUpperCase()} = ${operatorState[fighter].roundWins}`);
+    broadcastChange('STATE_CHANGED', {});
+  }
 
-    function loadStateFromLocalStorage() {
-      try {
-        const saved = localStorage.getItem('tkd_saved_state');
-        if (!saved) return;
-        const s = JSON.parse(saved);
-        if (s.court) operatorState.court = s.court;
-        if (s.division) operatorState.division = s.division;
-        if (s.kyorugi) {
-          if (s.kyorugi.chung) {
-            operatorState.chung.score = s.kyorugi.chung.score || 0;
-            if (s.kyorugi.chung.name) operatorState.chung.name = s.kyorugi.chung.name;
-            document.getElementById('chung-main-score').innerText = operatorState.chung.score;
-            document.getElementById('chung-name-input').value = operatorState.chung.name;
-          }
-          if (s.kyorugi.hong) {
-            operatorState.hong.score = s.kyorugi.hong.score || 0;
-            if (s.kyorugi.hong.name) operatorState.hong.name = s.kyorugi.hong.name;
-            document.getElementById('hong-main-score').innerText = operatorState.hong.score;
-            document.getElementById('hong-name-input').value = operatorState.hong.name;
-          }
+  function updateFighterName(fighter, name) {
+    operatorState[fighter].name = name;
+    logEvent(`PESERTA: Nama ${fighter.toUpperCase()} diubah → "${name}"`);
+    broadcastChange('STATE_CHANGED', {});
+  }
+
+  function updateFighterTeam(fighter, team) {
+    operatorState[fighter].team = team;
+    broadcastChange('STATE_CHANGED', {});
+  }
+
+  // ── IVR Modal ─────────────────────────────────────────────────
+  function triggerIVRModal(fighter) {
+    operatorState.ivrTarget = fighter;
+    const tag = document.getElementById('ivr-applicant-tag');
+    tag.innerText = fighter === 'chung' ? 'CHUNG (BIRU)' : 'HONG (MERAH)';
+    tag.style.color = fighter === 'chung' ? '#60a5fa' : '#f87171';
+    document.getElementById('ivr-modal').classList.add('open');
+    logEvent(`BANDING: Pelatih ${fighter.toUpperCase()} meminta Video Replay (IVR).`);
+  }
+
+  function closeIVRModal() {
+    document.getElementById('ivr-modal').classList.remove('open');
+  }
+
+  function resolveIVRDecision(decision) {
+    const fighter = operatorState.ivrTarget;
+    const item    = document.getElementById('ivr-item-select').value;
+    closeIVRModal();
+    if (decision === 'ACCEPTED') {
+      logEvent(`IVR DITERIMA: Banding ${fighter.toUpperCase()} (${item}) sah! Kartu pelatih utuh.`);
+      if (item.includes('Head Kick'))  modifyScore(fighter, 3, 'Hasil IVR Head Kick');
+      else if (item.includes('Spin')) modifyScore(fighter, 5, 'Hasil IVR Spin Head');
+    } else {
+      operatorState[fighter].ivrCard = 0;
+      document.getElementById(`${fighter}-ivr-card`).innerText = '0';
+      logEvent(`IVR DITOLAK: Banding ${fighter.toUpperCase()} ditolak! Kartu pelatih disita.`);
+    }
+    broadcastChange('STATE_CHANGED', {});
+  }
+
+  function startMedicalTimer(fighter) {
+    logEvent(`MEDIS: Waktu perawatan medis 1:00 untuk atlet ${fighter.toUpperCase()}`);
+    setTimerDirect(60); toggleMasterTimer();
+  }
+
+  function resetMatchParty() {
+    if (!confirm('Apakah Anda yakin ingin mereset seluruh skor dan ronde partai ini?')) return;
+    ['chung','hong'].forEach(f => {
+      operatorState[f].score = 0; operatorState[f].gamjeom = 0; operatorState[f].roundWins = 0;
+      document.getElementById(`${f}-main-score`).innerText = '0';
+      document.getElementById(`${f}-gamjeom-count`).innerText = '0';
+      if (document.getElementById(`summary-${f}`))
+        document.getElementById(`summary-${f}`).innerText = '0';
+    });
+    operatorState.round = 1; operatorState.timerSeconds = 120;
+    pauseMasterTimer(); updateTimerDisplay();
+    document.getElementById('disp-active-round').innerText = 'RONDE 1 [BEST OF 3]';
+    logEvent('OPERATOR: Seluruh skor dan ronde partai telah di-reset ke 0.');
+    broadcastChange('STATE_CHANGED', {});
+  }
+
+  function emergencyUndo() {
+    logEvent('OPERATOR: Emergency Undo dijalankan.');
+    broadcastChange('STATE_CHANGED', {});
+  }
+
+  // ── LocalStorage Sync ─────────────────────────────────────────
+  function saveStateToLocalStorage() {
+    try {
+      localStorage.setItem('tkd_saved_state', JSON.stringify({
+        court: operatorState.court,
+        division: operatorState.division,
+        matchNumber: operatorState.matchNumber,
+        kyorugi: {
+          round: operatorState.round,
+          timerSeconds: operatorState.timerSeconds,
+          timerRunning: operatorState.timerRunning,
+          chung: { name: operatorState.chung.name, score: operatorState.chung.score, gamjeom: operatorState.chung.gamjeom },
+          hong:  { name: operatorState.hong.name,  score: operatorState.hong.score,  gamjeom: operatorState.hong.gamjeom  }
         }
-      } catch (e) {}
-    }
+      }));
+    } catch (_) {}
+  }
 
-    // Initialize
-    loadStateFromLocalStorage();
-    updateTimerDisplay();
-  </script>
+  function loadStateFromLocalStorage() {
+    try {
+      const saved = localStorage.getItem('tkd_saved_state');
+      if (!saved) return;
+      const s = JSON.parse(saved);
+      if (s.court)    operatorState.court    = s.court;
+      if (s.division) operatorState.division = s.division;
+      if (s.kyorugi) {
+        ['chung','hong'].forEach(f => {
+          if (s.kyorugi[f]) {
+            operatorState[f].score = s.kyorugi[f].score || 0;
+            if (s.kyorugi[f].name) operatorState[f].name = s.kyorugi[f].name;
+            document.getElementById(`${f}-main-score`).innerText = operatorState[f].score;
+            document.getElementById(`${f}-name-input`).value     = operatorState[f].name;
+            if (document.getElementById(`summary-${f}`))
+              document.getElementById(`summary-${f}`).innerText  = operatorState[f].score;
+          }
+        });
+      }
+    } catch (_) {}
+  }
+
+  // ── Init ───────────────────────────────────────────────────────
+  loadStateFromLocalStorage();
+  updateTimerDisplay();
+</script>
 </body>
 </html>
